@@ -39,12 +39,6 @@ export default function ExpenseCard({ concept, date, amount, category }: Expense
             ${amount.toFixed(2)}
           </span>
       </div>
-
-      <ExpenseDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        expense={{ concept, date, amount, category }}
-      />
     </>
   );
 } 

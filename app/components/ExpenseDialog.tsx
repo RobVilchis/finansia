@@ -1,70 +1,201 @@
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
+import { useState, useEffect } from 'react';
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 interface ExpenseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   expense: {
+    id: string;
     concept: string;
     date: string;
     amount: number;
     category: string;
   };
+  onUpdate?: (updatedExpense: {
+    id: string;
+    concept: string;
+    date: string;
+    amount: number;
+    category: string;
+  }) => void;
+  onDelete?: (id: string) => void;
 }
 
-export default function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProps) {
+export default function ExpenseDialog({ open, onOpenChange, expense, onUpdate, onDelete }: ExpenseDialogProps) {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [formData, setFormData] = useState({
+    concept: expense.concept,
+    amount: expense.amount.toString(),
+    date: new Date(expense.date).toISOString().split('T')[0],
+    category: expense.category
+  });
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    setFormData({
+      concept: expense.concept,
+      amount: expense.amount.toString(),
+      date: new Date(expense.date).toISOString().split('T')[0],
+      category: expense.category
+    });
+    setShowDeleteConfirm(false);
+  }, [expense]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories');
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onUpdate) {
+      onUpdate({
+        id: expense.id,
+        concept: formData.concept,
+        amount: parseFloat(formData.amount),
+        date: formData.date,
+        category: formData.category
+      });
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(expense.id);
+    }
+  };
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 data-[state=open]:animate-overlayShow" />
         <Dialog.Content className="fixed top-[50%] left-[50%] max-h-[85vh] w-[90vw] max-w-[450px] translate-x-[-50%] translate-y-[-50%] rounded-[6px] bg-white dark:bg-gray-800 p-6 shadow-lg focus:outline-none data-[state=open]:animate-contentShow">
-          <Dialog.Title className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            Expense Details
+          <Dialog.Title className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex justify-between items-center">
+            <span>Expense Details</span>
+            {onDelete && !showDeleteConfirm && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="text-red-500 hover:text-red-600 p-1"
+                title="Delete expense"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                </svg>
+              </button>
+            )}
           </Dialog.Title>
           
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Concept</h3>
-              <p className="text-lg text-gray-900 dark:text-white">{expense.concept}</p>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Amount</h3>
-              <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                ${expense.amount.toFixed(2)}
+          {showDeleteConfirm ? (
+            <div className="space-y-4">
+              <p className="text-gray-700 dark:text-gray-300">
+                Are you sure you want to delete this expense? This action cannot be undone.
               </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-            
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Date</h3>
-              <p className="text-lg text-gray-900 dark:text-white">{expense.date}</p>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Category</h3>
-              <span className="inline-block mt-1 px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
-                {expense.category}
-              </span>
-            </div>
-          </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Concept</label>
+                <input
+                  type="text"
+                  value={formData.concept}
+                  onChange={(e) => setFormData({ ...formData, concept: e.target.value })}
+                  className="w-full mt-1 rounded-md border border-gray-300 dark:border-gray-600 bg-transparent px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Amount</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  className="w-full mt-1 rounded-md border border-gray-300 dark:border-gray-600 bg-transparent px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Date</label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  className="w-full mt-1 rounded-md border border-gray-300 dark:border-gray-600 bg-transparent px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Category</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full mt-1 rounded-md border border-gray-300 dark:border-gray-600 bg-transparent px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <Dialog.Close className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 15 15"
-              fill="none"
-              className="h-4 w-4 text-gray-500 dark:text-gray-400"
-            >
-              <path
-                d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03157 3.2184C3.80702 2.99385 3.44295 2.99385 3.2184 3.2184C2.99385 3.44295 2.99385 3.80702 3.2184 4.03157L6.68682 7.50005L3.2184 10.9685C2.99385 11.193 2.99385 11.5571 3.2184 11.7816C3.44295 12.0062 3.80702 12.0062 4.03157 11.7816L7.50005 8.31322L10.9685 11.7816C11.193 12.0062 11.5571 12.0062 11.7816 11.7816C12.0062 11.5571 12.0062 11.193 11.7816 10.9685L8.31322 7.50005L11.7816 4.03157Z"
-                fill="currentColor"
-                fillRule="evenodd"
-                clipRule="evenodd"
-              />
-            </svg>
-          </Dialog.Close>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

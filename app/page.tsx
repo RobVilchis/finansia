@@ -4,68 +4,106 @@ import Navbar from './components/Navbar';
 import ExpenseCard from './components/ExpenseCard';
 import ChatUI from './components/ChatUI';
 import NewExpenseDialog from './components/NewExpenseDialog';
+import ExpenseDialog from './components/ExpenseDialog';
 import { useChat } from '@ai-sdk/react';
-import { useState } from 'react';
-import { Tabs } from 'radix-ui';
+import { useState, useEffect } from 'react';
+import { Tabs } from "@radix-ui/themes";
 
-const initialExpenses = [
-  {
-    concept: "Grocery Shopping",
-    date: "2024-03-15",
-    amount: 156.78,
-    category: "Food & Groceries"
-  },
-  {
-    concept: "Netflix Subscription",
-    date: "2024-03-14",
-    amount: 15.99,
-    category: "Entertainment"
-  },
-  {
-    concept: "Electric Bill",
-    date: "2024-03-13",
-    amount: 89.50,
-    category: "Utilities"
-  },
-  {
-    concept: "Gas Station",
-    date: "2024-03-12",
-    amount: 45.23,
-    category: "Transportation"
-  },
-  {
-    concept: "Restaurant Dinner",
-    date: "2024-03-11",
-    amount: 68.90,
-    category: "Dining Out"
-  },
-  {
-    concept: "Electric Bill",
-    date: "2024-03-13",
-    amount: 89.50,
-    category: "Utilities"
-  },
-  {
-    concept: "Gas Station",
-    date: "2024-03-12",
-    amount: 45.23,
-    category: "Transportation"
-  },
-  {
-    concept: "Restaurant Dinner",
-    date: "2024-03-11",
-    amount: 68.90,
-    category: "Dining Out"
-  }
-];
+interface Expense {
+  id: string;
+  concept: string;
+  date: string;
+  amount: number;
+  categoryName: string;
+}
 
 export default function Home() {
   const { messages, input, handleInputChange, handleSubmit } = useChat();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [expenses, setExpenses] = useState(initialExpenses);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
 
-  const handleAddExpense = (newExpense: { concept: string; date: string; amount: number; category: string }) => {
-    setExpenses([newExpense, ...expenses]);
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
+
+  const fetchExpenses = async () => {
+    try {
+      const response = await fetch('/api/expenses');
+      if (!response.ok) throw new Error('Failed to fetch expenses');
+      const data = await response.json();
+      setExpenses(data);
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddExpense = async (newExpense: { concept: string; date: string; amount: number; category: string }) => {
+    try {
+      const response = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newExpense),
+      });
+
+      if (!response.ok) throw new Error('Failed to add expense');
+      
+      // Refresh expenses list
+      fetchExpenses();
+    } catch (error) {
+      console.error('Error adding expense:', error);
+    }
+  };
+
+  const handleUpdateExpense = async (updatedExpense: { id: string; concept: string; date: string; amount: number; category: string }) => {
+    try {
+      const response = await fetch(`/api/expenses`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedExpense),
+      });
+
+      if (!response.ok) throw new Error('Failed to update expense');
+      
+      // Refresh expenses list
+      fetchExpenses();
+      setExpenseDialogOpen(false);
+    } catch (error) {
+      console.error('Error updating expense:', error);
+    }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    try {
+      const response = await fetch(`/api/expenses`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      if (!response.ok) throw new Error('Failed to delete expense');
+      
+      // Refresh expenses list
+      fetchExpenses();
+      setExpenseDialogOpen(false);
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+    }
+  };
+
+  const handleExpenseClick = (expense: Expense) => {
+    setSelectedExpense(expense);
+    setExpenseDialogOpen(true);
   };
 
   return (
@@ -82,15 +120,13 @@ export default function Home() {
               <div className="text-2xl font-bold text-gray-900 dark:text-white mb-8 bg-gray-100 border-2 border-gray-300 dark:bg-gray-700 px-5 py-3 rounded-md h-min">
                 <h1>My Goals</h1>
                 <div className='text-lg opacity-70'>
-
-                <li>A</li>
-                <li>B</li>
-                <li>C</li>
+                  <li>A</li>
+                  <li>B</li>
+                  <li>C</li>
                 </div>
               </div>
             </Tabs.Content>
             <Tabs.Content value="Expenses">
-
               <div className='flex mb-8 gap-3 items-center justify-between'>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   Recent Expenses
@@ -103,25 +139,29 @@ export default function Home() {
                 </button>
               </div>
               <div className="grid gap-4 mx-auto">
-                {expenses.map((expense, index) => (
-                  <ExpenseCard
-                    key={index}
-                    concept={expense.concept}
-                    date={expense.date}
-                    amount={expense.amount}
-                    category={expense.category}
-                  />
-                ))}
+                {isLoading ? (
+                  <div className="text-center text-gray-500 dark:text-gray-400">Loading expenses...</div>
+                ) : expenses.length === 0 ? (
+                  <div className="text-center text-gray-500 dark:text-gray-400">No expenses found</div>
+                ) : (
+                  expenses.map((expense) => (
+                    <div key={expense.id} onClick={() => handleExpenseClick(expense)}>
+                      <ExpenseCard
+                        concept={expense.concept}
+                        date={new Date(expense.date).toLocaleDateString()}
+                        amount={Number(expense.amount)}
+                        category={expense.categoryName}
+                      />
+                    </div>
+                  ))
+                )}
               </div>
-
             </Tabs.Content>
           </Tabs.Root>
         </div>
 
-
         <div className="w-1/3"></div>
         <div className="w-1/3 block md:fixed right-36">
-        
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
             AI Assistant
           </h2>
@@ -139,6 +179,22 @@ export default function Home() {
         onOpenChange={setDialogOpen}
         onAddExpense={handleAddExpense}
       />
+
+      {selectedExpense && (
+        <ExpenseDialog
+          open={expenseDialogOpen}
+          onOpenChange={setExpenseDialogOpen}
+          expense={{
+            id: selectedExpense.id,
+            concept: selectedExpense.concept,
+            date: selectedExpense.date,
+            amount: Number(selectedExpense.amount),
+            category: selectedExpense.categoryName
+          }}
+          onUpdate={handleUpdateExpense}
+          onDelete={handleDeleteExpense}
+        />
+      )}
     </div>
   );
 }
