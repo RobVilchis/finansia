@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import ExpenseDialog from './ExpenseDialog';
 
 interface ExpenseCardProps {
   concept: string;
@@ -11,7 +9,6 @@ interface ExpenseCardProps {
 }
 
 export default function ExpenseCard({ concept, date, amount, category }: ExpenseCardProps) {
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <>
@@ -19,7 +16,6 @@ export default function ExpenseCard({ concept, date, amount, category }: Expense
         className="w-full flex justify-between items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm 
          p-3 border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md 
         transition-shadow  dark:hover:bg-gray-700 transition-color"
-        onClick={() => setDialogOpen(true)}
       >
         <div className="flex justify-between gap-4 items-start ">
           <div>

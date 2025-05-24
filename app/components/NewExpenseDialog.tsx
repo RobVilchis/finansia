@@ -24,23 +24,23 @@ export default function NewExpenseDialog({ open, onOpenChange, onAddExpense }: N
   });
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        if (!response.ok) throw new Error('Failed to fetch categories');
+        const data = await response.json();
+        setCategories(data);
+        // Set initial category if none selected
+        if (!formData.category && data.length > 0) {
+          setFormData(prev => ({ ...prev, category: data[0].name }));
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
     fetchCategories();
   }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/categories');
-      if (!response.ok) throw new Error('Failed to fetch categories');
-      const data = await response.json();
-      setCategories(data);
-      // Set initial category if none selected
-      if (!formData.category && data.length > 0) {
-        setFormData(prev => ({ ...prev, category: data[0].name }));
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

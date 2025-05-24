@@ -22,7 +22,7 @@ export async function GET() {
 
     return NextResponse.json(allExpenses);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch expenses" }, { status: 500 });
+    return NextResponse.json({ error: `Failed to fetch expenses: ${error}` }, { status: 500 });
   }
 }
 
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newExpense[0]);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to create expense" }, { status: 500 });
+    return NextResponse.json({ error: `Failed to create expense ${error}` }, { status: 500 });
   }
 } 
 
@@ -76,8 +76,6 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
     const body = await request.json()
 
-    const expenseId = body.id
-
     const deleted = await db.delete(expenses)
         .where(eq(expenses.id, body.id))
         .returning({ deletedId: expenses.id })
@@ -92,5 +90,4 @@ export async function DELETE(request: Request) {
     return new Response(JSON.stringify({ message: 'Expense deleted successfully', deletedId: deleted[0].deletedId }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
-    })
-}
+    })}
