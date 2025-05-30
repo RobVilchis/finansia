@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const allCategories = await db.select().from(categories);
+    const allCategories = await db.select({name: categories.name}).from(categories);
+    console.log(allCategories);
     return NextResponse.json(allCategories);
   } catch (error) {
     return NextResponse.json({ error: `Failed to fetch categories: ${error}` }, { status: 500 });

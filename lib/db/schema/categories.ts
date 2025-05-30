@@ -9,6 +9,7 @@ export const categories = pgTable("categories", {
     .$defaultFn(() => nanoid()),
   name: text("name").notNull().unique(),
   description: text("description"),
+  type: text("type").notNull(),
   createdAt: timestamp("created_at")
     .notNull()
     .default(sql`now()`),
@@ -20,6 +21,7 @@ export const categories = pgTable("categories", {
 export const insertCategorySchema = z.object({
   name: z.string(),
   description: z.string().optional(),
+  type: z.string(),
 });
 
 export type NewCategoryParams = z.infer<typeof insertCategorySchema>; 

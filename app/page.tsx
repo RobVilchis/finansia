@@ -8,82 +8,84 @@ import ExpenseDialog from './components/ExpenseDialog';
 import { useChat } from '@ai-sdk/react';
 import { useState, useEffect } from 'react';
 import { Tabs } from "@radix-ui/themes";
+import { GoalCard } from './components/GoalCard';
 
-interface Expense {
+interface Transaction {
   id: string;
-  concept: string;
+  description: string;
   date: string;
   amount: number;
-  categoryName: string;
+  category: string;
+  type: string;
 }
 
 export default function Home() {
   const { messages, input, handleInputChange, handleSubmit } = useChat();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-  const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
 
   useEffect(() => {
-    fetchExpenses();
+    fetchTransactions();
   }, []);
 
-  const fetchExpenses = async () => {
+  const fetchTransactions = async () => {
     try {
-      const response = await fetch('/api/expenses');
-      if (!response.ok) throw new Error('Failed to fetch expenses');
+      const response = await fetch('/api/transactions');
+      if (!response.ok) throw new Error('Failed to fetch transactions');
       const data = await response.json();
-      setExpenses(data);
+      setTransactions(data);
     } catch (error) {
-      console.error('Error fetching expenses:', error);
+      console.error('Error fetching transactions:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleAddExpense = async (newExpense: { concept: string; date: string; amount: number; category: string }) => {
+  const handleAddTransaction = async (newTransaction: { description: string; date: string; amount: number; category: string; type: string }) => {
     try {
-      const response = await fetch('/api/expenses', {
+      const response = await fetch('/api/transactions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newExpense),
+        body: JSON.stringify(newTransaction),
       });
 
-      if (!response.ok) throw new Error('Failed to add expense');
+      if (!response.ok) throw new Error('Failed to add transaction');
       
-      // Refresh expenses list
-      fetchExpenses();
+      // Refresh transactions list
+      fetchTransactions();
     } catch (error) {
-      console.error('Error adding expense:', error);
+      console.error('Error adding transaction:', error);
     }
   };
 
-  const handleUpdateExpense = async (updatedExpense: { id: string; concept: string; date: string; amount: number; category: string }) => {
+  const handleUpdateTransaction = async (updatedTransaction: { id: string; description: string; date: string; amount: number; category: string; type: string }) => {
     try {
-      const response = await fetch(`/api/expenses`, {
+      const response = await fetch(`/api/transactions`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedExpense),
+        body: JSON.stringify(updatedTransaction),
       });
 
-      if (!response.ok) throw new Error('Failed to update expense');
+      if (!response.ok) throw new Error('Failed to update transaction');
       
-      // Refresh expenses list
-      fetchExpenses();
-      setExpenseDialogOpen(false);
+      // Refresh transactions list
+      fetchTransactions();
+      setTransactionDialogOpen(false);
     } catch (error) {
-      console.error('Error updating expense:', error);
+      console.error('Error updating transaction:', error);
     }
   };
 
-  const handleDeleteExpense = async (id: string) => {
+  const handleDeleteTransaction = async (id: string) => {
     try {
-      const response = await fetch(`/api/expenses`, {
+      const response = await fetch(`/api/transactions`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -91,19 +93,19 @@ export default function Home() {
         body: JSON.stringify({ id }),
       });
 
-      if (!response.ok) throw new Error('Failed to delete expense');
+      if (!response.ok) throw new Error('Failed to delete transaction');
       
-      // Refresh expenses list
-      fetchExpenses();
-      setExpenseDialogOpen(false);
+      // Refresh transactions list
+      fetchTransactions();
+      setTransactionDialogOpen(false);
     } catch (error) {
-      console.error('Error deleting expense:', error);
+      console.error('Error deleting transaction:', error);
     }
   };
 
-  const handleExpenseClick = (expense: Expense) => {
-    setSelectedExpense(expense);
-    setExpenseDialogOpen(true);
+  const handleTransactionClick = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setTransactionDialogOpen(true);
   };
 
   return (
@@ -117,40 +119,47 @@ export default function Home() {
               <Tabs.Trigger value="Goals">Goals</Tabs.Trigger>
             </Tabs.List>
             <Tabs.Content value="Goals">
-              <div className="text-2xl font-bold text-gray-900 dark:text-white mb-8 bg-gray-100 border-2 border-gray-300 dark:bg-gray-700 px-5 py-3 rounded-md h-min">
-                <h1>My Goals</h1>
-                <div className='text-lg opacity-70'>
-                  <li>A</li>
-                  <li>B</li>
-                  <li>C</li>
-                </div>
+              <div className='flex mb-8 gap-3 items-center justify-between'>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    My Goals
+                  </h1>
+                  <button 
+                  onClick={() => {}} 
+                  className='border-2 border-neutral-300 py-1 px-2 rounded-md opacity-70 hover:opacity-80'
+                >
+                  Add New Goal
+                </button>
+              </div>
+              <div className='flex flex-col gap-3'>
+                <GoalCard name={'New car'} target={150000} current={36000}></GoalCard>
+                <GoalCard name={'Retirement'} target={1500000} current={100000}></GoalCard>
               </div>
             </Tabs.Content>
             <Tabs.Content value="Expenses">
               <div className='flex mb-8 gap-3 items-center justify-between'>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Recent Expenses
+                  Recent Transactions
                 </h1>
                 <button 
                   onClick={() => setDialogOpen(true)} 
                   className='border-2 border-neutral-300 py-1 px-2 rounded-md opacity-70 hover:opacity-80'
                 >
-                  Add New Expense
+                  Add New Transaction
                 </button>
               </div>
               <div className="grid gap-4 mx-auto">
                 {isLoading ? (
-                  <div className="text-center text-gray-500 dark:text-gray-400">Loading expenses...</div>
-                ) : expenses.length === 0 ? (
-                  <div className="text-center text-gray-500 dark:text-gray-400">No expenses found</div>
+                  <div className="text-center text-gray-500 dark:text-gray-400">Loading transactions...</div>
+                ) : transactions.length === 0 ? (
+                  <div className="text-center text-gray-500 dark:text-gray-400">No transactions found</div>
                 ) : (
-                  expenses.map((expense) => (
-                    <div key={expense.id} onClick={() => handleExpenseClick(expense)}>
+                  transactions.map((transaction) => (
+                    <div key={transaction.id} onClick={() => handleTransactionClick(transaction)}>
                       <ExpenseCard
-                        concept={expense.concept}
-                        date={new Date(expense.date).toLocaleDateString()}
-                        amount={Number(expense.amount)}
-                        category={expense.categoryName}
+                        concept={transaction.description}
+                        date={new Date(transaction.date).toLocaleDateString()}
+                        amount={Number(transaction.amount)}
+                        category={transaction.category}
                       />
                     </div>
                   ))
@@ -160,8 +169,8 @@ export default function Home() {
           </Tabs.Root>
         </div>
 
-        <div className="w-1/3"></div>
-        <div className="w-1/3 block md:fixed right-36">
+        <div className="w-md"></div>
+        <div className="w-md block md:fixed right-64">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
             AI Assistant
           </h2>
@@ -177,22 +186,35 @@ export default function Home() {
       <NewExpenseDialog 
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onAddExpense={handleAddExpense}
+        onAddExpense={(expense) => handleAddTransaction({
+          description: expense.concept,
+          date: expense.date,
+          amount: expense.amount,
+          category: expense.category,
+          type: 'expense' // Default to expense type for now
+        })}
       />
 
-      {selectedExpense && (
+      {selectedTransaction && (
         <ExpenseDialog
-          open={expenseDialogOpen}
-          onOpenChange={setExpenseDialogOpen}
+          open={transactionDialogOpen}
+          onOpenChange={setTransactionDialogOpen}
           expense={{
-            id: selectedExpense.id,
-            concept: selectedExpense.concept,
-            date: selectedExpense.date,
-            amount: Number(selectedExpense.amount),
-            category: selectedExpense.categoryName
+            id: selectedTransaction.id,
+            concept: selectedTransaction.description,
+            date: selectedTransaction.date,
+            amount: Number(selectedTransaction.amount),
+            category: selectedTransaction.category
           }}
-          onUpdate={handleUpdateExpense}
-          onDelete={handleDeleteExpense}
+          onUpdate={(expense) => handleUpdateTransaction({
+            id: expense.id,
+            description: expense.concept,
+            date: expense.date,
+            amount: expense.amount,
+            category: expense.category,
+            type: selectedTransaction.type // Preserve the original type
+          })}
+          onDelete={handleDeleteTransaction}
         />
       )}
     </div>
