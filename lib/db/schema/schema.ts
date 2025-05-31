@@ -1,6 +1,5 @@
 import { foreignKey, numeric, pgTable, text, timestamp, unique, varchar } from "drizzle-orm/pg-core";
-
-
+import { categories } from "./categories";
 
 export const resources = pgTable("resources", {
 	id: varchar({ length: 191 }).primaryKey().notNull(),
@@ -8,16 +7,6 @@ export const resources = pgTable("resources", {
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
 });
-
-export const categories = pgTable("categories", {
-	id: varchar({ length: 191 }).primaryKey().notNull(),
-	name: text().notNull(),
-	description: text(),
-	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	unique("categories_name_unique").on(table.name),
-]);
 
 export const expenses = pgTable("expenses", {
 	id: varchar({ length: 191 }).primaryKey().notNull(),

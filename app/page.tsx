@@ -1,22 +1,26 @@
-'use client';
+"use client";
 
-import Navbar from './components/Navbar';
-import ExpenseCard from './components/ExpenseCard';
-import ChatUI from './components/ChatUI';
-import NewExpenseDialog from './components/NewExpenseDialog';
-import ExpenseDialog from './components/ExpenseDialog';
-import { useChat } from '@ai-sdk/react';
-import { useState, useEffect } from 'react';
-import { Tabs } from "@radix-ui/themes";
-import { GoalCard } from './components/GoalCard';
+import Navbar from "./components/Navbar";
+import TransactionCard from "./components/ExpenseCard";
+import ChatUI from "./components/ChatUI";
+import NewExpenseDialog from "./components/NewExpenseDialog";
+import ExpenseDialog from "./components/ExpenseDialog";
+import { useChat } from "@ai-sdk/react";
+import { useState, useEffect } from "react";
+import { Select, Tabs } from "@radix-ui/themes";
+import { GoalCard } from "./components/GoalCard";
+import Image from "next/image";
+import { AddButton } from "./components/AddButton";
 
 interface Transaction {
   id: string;
   description: string;
   date: string;
   amount: number;
-  category: string;
+  categoryName: string;
   type: string;
+  sourceAccountName: string;
+  targetAccountName: string;
 }
 
 export default function Home() {
@@ -24,7 +28,8 @@ export default function Home() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -33,73 +38,86 @@ export default function Home() {
 
   const fetchTransactions = async () => {
     try {
-      const response = await fetch('/api/transactions');
-      if (!response.ok) throw new Error('Failed to fetch transactions');
+      const response = await fetch("/api/transactions");
+      if (!response.ok) throw new Error("Failed to fetch transactions");
       const data = await response.json();
       setTransactions(data);
     } catch (error) {
-      console.error('Error fetching transactions:', error);
+      console.error("Error fetching transactions:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleAddTransaction = async (newTransaction: { description: string; date: string; amount: number; category: string; type: string }) => {
+  const handleAddTransaction = async (newTransaction: {
+    description: string;
+    date: string;
+    amount: number;
+    category: string;
+    type: string;
+  }) => {
     try {
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
+      const response = await fetch("/api/transactions", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(newTransaction),
       });
 
-      if (!response.ok) throw new Error('Failed to add transaction');
-      
+      if (!response.ok) throw new Error("Failed to add transaction");
+
       // Refresh transactions list
       fetchTransactions();
     } catch (error) {
-      console.error('Error adding transaction:', error);
+      console.error("Error adding transaction:", error);
     }
   };
 
-  const handleUpdateTransaction = async (updatedTransaction: { id: string; description: string; date: string; amount: number; category: string; type: string }) => {
+  const handleUpdateTransaction = async (updatedTransaction: {
+    id: string;
+    description: string;
+    date: string;
+    amount: number;
+    category: string;
+    type: string;
+  }) => {
     try {
       const response = await fetch(`/api/transactions`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(updatedTransaction),
       });
 
-      if (!response.ok) throw new Error('Failed to update transaction');
-      
+      if (!response.ok) throw new Error("Failed to update transaction");
+
       // Refresh transactions list
       fetchTransactions();
       setTransactionDialogOpen(false);
     } catch (error) {
-      console.error('Error updating transaction:', error);
+      console.error("Error updating transaction:", error);
     }
   };
 
   const handleDeleteTransaction = async (id: string) => {
     try {
       const response = await fetch(`/api/transactions`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ id }),
       });
 
-      if (!response.ok) throw new Error('Failed to delete transaction');
-      
+      if (!response.ok) throw new Error("Failed to delete transaction");
+
       // Refresh transactions list
       fetchTransactions();
       setTransactionDialogOpen(false);
     } catch (error) {
-      console.error('Error deleting transaction:', error);
+      console.error("Error deleting transaction:", error);
     }
   };
 
@@ -119,47 +137,55 @@ export default function Home() {
               <Tabs.Trigger value="Goals">Goals</Tabs.Trigger>
             </Tabs.List>
             <Tabs.Content value="Goals">
-              <div className='flex mb-8 gap-3 items-center justify-between'>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    My Goals
-                  </h1>
-                  <button 
-                  onClick={() => {}} 
-                  className='border-2 border-neutral-300 py-1 px-2 rounded-md opacity-70 hover:opacity-80'
-                >
-                  Add New Goal
-                </button>
+              <div className="flex mb-8 gap-3 items-center justify-between">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  My Goals
+                </h1>
+                <AddButton onClick={() => {}}></AddButton>
               </div>
-              <div className='flex flex-col gap-3'>
-                <GoalCard name={'New car'} target={150000} current={36000}></GoalCard>
-                <GoalCard name={'Retirement'} target={1500000} current={100000}></GoalCard>
+              <div className="flex flex-col gap-3">
+                <GoalCard
+                  name={"New car"}
+                  target={150000}
+                  current={36000}
+                ></GoalCard>
+                <GoalCard
+                  name={"Retirement"}
+                  target={1500000}
+                  current={100000}
+                ></GoalCard>
               </div>
             </Tabs.Content>
             <Tabs.Content value="Expenses">
-              <div className='flex mb-8 gap-3 items-center justify-between'>
+              <div className="flex mb-8 gap-3 items-center justify-between">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   Recent Transactions
                 </h1>
-                <button 
-                  onClick={() => setDialogOpen(true)} 
-                  className='border-2 border-neutral-300 py-1 px-2 rounded-md opacity-70 hover:opacity-80'
-                >
-                  Add New Transaction
-                </button>
+                <AddButton onClick={() => setDialogOpen(true)}></AddButton>
               </div>
               <div className="grid gap-4 mx-auto">
                 {isLoading ? (
-                  <div className="text-center text-gray-500 dark:text-gray-400">Loading transactions...</div>
+                  <div className="text-center text-gray-500 dark:text-gray-400">
+                    Loading transactions...
+                  </div>
                 ) : transactions.length === 0 ? (
-                  <div className="text-center text-gray-500 dark:text-gray-400">No transactions found</div>
+                  <div className="text-center text-gray-500 dark:text-gray-400">
+                    No transactions found
+                  </div>
                 ) : (
                   transactions.map((transaction) => (
-                    <div key={transaction.id} onClick={() => handleTransactionClick(transaction)}>
-                      <ExpenseCard
-                        concept={transaction.description}
+                    <div
+                      key={transaction.id}
+                      onClick={() => handleTransactionClick(transaction)}
+                    >
+                      <TransactionCard
+                        description={transaction.description}
                         date={new Date(transaction.date).toLocaleDateString()}
                         amount={Number(transaction.amount)}
-                        category={transaction.category}
+                        categoryName={transaction.categoryName}
+                        type={transaction.type}
+                        sourceAccountName={transaction.sourceAccountName}
+                        targetAccountName={transaction.targetAccountName}
                       />
                     </div>
                   ))
@@ -183,16 +209,18 @@ export default function Home() {
         </div>
       </main>
 
-      <NewExpenseDialog 
+      <NewExpenseDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onAddExpense={(expense) => handleAddTransaction({
-          description: expense.concept,
-          date: expense.date,
-          amount: expense.amount,
-          category: expense.category,
-          type: 'expense' // Default to expense type for now
-        })}
+        onAddExpense={(expense) =>
+          handleAddTransaction({
+            description: expense.concept,
+            date: expense.date,
+            amount: expense.amount,
+            category: expense.category,
+            type: "expense", // Default to expense type for now
+          })
+        }
       />
 
       {selectedTransaction && (
@@ -204,16 +232,18 @@ export default function Home() {
             concept: selectedTransaction.description,
             date: selectedTransaction.date,
             amount: Number(selectedTransaction.amount),
-            category: selectedTransaction.category
+            category: selectedTransaction.categoryName,
           }}
-          onUpdate={(expense) => handleUpdateTransaction({
-            id: expense.id,
-            description: expense.concept,
-            date: expense.date,
-            amount: expense.amount,
-            category: expense.category,
-            type: selectedTransaction.type // Preserve the original type
-          })}
+          onUpdate={(expense) =>
+            handleUpdateTransaction({
+              id: expense.id,
+              description: expense.concept,
+              date: expense.date,
+              amount: expense.amount,
+              category: expense.category,
+              type: selectedTransaction.type, // Preserve the original type
+            })
+          }
           onDelete={handleDeleteTransaction}
         />
       )}

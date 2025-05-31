@@ -9,7 +9,7 @@ export const categories = pgTable("categories", {
     .$defaultFn(() => nanoid()),
   name: text("name").notNull().unique(),
   description: text("description"),
-  type: text("type").notNull(),
+  type: text("type").default("expense").notNull(),
   createdAt: timestamp("created_at")
     .notNull()
     .default(sql`now()`),

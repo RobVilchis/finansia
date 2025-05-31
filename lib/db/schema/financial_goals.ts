@@ -1,6 +1,6 @@
-import { pgTable, uuid, text, decimal, date, timestamp, varchar } from "drizzle-orm/pg-core";
-import { accounts } from "./account";
 import { nanoid } from "@/lib/utils";
+import { date, decimal, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { accounts } from "./account";
 
 export const financialGoals = pgTable("financial_goals", {
     id: varchar("id", { length: 191 })

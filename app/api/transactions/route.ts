@@ -1,25 +1,38 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { insertTransactionSchema, transactions } from "@/lib/db/schema/transactions";
-import { eq } from "drizzle-orm";
 import { categories } from "@/lib/db/schema/categories";
-import { nanoid } from "@/lib/utils";
+import { insertTransactionSchema, transactions } from "@/lib/db/schema/transactions";
+import { eq, desc } from "drizzle-orm";
+import { NextResponse } from "next/server";
+import { accounts, accounts as sourceAccounts } from "@/lib/db/schema/account";
+import { accounts as targetAccounts } from "@/lib/db/schema/account";
+import { alias } from "drizzle-orm/pg-core";
 
 export async function GET() {
   try {
-    // Join transactions with categories to get category names
-    const allTransactions = await db
-      .select({
-        id: transactions.id,
-        description: transactions.description,
-        amount: transactions.amount,
-        date: transactions.date,
-        type: transactions.type,
-        category: categories.name,
-      })
-      .from(transactions)
-      .leftJoin(categories, eq(transactions.category, categories.id))
-      .orderBy(transactions.date);
+    const sourceAccounts = alias(accounts, 'sourceAccounts');
+const targetAccounts = alias(accounts, 'targetAccounts');
+
+
+const allTransactions = await db
+  .select({
+    id: transactions.id,
+    description: transactions.description,
+    amount: transactions.amount,
+    date: transactions.date,
+    type: transactions.type,
+    categoryName: categories.name,
+    sourceAccountId: transactions.sourceAccountId,
+    targetAccountId: transactions.targetAccountId,
+    sourceAccountName: sourceAccounts.name,
+    targetAccountName: targetAccounts.name,
+  })
+  .from(transactions)
+  .leftJoin(categories, eq(transactions.category, categories.id))
+  .leftJoin(sourceAccounts, eq(transactions.sourceAccountId, sourceAccounts.id))
+  .leftJoin(targetAccounts, eq(transactions.targetAccountId, targetAccounts.id))
+  .orderBy(desc(transactions.date));
+  
+  
 
     return NextResponse.json(allTransactions);
   } catch (error) {
@@ -58,10 +71,10 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  try {
+
     const body = await request.json();
     const transactionId = body.id;
-
+    console.log(body);
     // If category is being updated, get the new category ID
     let categoryId = body.category;
     if (body.category && typeof body.category === 'string') {
@@ -80,13 +93,20 @@ export async function PATCH(request: Request) {
       categoryId = category[0].id;
     }
 
+    console.log(categoryId)
+
+
+
     const updatedTransaction = await db.update(transactions)
       .set({
         ...body,
+        amount: body.amount.toString(),
         category: categoryId,
       })
       .where(eq(transactions.id, transactionId))
       .returning();
+
+    console.log(updatedTransaction)
 
     if (!updatedTransaction.length) {
       return NextResponse.json(
@@ -96,9 +116,7 @@ export async function PATCH(request: Request) {
     }
 
     return NextResponse.json(updatedTransaction[0]);
-  } catch (error) {
-    return NextResponse.json({ error: `Failed to update transaction: ${error}` }, { status: 500 });
-  }
+
 }
 
 export async function DELETE(request: Request) {

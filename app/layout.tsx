@@ -26,13 +26,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          <Theme appearance="dark">
-        {children}
-        </Theme>
+      >
+        <Theme appearance="dark">{children}</Theme>
       </body>
     </html>
   );

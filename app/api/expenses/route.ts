@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { expenses } from "@/lib/db/schema/schema";
 import { eq } from "drizzle-orm";
-import { categories } from "@/lib/db/schema/schema";
 import { nanoid } from "@/lib/utils";
+import { categories } from "@/lib/db/schema/categories";
 
 export async function GET() {
   try {
