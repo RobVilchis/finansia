@@ -17,8 +17,11 @@ export default function ChatUI({
   handleSubmit,
 }: ChatUIProps) {
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-      <div className="h-[400px] overflow-y-auto p-4 space-y-4">
+    <div className="w-full max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden">
+      <h1 className="m-4 text-2xl font-bold text-gray-900 dark:text-white mb-8">
+        AI Assistant
+      </h1>
+      <div className="h-[370px]  md:h-[350px] overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -39,10 +42,7 @@ export default function ChatUI({
         ))}
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="border-t dark:border-gray-700 p-4"
-      >
+      <form onSubmit={handleSubmit} className=" p-4">
         <div className="flex gap-2">
           <TextArea
             value={input}

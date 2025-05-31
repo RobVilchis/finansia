@@ -1,8 +1,8 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { Tabs } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
+import { Box, Flex, Popover, Tabs, Checkbox } from "@radix-ui/themes";
+import { use, useEffect, useState } from "react";
 import { AddButton } from "./components/AddButton";
 import ChatUI from "./components/ChatUI";
 import TransactionCard from "./components/ExpenseCard";
@@ -29,6 +29,7 @@ export default function Home() {
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState<boolean>(false);
 
   useEffect(() => {
     fetchTransactions();
@@ -41,7 +42,7 @@ export default function Home() {
       const data = await response.json();
       setTransactions(data);
     } catch (error) {
-      console.error("Error fetching transactions:", error);
+      console.error("Error fetching trzansactions:", error);
     } finally {
       setIsLoading(false);
     }
@@ -124,27 +125,29 @@ export default function Home() {
     setTransactionDialogOpen(true);
   };
 
-  const groupTransactionsByMonth = (transactions: Transaction[]) => {
+  const groupTransactionsByDay = (transactions: Transaction[]) => {
     return transactions.reduce((groups, transaction) => {
       const date = new Date(transaction.date);
-      const monthYear = date.toLocaleString("default", {
+      const dayKey = date.toLocaleDateString("default", {
+        weekday: "long",
         month: "long",
+        day: "numeric",
         year: "numeric",
       });
 
-      if (!groups[monthYear]) {
-        groups[monthYear] = [];
+      if (!groups[dayKey]) {
+        groups[dayKey] = [];
       }
-      groups[monthYear].push(transaction);
+      groups[dayKey].push(transaction);
       return groups;
     }, {} as Record<string, Transaction[]>);
   };
 
   return (
-    <div className="min-h-screen">
-      <main className="relative container mx-auto px-4 py-8 flex flex-col-reverse md:flex-row gap-24 space-y-10 md:space-y-0 justify-center">
-        <div className="max-w-1/3 mr-6">
-          <Tabs.Root defaultValue="Expenses">
+    <div className="relative min-h-screen">
+      <main className="container mx-auto px-4 py-8 flex flex-col-reverse md:flex-row gap-24 space-y-10 md:space-y-0 justify-center">
+        <div className="mr-6">
+          <Tabs.Root defaultValue="Expenses" className="w-full">
             <Tabs.List className="mb-4">
               <Tabs.Trigger value="Expenses">Expenses</Tabs.Trigger>
               <Tabs.Trigger value="Goals">Goals</Tabs.Trigger>
@@ -186,18 +189,18 @@ export default function Home() {
                     No transactions found
                   </div>
                 ) : (
-                  Object.entries(groupTransactionsByMonth(transactions))
+                  Object.entries(groupTransactionsByDay(transactions))
                     .sort(
                       ([a], [b]) =>
                         new Date(b).getTime() - new Date(a).getTime()
                     )
-                    .map(([monthYear, monthTransactions]) => (
-                      <div key={monthYear} className="mb-6">
+                    .map(([dayKey, dayTransactions]) => (
+                      <div key={dayKey} className="mb-6">
                         <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                          {monthYear}
+                          {dayKey}
                         </h2>
                         <div className="space-y-3">
-                          {monthTransactions.map((transaction) => (
+                          {dayTransactions.map((transaction) => (
                             <div
                               key={transaction.id}
                               onClick={() =>
@@ -231,18 +234,39 @@ export default function Home() {
         </div>
 
         {/* <div className="w-md"></div> */}
-        <div className="md:w-md ">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
-            AI Assistant
-          </h2>
-          <ChatUI
-            messages={messages}
-            input={input}
-            handleInputChange={handleInputChange}
-            handleSubmit={handleSubmit}
-          />
-        </div>
       </main>
+
+      <button
+        onClick={() => setChatOpen(!chatOpen)}
+        className="fixed right-8 bottom-8 md:right-16 md:bottom-16 bg-blue-700 rounded-full p-3 flex items-center justify-center hover:bg-blue-800 transition-colors"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+          className="w-10 h-10"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z"
+          />
+        </svg>
+      </button>
+      <div
+        className={`bottom-30 right-8 ml-8 md:bottom-16 md:right-35 md:w-md transition-all transition-discrete ${
+          chatOpen ? "fixed" : "hidden"
+        }`}
+      >
+        <ChatUI
+          messages={messages}
+          input={input}
+          handleInputChange={handleInputChange}
+          handleSubmit={handleSubmit}
+        />
+      </div>
 
       <NewExpenseDialog
         open={dialogOpen}
