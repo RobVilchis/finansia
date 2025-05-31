@@ -1,8 +1,8 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { Box, Flex, Popover, Tabs, Checkbox } from "@radix-ui/themes";
-import { use, useEffect, useState } from "react";
+import { Tabs } from "@radix-ui/themes";
+import { useEffect, useState } from "react";
 import { AddButton } from "./components/AddButton";
 import ChatUI from "./components/ChatUI";
 import TransactionCard from "./components/ExpenseCard";
@@ -147,7 +147,7 @@ export default function Home() {
     <div className="relative min-h-screen">
       <main className="container mx-auto px-4 py-8 flex flex-col-reverse md:flex-row gap-24 space-y-10 md:space-y-0 justify-center">
         <div className="mr-6">
-          <Tabs.Root defaultValue="Expenses" className="w-full">
+          <Tabs.Root defaultValue="Expenses">
             <Tabs.List className="mb-4">
               <Tabs.Trigger value="Expenses">Expenses</Tabs.Trigger>
               <Tabs.Trigger value="Goals">Goals</Tabs.Trigger>
