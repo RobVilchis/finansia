@@ -1,16 +1,15 @@
 "use client";
 
-import Navbar from "./components/Navbar";
-import TransactionCard from "./components/ExpenseCard";
-import ChatUI from "./components/ChatUI";
-import NewExpenseDialog from "./components/NewExpenseDialog";
-import ExpenseDialog from "./components/ExpenseDialog";
 import { useChat } from "@ai-sdk/react";
-import { useState, useEffect } from "react";
-import { Select, Tabs } from "@radix-ui/themes";
-import { GoalCard } from "./components/GoalCard";
-import Image from "next/image";
+import { Tabs } from "@radix-ui/themes";
+import { useEffect, useState } from "react";
 import { AddButton } from "./components/AddButton";
+import ChatUI from "./components/ChatUI";
+import TransactionCard from "./components/ExpenseCard";
+import ExpenseDialog from "./components/ExpenseDialog";
+import { GoalCard } from "./components/GoalCard";
+import Navbar from "./components/Navbar";
+import NewExpenseDialog from "./components/NewExpenseDialog";
 
 interface Transaction {
   id: string;
