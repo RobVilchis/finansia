@@ -84,7 +84,6 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const body = await request.json();
   const transactionId = body.id;
-  console.log(body);
   // If category is being updated, get the new category ID
   let categoryId = body.category;
   if (body.category && typeof body.category === "string") {

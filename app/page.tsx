@@ -8,7 +8,6 @@ import ChatUI from "./components/ChatUI";
 import TransactionCard from "./components/ExpenseCard";
 import ExpenseDialog from "./components/ExpenseDialog";
 import { GoalCard } from "./components/GoalCard";
-import Navbar from "./components/Navbar";
 import NewExpenseDialog from "./components/NewExpenseDialog";
 
 interface Transaction {
@@ -125,11 +124,26 @@ export default function Home() {
     setTransactionDialogOpen(true);
   };
 
+  const groupTransactionsByMonth = (transactions: Transaction[]) => {
+    return transactions.reduce((groups, transaction) => {
+      const date = new Date(transaction.date);
+      const monthYear = date.toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      });
+
+      if (!groups[monthYear]) {
+        groups[monthYear] = [];
+      }
+      groups[monthYear].push(transaction);
+      return groups;
+    }, {} as Record<string, Transaction[]>);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navbar />
-      <main className="relative container mx-auto px-4 py-8 md:flex gap-24 space-y-10 md:space-y-0 justify-center">
-        <div className="w-1/3 mr-6">
+    <div className="min-h-screen">
+      <main className="relative container mx-auto px-4 py-8 flex flex-col-reverse md:flex-row gap-24 space-y-10 md:space-y-0 justify-center">
+        <div className="max-w-1/3 mr-6">
           <Tabs.Root defaultValue="Expenses">
             <Tabs.List className="mb-4">
               <Tabs.Trigger value="Expenses">Expenses</Tabs.Trigger>
@@ -172,30 +186,52 @@ export default function Home() {
                     No transactions found
                   </div>
                 ) : (
-                  transactions.map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      onClick={() => handleTransactionClick(transaction)}
-                    >
-                      <TransactionCard
-                        description={transaction.description}
-                        date={new Date(transaction.date).toLocaleDateString()}
-                        amount={Number(transaction.amount)}
-                        categoryName={transaction.categoryName}
-                        type={transaction.type}
-                        sourceAccountName={transaction.sourceAccountName}
-                        targetAccountName={transaction.targetAccountName}
-                      />
-                    </div>
-                  ))
+                  Object.entries(groupTransactionsByMonth(transactions))
+                    .sort(
+                      ([a], [b]) =>
+                        new Date(b).getTime() - new Date(a).getTime()
+                    )
+                    .map(([monthYear, monthTransactions]) => (
+                      <div key={monthYear} className="mb-6">
+                        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                          {monthYear}
+                        </h2>
+                        <div className="space-y-3">
+                          {monthTransactions.map((transaction) => (
+                            <div
+                              key={transaction.id}
+                              onClick={() =>
+                                handleTransactionClick(transaction)
+                              }
+                            >
+                              <TransactionCard
+                                description={transaction.description}
+                                date={new Date(
+                                  transaction.date
+                                ).toLocaleDateString()}
+                                amount={Number(transaction.amount)}
+                                categoryName={transaction.categoryName}
+                                type={transaction.type}
+                                sourceAccountName={
+                                  transaction.sourceAccountName
+                                }
+                                targetAccountName={
+                                  transaction.targetAccountName
+                                }
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))
                 )}
               </div>
             </Tabs.Content>
           </Tabs.Root>
         </div>
 
-        <div className="w-md"></div>
-        <div className="w-md block md:fixed right-64">
+        {/* <div className="w-md"></div> */}
+        <div className="md:w-md ">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
             AI Assistant
           </h2>

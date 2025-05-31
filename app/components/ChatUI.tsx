@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
-import { Message } from 'ai';
+import { TextArea } from "@radix-ui/themes";
+import { Message } from "ai";
 
 interface ChatUIProps {
   messages: Message[];
@@ -9,7 +10,12 @@ interface ChatUIProps {
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 }
 
-export default function ChatUI({ messages, input, handleInputChange, handleSubmit }: ChatUIProps) {
+export default function ChatUI({
+  messages,
+  input,
+  handleInputChange,
+  handleSubmit,
+}: ChatUIProps) {
   return (
     <div className="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
       <div className="h-[400px] overflow-y-auto p-4 space-y-4">
@@ -17,14 +23,14 @@ export default function ChatUI({ messages, input, handleInputChange, handleSubmi
           <div
             key={message.id}
             className={`flex ${
-              message.role === 'user' ? 'justify-end' : 'justify-start'
+              message.role === "user" ? "justify-end" : "justify-start"
             }`}
           >
             <div
               className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                message.role === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                message.role === "user"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
               }`}
             >
               {message.content}
@@ -32,10 +38,13 @@ export default function ChatUI({ messages, input, handleInputChange, handleSubmi
           </div>
         ))}
       </div>
-      
-      <form onSubmit={handleSubmit} className="border-t dark:border-gray-700 p-4">
+
+      <form
+        onSubmit={handleSubmit}
+        className="border-t dark:border-gray-700 p-4"
+      >
         <div className="flex gap-2">
-          <textarea
+          <TextArea
             value={input}
             onChange={handleInputChange}
             placeholder="Ask about your expenses..."
@@ -52,4 +61,4 @@ export default function ChatUI({ messages, input, handleInputChange, handleSubmi
       </form>
     </div>
   );
-} 
+}

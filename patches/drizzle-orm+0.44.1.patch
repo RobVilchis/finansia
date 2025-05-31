@@ -1,0 +1,26 @@
+diff --git a/node_modules/drizzle-orm/pg-core/columns/date.js b/node_modules/drizzle-orm/pg-core/columns/date.js
+index 37efeb9..c88682e 100644
+--- a/node_modules/drizzle-orm/pg-core/columns/date.js
++++ b/node_modules/drizzle-orm/pg-core/columns/date.js
+@@ -21,7 +21,7 @@ class PgDate extends PgColumn {
+     return new Date(value);
+   }
+   mapToDriverValue(value) {
+-    return value.toISOString();
++    return value;
+   }
+ }
+ class PgDateStringBuilder extends PgDateColumnBaseBuilder {
+diff --git a/node_modules/drizzle-orm/pg-core/columns/timestamp.js b/node_modules/drizzle-orm/pg-core/columns/timestamp.js
+index 5f793f0..c864284 100644
+--- a/node_modules/drizzle-orm/pg-core/columns/timestamp.js
++++ b/node_modules/drizzle-orm/pg-core/columns/timestamp.js
+@@ -31,7 +31,7 @@ class PgTimestamp extends PgColumn {
+     return new Date(this.withTimezone ? value : value + "+0000");
+   };
+   mapToDriverValue = (value) => {
+-    return value.toISOString();
++    return value;
+   };
+ }
+ class PgTimestampStringBuilder extends PgDateColumnBaseBuilder {
