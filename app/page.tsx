@@ -32,6 +32,10 @@ export default function Home() {
   const [chatOpen, setChatOpen] = useState<boolean>(false);
 
   useEffect(() => {
+    fetch("/api/create-user");
+  }, []);
+
+  useEffect(() => {
     fetchTransactions();
   }, []);
 

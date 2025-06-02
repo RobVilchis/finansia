@@ -8,6 +8,23 @@ export const maxDuration = 30;
 function getFirst50<T>(list: T[]): T[] {
   return list.length > 20 ? list.slice(0, 20) : list;
 }
+
+function errorHandler(error: unknown) {
+  if (error == null) {
+    return "unknown error";
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return JSON.stringify(error);
+}
+
 export async function POST(req: Request) {
   const { messages } = await req.json();
 
@@ -27,5 +44,7 @@ export async function POST(req: Request) {
     messages,
   });
 
-  return result.toDataStreamResponse();
+  return result.toDataStreamResponse({
+    getErrorMessage: errorHandler,
+  });
 }

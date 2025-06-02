@@ -1,16 +1,10 @@
+import { UserButton } from "@clerk/nextjs";
 
 export default function Navbar() {
   return (
     <nav className="w-full shadow-sm bg-gray-800 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {/* <Image
-            src="/next.svg"
-            alt="Logo"
-            width={100}
-            height={24}
-            className="dark:invert"
-          /> */}
           <span className="text-xl font-semibold text-white">Finance AI</span>
         </div>
         <div className="flex items-center gap-4">
@@ -20,8 +14,9 @@ export default function Navbar() {
           <button className="px-4 py-2 text-sm font-medium hover:text-gray-900 text-gray-200 dark:hover:text-white">
             Reports
           </button>
+          <UserButton></UserButton>
         </div>
       </div>
     </nav>
   );
-} 
+}
