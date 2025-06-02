@@ -5,12 +5,18 @@ import {
   insertTransactionSchema,
   transactions,
 } from "@/lib/db/schema/transactions";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { NextResponse } from "next/server";
+import { currentUser } from "@clerk/nextjs/server";
 
 export async function GET() {
   try {
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const sourceAccounts = alias(accounts, "sourceAccounts");
     const targetAccounts = alias(accounts, "targetAccounts");
 
@@ -37,6 +43,7 @@ export async function GET() {
         targetAccounts,
         eq(transactions.targetAccountId, targetAccounts.id)
       )
+      .where(eq(transactions.userId, user.id))
       .orderBy(desc(transactions.date));
 
     return NextResponse.json(allTransactions);
@@ -50,8 +57,18 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
-    const validatedData = insertTransactionSchema.parse(body);
+    body.amount = body.amount.toString();
+    body.date = new Date(body.date);
+    const validatedData = insertTransactionSchema.parse({
+      ...body,
+      userId: user.id,
+    });
 
     // Find the category ID based on the category name
     const category = await db
@@ -68,7 +85,9 @@ export async function POST(request: Request) {
       .insert(transactions)
       .values({
         ...validatedData,
+        amount: body.amount.toString(),
         category: category[0].id,
+        userId: user.id,
       })
       .returning();
 
@@ -82,53 +101,113 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const body = await request.json();
-  const transactionId = body.id;
-  // If category is being updated, get the new category ID
-  let categoryId = body.category;
-  if (body.category && typeof body.category === "string") {
-    const category = await db
+  try {
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const transactionId = body.id;
+
+    // First check if the transaction belongs to the user
+    const existingTransaction = await db
       .select()
-      .from(categories)
-      .where(eq(categories.name, body.category))
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.id, transactionId),
+          eq(transactions.userId, user.id)
+        )
+      )
       .limit(1);
 
-    if (!category.length) {
-      return NextResponse.json({ error: "Invalid category" }, { status: 400 });
+    if (!existingTransaction.length) {
+      return NextResponse.json(
+        { error: "Transaction not found or unauthorized" },
+        { status: 404 }
+      );
     }
-    categoryId = category[0].id;
-  }
 
-  console.log(categoryId);
+    // If category is being updated, get the new category ID
+    let categoryId = body.category;
+    if (body.category && typeof body.category === "string") {
+      const category = await db
+        .select()
+        .from(categories)
+        .where(eq(categories.name, body.category))
+        .limit(1);
 
-  const updatedTransaction = await db
-    .update(transactions)
-    .set({
-      ...body,
-      amount: body.amount.toString(),
-      category: categoryId,
-    })
-    .where(eq(transactions.id, transactionId))
-    .returning();
+      if (!category.length) {
+        return NextResponse.json(
+          { error: "Invalid category" },
+          { status: 400 }
+        );
+      }
+      categoryId = category[0].id;
+    }
 
-  console.log(updatedTransaction);
+    const updatedTransaction = await db
+      .update(transactions)
+      .set({
+        ...body,
+        amount: body.amount.toString(),
+        category: categoryId,
+      })
+      .where(
+        and(
+          eq(transactions.id, transactionId),
+          eq(transactions.userId, user.id)
+        )
+      )
+      .returning();
 
-  if (!updatedTransaction.length) {
+    if (!updatedTransaction.length) {
+      return NextResponse.json(
+        { error: "Transaction not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(updatedTransaction[0]);
+  } catch (error) {
     return NextResponse.json(
-      { error: "Transaction not found" },
-      { status: 404 }
+      { error: `Failed to update transaction: ${error}` },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json(updatedTransaction[0]);
 }
 
 export async function DELETE(request: Request) {
   try {
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
+
+    // First check if the transaction belongs to the user
+    const existingTransaction = await db
+      .select()
+      .from(transactions)
+      .where(
+        and(eq(transactions.id, body.id), eq(transactions.userId, user.id))
+      )
+      .limit(1);
+
+    if (!existingTransaction.length) {
+      return NextResponse.json(
+        { error: "Transaction not found or unauthorized" },
+        { status: 404 }
+      );
+    }
+
     const deleted = await db
       .delete(transactions)
-      .where(eq(transactions.id, body.id))
+      .where(
+        and(eq(transactions.id, body.id), eq(transactions.userId, user.id))
+      )
       .returning({ deletedId: transactions.id });
 
     if (!deleted.length) {

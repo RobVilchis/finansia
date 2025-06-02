@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   const lastTransactions = getFirst50(transactions);
 
   const systemContext = `
-  You are an expert financial advisor. You are given a list of transactions (income/expenses) and you need to answer any questions or advice the user may ask.
+  You are an expert financial advisor. You are given a list of transactions (income/expenses) and you need to answer any questions or advice the user may ask in an honest and concise way. Request any additional information you need from the user.
 
   Here are the last transactions made by the user:
   ${JSON.stringify(lastTransactions)}
