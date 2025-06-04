@@ -2,37 +2,40 @@
 
 import { Dialog, TextField, Button } from "@radix-ui/themes";
 import { useState } from "react";
+import { createGoal } from "@/lib/services/goals";
 
 interface NewGoalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddGoal: (goal: { name: string; target: number; current: number }) => void;
+  onGoalAdded: () => void;
 }
 
 export default function NewGoalDialog({
   open,
   onOpenChange,
-  onAddGoal,
+  onGoalAdded,
 }: NewGoalDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
-    target: "",
-    current: "0",
+    targetAmount: "",
+    targetDate: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onAddGoal({
-      ...formData,
-      target: parseFloat(formData.target),
-      current: parseFloat(formData.current),
-    });
-    setFormData({
-      name: "",
-      target: "",
-      current: "0",
-    });
-    onOpenChange(false);
+    try {
+      await createGoal(formData);
+      setFormData({
+        name: "",
+        targetAmount: "",
+        targetDate: "",
+      });
+      onGoalAdded();
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Failed to create goal:", error);
+      // You might want to show an error message to the user here
+    }
   };
 
   return (
@@ -64,9 +67,9 @@ export default function NewGoalDialog({
               <TextField.Root
                 type="number"
                 step="0.01"
-                value={formData.target}
+                value={formData.targetAmount}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData({ ...formData, target: e.target.value })
+                  setFormData({ ...formData, targetAmount: e.target.value })
                 }
                 required
               />
@@ -74,16 +77,14 @@ export default function NewGoalDialog({
 
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Current Amount
+                Target Date
               </label>
               <TextField.Root
-                type="number"
-                step="0.01"
-                value={formData.current}
+                type="date"
+                value={formData.targetDate}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData({ ...formData, current: e.target.value })
+                  setFormData({ ...formData, targetDate: e.target.value })
                 }
-                required
               />
             </div>
           </div>

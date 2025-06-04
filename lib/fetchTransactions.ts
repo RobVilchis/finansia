@@ -5,7 +5,7 @@ import { accounts } from "./db/schema/account";
 import { categories } from "./db/schema/categories";
 import { transactions } from "./db/schema/transactions";
 
-export async function fetchTransactions() {
+export async function fetchChatTransactions(userId: string) {
   const sourceAccounts = alias(accounts, "sourceAccounts");
   const targetAccounts = alias(accounts, "targetAccounts");
 
@@ -32,6 +32,7 @@ export async function fetchTransactions() {
       targetAccounts,
       eq(transactions.targetAccountId, targetAccounts.id)
     )
+    .where(eq(transactions.userId, userId))
     .orderBy(desc(transactions.date));
 
   return allTransactions;

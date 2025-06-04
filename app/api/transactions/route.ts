@@ -70,15 +70,22 @@ export async function POST(request: Request) {
       userId: user.id,
     });
 
-    // Find the category ID based on the category name
-    const category = await db
-      .select()
-      .from(categories)
-      .where(eq(categories.name, body.category))
-      .limit(1);
+    // Find the category ID based on the category name if it's not a transfer
+    let categoryId = null;
+    if (body.type !== "transfer" && body.category) {
+      const category = await db
+        .select()
+        .from(categories)
+        .where(eq(categories.name, body.category))
+        .limit(1);
 
-    if (!category.length) {
-      return NextResponse.json({ error: "Invalid category" }, { status: 400 });
+      if (!category.length) {
+        return NextResponse.json(
+          { error: "Invalid category" },
+          { status: 400 }
+        );
+      }
+      categoryId = category[0].id;
     }
 
     const newTransaction = await db
@@ -86,8 +93,20 @@ export async function POST(request: Request) {
       .values({
         ...validatedData,
         amount: body.amount.toString(),
-        category: category[0].id,
+        category: categoryId,
         userId: user.id,
+        sourceAccountId:
+          body.type === "transfer"
+            ? body.accountId
+            : body.type === "expense"
+            ? body.accountId
+            : null,
+        targetAccountId:
+          body.type === "transfer"
+            ? body.targetAccountId
+            : body.type === "income"
+            ? body.accountId
+            : null,
       })
       .returning();
 
@@ -131,7 +150,11 @@ export async function PATCH(request: Request) {
 
     // If category is being updated, get the new category ID
     let categoryId = body.category;
-    if (body.category && typeof body.category === "string") {
+    if (
+      body.type !== "transfer" &&
+      body.category &&
+      typeof body.category === "string"
+    ) {
       const category = await db
         .select()
         .from(categories)
@@ -146,6 +169,11 @@ export async function PATCH(request: Request) {
       }
       categoryId = category[0].id;
     }
+    if (body.type == "transfer") {
+      categoryId = null;
+    }
+
+    console.log(categoryId);
 
     const updatedTransaction = await db
       .update(transactions)
@@ -153,6 +181,18 @@ export async function PATCH(request: Request) {
         ...body,
         amount: body.amount.toString(),
         category: categoryId,
+        sourceAccountId:
+          body.type === "transfer"
+            ? body.accountId
+            : body.type === "expense"
+            ? body.accountId
+            : null,
+        targetAccountId:
+          body.type === "transfer"
+            ? body.targetAccountId
+            : body.type === "income"
+            ? body.accountId
+            : null,
       })
       .where(
         and(
@@ -171,6 +211,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json(updatedTransaction[0]);
   } catch (error) {
+    console.log(error);
     return NextResponse.json(
       { error: `Failed to update transaction: ${error}` },
       { status: 500 }

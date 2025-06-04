@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { accounts } from "@/lib/db/schema/account";
 import { users } from "@/lib/db/schema/user";
 import { currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
@@ -14,6 +15,11 @@ export async function GET() {
     await db.insert(users).values({
       id: user.id,
       email: user.emailAddresses[0].emailAddress || "",
+    });
+
+    await db.insert(accounts).values({
+      userId: user.id,
+      name: "Card",
     });
   }
 

@@ -13,6 +13,7 @@
     "@ai-sdk/openai": "^1.3.22",
     "@ai-sdk/react": "^1.2.12",
     "@clerk/nextjs": "^6.20.2",
+    "@clerk/themes": "^2.2.48",
     "@llamaindex/chat-ui": "^0.4.4",
     "@neondatabase/serverless": "^1.0.0",
     "@radix-ui/react-dialog": "^1.0.5",

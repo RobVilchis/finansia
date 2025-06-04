@@ -2,13 +2,16 @@
 
 import { useChat } from "@ai-sdk/react";
 import { Tabs } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AddButton } from "./components/AddButton";
 import ChatUI from "./components/ChatUI";
-import TransactionCard from "./components/ExpenseCard";
-import ExpenseDialog from "./components/ExpenseDialog";
-import { GoalCard } from "./components/GoalCard";
-import NewExpenseDialog from "./components/NewExpenseDialog";
+import TransactionCard from "./components/TransactionCard";
+import TransactionDialog from "./components/TransactionDialog";
+import NewExpenseDialog from "./components/NewTransactionDialog";
+import NewGoalDialog from "./components/NewGoalDialog";
+import GoalsList from "./components/GoalsList";
+import AccountsList from "./components/AccountsList";
+import NewAccountDialog from "./components/NewAccountDialog";
 
 interface Transaction {
   id: string;
@@ -19,16 +22,20 @@ interface Transaction {
   type: string;
   sourceAccountName: string;
   targetAccountName: string;
+  sourceAccountId: string;
+  targetAccountId?: string;
 }
 
 export default function Home() {
   const { messages, input, handleInputChange, handleSubmit } = useChat();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [goalDialogOpen, setGoalDialogOpen] = useState(false);
+  const [accountDialogOpen, setAccountDialogOpen] = useState(false);
+  const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
-  const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState<boolean>(false);
 
   useEffect(() => {
@@ -46,7 +53,7 @@ export default function Home() {
       const data = await response.json();
       setTransactions(data);
     } catch (error) {
-      console.error("Error fetching trzansactions:", error);
+      console.error("Error fetching transactions:", error);
     } finally {
       setIsLoading(false);
     }
@@ -58,6 +65,8 @@ export default function Home() {
     amount: number;
     category: string;
     type: string;
+    accountId: string;
+    targetAccountId?: string;
   }) => {
     try {
       const response = await fetch("/api/transactions", {
@@ -84,6 +93,8 @@ export default function Home() {
     amount: number;
     category: string;
     type: string;
+    accountId: string;
+    targetAccountId?: string;
   }) => {
     try {
       const response = await fetch(`/api/transactions`, {
@@ -124,10 +135,10 @@ export default function Home() {
     }
   };
 
-  const handleTransactionClick = (transaction: Transaction) => {
+  /* const handleTransactionClick = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setTransactionDialogOpen(true);
-  };
+  }; */
 
   const groupTransactionsByDay = (transactions: Transaction[]) => {
     return transactions.reduce((groups, transaction) => {
@@ -147,41 +158,56 @@ export default function Home() {
     }, {} as Record<string, Transaction[]>);
   };
 
+  const closeAcountDialog = useCallback(() => {
+    setAccountDialogOpen(false);
+  }, []);
+
+  const closeGoalDialog = useCallback(() => {
+    setGoalDialogOpen(false);
+  }, []);
+
   return (
     <div className="relative min-h-screen">
       <main className="container mx-auto px-4 py-8 flex flex-col-reverse md:flex-row gap-24 space-y-10 md:space-y-0 justify-center">
-        <div className="mr-6">
-          <Tabs.Root defaultValue="Expenses">
+        <div className="mr-6 flex-grow max-w-[500px]">
+          <Tabs.Root defaultValue="Transactions">
             <Tabs.List className="mb-4">
-              <Tabs.Trigger value="Expenses">Expenses</Tabs.Trigger>
+              <Tabs.Trigger value="Transactions">Transactions</Tabs.Trigger>
               <Tabs.Trigger value="Goals">Goals</Tabs.Trigger>
+              <Tabs.Trigger value="Accounts">Accounts</Tabs.Trigger>
             </Tabs.List>
             <Tabs.Content value="Goals">
               <div className="flex mb-8 gap-3 items-center justify-between">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   My Goals
                 </h1>
-                <AddButton onClick={() => {}}></AddButton>
+                <AddButton
+                  onClick={() => {
+                    setGoalDialogOpen(true);
+                  }}
+                />
               </div>
-              <div className="flex flex-col gap-3">
-                <GoalCard
-                  name={"New car"}
-                  target={150000}
-                  current={36000}
-                ></GoalCard>
-                <GoalCard
-                  name={"Retirement"}
-                  target={1500000}
-                  current={100000}
-                ></GoalCard>
-              </div>
+              <GoalsList onGoalAdded={closeGoalDialog} />
             </Tabs.Content>
-            <Tabs.Content value="Expenses">
+            <Tabs.Content value="Accounts">
+              <div className="flex mb-8 gap-3 items-center justify-between">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  My Accounts
+                </h1>
+                <AddButton
+                  onClick={() => {
+                    setAccountDialogOpen(true);
+                  }}
+                />
+              </div>
+              <AccountsList onAccountAdded={closeAcountDialog} />
+            </Tabs.Content>
+            <Tabs.Content value="Transactions">
               <div className="flex mb-8 gap-3 items-center justify-between">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   Recent Transactions
                 </h1>
-                <AddButton onClick={() => setDialogOpen(true)}></AddButton>
+                <AddButton onClick={() => setDialogOpen(true)} />
               </div>
               <div className="grid gap-4 mx-auto">
                 {isLoading ? (
@@ -193,23 +219,20 @@ export default function Home() {
                     No transactions found
                   </div>
                 ) : (
-                  Object.entries(groupTransactionsByDay(transactions))
-                    .sort(
-                      ([a], [b]) =>
-                        new Date(b).getTime() - new Date(a).getTime()
-                    )
-                    .map(([dayKey, dayTransactions]) => (
-                      <div key={dayKey} className="mb-6">
-                        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                          {dayKey}
+                  Object.entries(groupTransactionsByDay(transactions)).map(
+                    ([day, dayTransactions]) => (
+                      <div key={day}>
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                          {day}
                         </h2>
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           {dayTransactions.map((transaction) => (
                             <div
                               key={transaction.id}
-                              onClick={() =>
-                                handleTransactionClick(transaction)
-                              }
+                              onClick={() => {
+                                setSelectedTransaction(transaction);
+                                setTransactionDialogOpen(true);
+                              }}
                             >
                               <TransactionCard
                                 description={transaction.description}
@@ -230,14 +253,13 @@ export default function Home() {
                           ))}
                         </div>
                       </div>
-                    ))
+                    )
+                  )
                 )}
               </div>
             </Tabs.Content>
           </Tabs.Root>
         </div>
-
-        {/* <div className="w-md"></div> */}
       </main>
 
       <button
@@ -281,21 +303,38 @@ export default function Home() {
             date: expense.date,
             amount: expense.amount,
             category: expense.category,
-            type: "expense", // Default to expense type for now
+            type: expense.type,
+            accountId: expense.accountId,
+            targetAccountId: expense.targetAccountId,
           })
         }
       />
 
+      <NewGoalDialog
+        open={goalDialogOpen}
+        onOpenChange={setGoalDialogOpen}
+        onGoalAdded={() => {}}
+      />
+
+      <NewAccountDialog
+        open={accountDialogOpen}
+        onOpenChange={setAccountDialogOpen}
+        onAccountAdded={closeAcountDialog}
+      />
+
       {selectedTransaction && (
-        <ExpenseDialog
+        <TransactionDialog
           open={transactionDialogOpen}
           onOpenChange={setTransactionDialogOpen}
-          expense={{
+          transaction={{
             id: selectedTransaction.id,
             concept: selectedTransaction.description,
             date: selectedTransaction.date,
+            type: selectedTransaction.type,
             amount: Number(selectedTransaction.amount),
             category: selectedTransaction.categoryName,
+            accountId: selectedTransaction.sourceAccountId,
+            targetAccountId: selectedTransaction.targetAccountId,
           }}
           onUpdate={(expense) =>
             handleUpdateTransaction({
@@ -304,7 +343,9 @@ export default function Home() {
               date: expense.date,
               amount: expense.amount,
               category: expense.category,
-              type: selectedTransaction.type, // Preserve the original type
+              type: expense.type,
+              accountId: expense.accountId,
+              targetAccountId: expense.targetAccountId,
             })
           }
           onDelete={handleDeleteTransaction}
