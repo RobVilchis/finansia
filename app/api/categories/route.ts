@@ -5,8 +5,9 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const allCategories = await db
-      .select({ name: categories.name })
-      .from(categories);
+      .select({ name: categories.name, type: categories.type })
+      .from(categories)
+      .orderBy(categories.name);
     return NextResponse.json(allCategories);
   } catch (error) {
     return NextResponse.json(

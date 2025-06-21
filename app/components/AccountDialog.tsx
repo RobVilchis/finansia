@@ -1,23 +1,34 @@
 "use client";
 
-import { Dialog, TextField, Button } from "@radix-ui/themes";
-import { useState, useEffect } from "react";
-
-interface Account {
-  id: string;
-  name: string;
-  type: string;
-  createdAt: string;
-  balance: number;
-}
+import { Button, Dialog, TextField } from "@radix-ui/themes";
+import { useState } from "react";
+import { useForm, Controller, ControllerRenderProps } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useBreakpoint } from "../hooks/useBreakpoint";
 
 interface AccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  account: Account | null;
+  account: {
+    id: string;
+    name: string;
+    type: string;
+  };
   onDelete: (id: string) => void;
   onAccountUpdated: () => void;
 }
+
+const accountSchema = z.object({
+  name: z.string().min(1, "Account name is required"),
+  type: z.string().min(1, "Account type is required"),
+});
+
+type AccountFormData = z.infer<typeof accountSchema>;
+
+type FieldProps = {
+  field: ControllerRenderProps<AccountFormData, keyof AccountFormData>;
+};
 
 export default function AccountDialog({
   open,
@@ -27,37 +38,34 @@ export default function AccountDialog({
   onAccountUpdated,
 }: AccountDialogProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    type: "",
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<AccountFormData>({
+    resolver: zodResolver(accountSchema),
+    defaultValues: {
+      name: account.name,
+      type: account.type,
+    },
   });
 
-  useEffect(() => {
-    if (account) {
-      setFormData({
-        name: account.name,
-        type: account.type || "",
-      });
-    }
-  }, [account]);
+  const bp = useBreakpoint();
+  const size = bp === "lg" ? "2" : bp === "md" ? "2" : "3";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!account) return;
-
+  const onSubmit = async (data: AccountFormData) => {
     try {
-      const response = await fetch(`/api/accounts`, {
-        method: "PATCH",
+      const response = await fetch(`/api/accounts/${account.id}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          id: account.id,
-          ...formData,
-        }),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) throw new Error("Failed to update account");
+
       onAccountUpdated();
       onOpenChange(false);
     } catch (error) {
@@ -69,7 +77,7 @@ export default function AccountDialog({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="400px">
         <div className="flex justify-between items-center mb-2">
-          <Dialog.Title>Edit Account</Dialog.Title>
+          <Dialog.Title>Edit account</Dialog.Title>
           <Button
             variant="soft"
             color="red"
@@ -93,45 +101,56 @@ export default function AccountDialog({
               >
                 Cancel
               </Button>
-              <Button
-                color="red"
-                onClick={() => {
-                  if (account) {
-                    onDelete(account.id);
-                    onOpenChange(false);
-                  }
-                }}
-              >
+              <Button color="red" onClick={() => onDelete(account.id)}>
                 Delete Account
               </Button>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Account Name
+                Account name
               </label>
-              <TextField.Root
-                value={formData.name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                required
+              <Controller
+                name="name"
+                control={control}
+                render={({ field }: FieldProps) => (
+                  <TextField.Root
+                    size={size}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
+              {errors.name && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.name.message}
+                </p>
+              )}
             </div>
 
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Account Type
+                Account type
               </label>
-              <TextField.Root
-                value={formData.type}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData({ ...formData, type: e.target.value })
-                }
-                placeholder="e.g., Checking, Savings, Credit Card"
+              <Controller
+                name="type"
+                control={control}
+                render={({ field }: FieldProps) => (
+                  <TextField.Root
+                    size={size}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="e.g., Checking, Savings, Credit Card"
+                  />
+                )}
               />
+              {errors.type && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.type.message}
+                </p>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 mt-6">
@@ -141,7 +160,7 @@ export default function AccountDialog({
                 </Button>
               </Dialog.Close>
               <Button type="submit" color="blue">
-                Update Account
+                Update
               </Button>
             </div>
           </form>

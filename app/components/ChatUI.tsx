@@ -18,8 +18,8 @@ export default function ChatUI({
 }: ChatUIProps) {
   return (
     <div className="w-full max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden">
-      <h1 className="m-4 text-2xl font-bold text-gray-900 dark:text-white mb-8">
-        AI Assistant
+      <h1 className="m-4 text-2xl  text-gray-900 dark:text-white mb-8">
+        Ask a question
       </h1>
       <div className="h-[370px]  md:h-[350px] overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
@@ -53,7 +53,7 @@ export default function ChatUI({
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             Send
           </button>

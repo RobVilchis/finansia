@@ -4,10 +4,10 @@ export const AddButton = ({ onClick }: { onClick: () => void }) => {
   return (
     <button
       onClick={onClick}
-      className="py-1 px-2 rounded-md opacity-70 hover:opacity-80"
+      className="py-3 px-3 rounded-md opacity-70  bg-gray-700 hover:opacity-80"
     >
       <svg
-        className="w-6 h-6 text-gray-400 "
+        className="w-4 h-4 text-gray-200 "
         xmlns="http://www.w3.org/2000/svg"
         stroke="currentColor"
         fill="currentColor"

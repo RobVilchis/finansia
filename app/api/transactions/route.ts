@@ -64,7 +64,13 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     body.amount = body.amount.toString();
-    body.date = new Date(body.date);
+
+    // Parse the UTC string and create a Date object that preserves UTC
+    const utcDate = new Date(body.date);
+    body.date = new Date(
+      utcDate.getTime() + utcDate.getTimezoneOffset() * 60000
+    );
+
     const validatedData = insertTransactionSchema.parse({
       ...body,
       userId: user.id,
@@ -128,6 +134,11 @@ export async function PATCH(request: Request) {
 
     const body = await request.json();
     const transactionId = body.id;
+
+    const utcDate = new Date(body.date);
+    body.date = new Date(
+      utcDate.getTime() + utcDate.getTimezoneOffset() * 60000
+    );
 
     // First check if the transaction belongs to the user
     const existingTransaction = await db

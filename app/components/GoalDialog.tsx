@@ -1,16 +1,37 @@
 "use client";
 
-import { Dialog, TextField, Button } from "@radix-ui/themes";
-import { useState, useEffect } from "react";
-import { Goal, updateGoal } from "@/lib/services/goals";
+import { Button, Dialog, TextField } from "@radix-ui/themes";
+import { useState } from "react";
+import { useForm, Controller, ControllerRenderProps } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useBreakpoint } from "../hooks/useBreakpoint";
+import { updateGoal } from "@/lib/services/goals";
 
 interface GoalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDelete: (open: string) => void;
-  goal: Goal;
+  goal: {
+    id: string;
+    name: string;
+    targetAmount: string;
+    targetDate?: string;
+  };
+  onDelete: (id: string) => void;
   onGoalUpdated: () => void;
 }
+
+const goalSchema = z.object({
+  name: z.string().min(1, "Goal name is required"),
+  targetAmount: z.string().min(1, "Target amount is required"),
+  targetDate: z.string().optional(),
+});
+
+type GoalFormData = z.infer<typeof goalSchema>;
+
+type FieldProps = {
+  field: ControllerRenderProps<GoalFormData, keyof GoalFormData>;
+};
 
 export default function GoalDialog({
   open,
@@ -21,36 +42,34 @@ export default function GoalDialog({
 }: GoalDialogProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    targetAmount: "",
-    targetDate: "",
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<GoalFormData>({
+    resolver: zodResolver(goalSchema),
+    defaultValues: {
+      name: goal.name,
+      targetAmount: goal.targetAmount.toString(),
+      targetDate: goal.targetDate || "",
+    },
   });
 
-  useEffect(() => {
-    if (goal) {
-      setFormData({
-        name: goal.name,
-        targetAmount: goal.targetAmount,
-        targetDate: goal.targetDate || "",
-      });
-    }
-  }, [goal]);
+  const bp = useBreakpoint();
+  const size = bp === "lg" ? "2" : bp === "md" ? "2" : "3";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!goal) return;
-
+  const onSubmit = async (data: GoalFormData) => {
     try {
       await updateGoal({
         id: goal.id,
-        ...formData,
+        name: data.name,
+        targetAmount: data.targetAmount,
+        targetDate: data.targetDate || undefined,
       });
       onGoalUpdated();
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to update goal:", error);
-      // You might want to show an error message to the user here
     }
   };
 
@@ -58,7 +77,7 @@ export default function GoalDialog({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="400px">
         <div className="flex justify-between items-center mb-2">
-          <Dialog.Title>Edit Goal</Dialog.Title>
+          <Dialog.Title>Edit goal</Dialog.Title>
           {!showDeleteConfirm && (
             <Button
               variant="ghost"
@@ -87,8 +106,8 @@ export default function GoalDialog({
         {showDeleteConfirm ? (
           <div className="space-y-4">
             <p className="text-gray-700 dark:text-gray-300">
-              Are you sure you want to delete this expense? This action cannot
-              be undone.
+              Are you sure you want to delete this goal? This action cannot be
+              undone.
             </p>
             <div className="flex justify-end gap-3">
               <Button
@@ -104,46 +123,69 @@ export default function GoalDialog({
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="flex flex-col gap-5">
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Goal Name
+                  Goal name
                 </label>
-                <TextField.Root
-                  value={formData.name}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  required
+                <Controller
+                  name="name"
+                  control={control}
+                  render={({ field }: FieldProps) => (
+                    <TextField.Root
+                      size={size}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
+                {errors.name && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.name.message}
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Target Amount
+                  Target amount
                 </label>
-                <TextField.Root
-                  type="number"
-                  step="0.01"
-                  value={formData.targetAmount}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setFormData({ ...formData, targetAmount: e.target.value })
-                  }
-                  required
+                <Controller
+                  name="targetAmount"
+                  control={control}
+                  render={({ field }: FieldProps) => (
+                    <TextField.Root
+                      size={size}
+                      type="number"
+                      step="0.01"
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
+                {errors.targetAmount && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.targetAmount.message}
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Target Date
+                  Target date
                 </label>
-                <TextField.Root
-                  type="date"
-                  value={formData.targetDate}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setFormData({ ...formData, targetDate: e.target.value })
-                  }
+                <Controller
+                  name="targetDate"
+                  control={control}
+                  render={({ field }: FieldProps) => (
+                    <TextField.Root
+                      size={size}
+                      type="date"
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
             </div>
@@ -155,7 +197,7 @@ export default function GoalDialog({
                 </Button>
               </Dialog.Close>
               <Button type="submit" color="blue">
-                Update Goal
+                Update
               </Button>
             </div>
           </form>

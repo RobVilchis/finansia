@@ -1,7 +1,10 @@
 "use client";
 
-import { Dialog, TextField, Button } from "@radix-ui/themes";
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button, Dialog, TextField } from "@radix-ui/themes";
+import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
+import * as z from "zod";
+import { useBreakpoint } from "../hooks/useBreakpoint";
 
 interface NewAccountDialogProps {
   open: boolean;
@@ -9,33 +12,51 @@ interface NewAccountDialogProps {
   onAccountAdded: () => void;
 }
 
+const accountSchema = z.object({
+  name: z.string().min(1, "Account name is required"),
+  type: z.string().min(1, "Account type is required"),
+});
+
+type AccountFormData = z.infer<typeof accountSchema>;
+
+type FieldProps = {
+  field: ControllerRenderProps<AccountFormData, keyof AccountFormData>;
+};
+
 export default function NewAccountDialog({
   open,
   onOpenChange,
   onAccountAdded,
 }: NewAccountDialogProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    type: "",
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<AccountFormData>({
+    resolver: zodResolver(accountSchema),
+    defaultValues: {
+      name: "",
+      type: "",
+    },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const bp = useBreakpoint();
+  const size = bp === "lg" ? "2" : bp === "md" ? "2" : "3";
+
+  const onSubmit = async (data: AccountFormData) => {
     try {
       const response = await fetch("/api/accounts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) throw new Error("Failed to create account");
 
-      setFormData({
-        name: "",
-        type: "",
-      });
+      reset();
       onAccountAdded();
       onOpenChange(false);
     } catch (error) {
@@ -47,34 +68,49 @@ export default function NewAccountDialog({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="400px">
         <div className="flex justify-between items-center mb-2">
-          <Dialog.Title>Add New Account</Dialog.Title>
+          <Dialog.Title>Add new account</Dialog.Title>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-              Account Name
+              Account name
             </label>
-            <TextField.Root
-              value={formData.name}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              required
+            <Controller
+              name="name"
+              control={control}
+              render={({ field }: FieldProps) => (
+                <TextField.Root
+                  size={size}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+            )}
           </div>
 
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-              Account Type
+              Account type
             </label>
-            <TextField.Root
-              value={formData.type}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFormData({ ...formData, type: e.target.value })
-              }
-              placeholder="e.g., Checking, Savings, Credit Card"
+            <Controller
+              name="type"
+              control={control}
+              render={({ field }: FieldProps) => (
+                <TextField.Root
+                  size={size}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="e.g., Checking, Savings, Credit Card"
+                />
+              )}
             />
+            {errors.type && (
+              <p className="text-red-500 text-xs mt-1">{errors.type.message}</p>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 mt-6">
@@ -84,7 +120,7 @@ export default function NewAccountDialog({
               </Button>
             </Dialog.Close>
             <Button type="submit" color="blue">
-              Add Account
+              Add account
             </Button>
           </div>
         </form>
