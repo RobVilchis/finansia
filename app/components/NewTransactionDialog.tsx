@@ -111,8 +111,6 @@ export default function NewTransactionDialog({
     },
   });
 
-  console.log(watch("time"));
-
   const transactionType = watch("type");
 
   const bp = useBreakpoint();

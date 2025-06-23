@@ -114,6 +114,7 @@ export default function TransactionDialog({
     watch,
     formState: { errors },
     register,
+    reset,
   } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -127,6 +128,19 @@ export default function TransactionDialog({
       targetAccountId: transaction.targetAccountId || "",
     },
   });
+
+  useEffect(() => {
+    reset({
+      concept: transaction.concept,
+      date: dateString,
+      time: timeString,
+      type: transaction.type,
+      amount: transaction.amount.toString(),
+      category: transaction.category,
+      accountId: transaction.accountId || "",
+      targetAccountId: transaction.targetAccountId || "",
+    });
+  }, [transaction]);
 
   const transactionType = watch("type");
 

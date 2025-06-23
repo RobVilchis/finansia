@@ -33,8 +33,6 @@ const darkTheme = createTheme({
   },
 });
 
-export const dynamic = "force-dynamic";
-
 export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
