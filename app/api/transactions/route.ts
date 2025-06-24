@@ -184,8 +184,6 @@ export async function PATCH(request: Request) {
       categoryId = null;
     }
 
-    console.log(categoryId);
-
     const updatedTransaction = await db
       .update(transactions)
       .set({
@@ -202,7 +200,7 @@ export async function PATCH(request: Request) {
           body.type === "transfer"
             ? body.targetAccountId
             : body.type === "income"
-            ? body.accountId
+            ? body.targetAccountId
             : null,
       })
       .where(

@@ -112,9 +112,9 @@ export default function Home() {
     description: string;
     date: string;
     amount: number;
-    category: string;
+    category: string | undefined;
     type: string;
-    accountId: string;
+    accountId?: string;
     targetAccountId?: string;
   }) => {
     try {

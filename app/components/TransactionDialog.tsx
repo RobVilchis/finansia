@@ -34,7 +34,7 @@ interface TransactionDialogProps {
     date: string;
     type: "income" | "expense" | "transfer" | undefined;
     amount: number;
-    category: string;
+    category?: string;
     accountId?: string;
     targetAccountId?: string;
   };
@@ -44,8 +44,8 @@ interface TransactionDialogProps {
     date: string;
     type: string;
     amount: number;
-    category: string;
-    accountId: string;
+    category?: string;
+    accountId?: string;
     targetAccountId?: string;
   }) => void;
   onDelete: (id: string) => void;
@@ -59,19 +59,43 @@ const transactionSchema = z
     amount: z.string().min(1, "Amount is required"),
     category: z.string().optional(),
     type: z.enum(["expense", "income", "transfer"]),
-    accountId: z.string().min(1, "Account is required"),
+    accountId: z.string().optional(),
     targetAccountId: z.string().optional(),
   })
   .refine(
     (data) => {
-      if (data.type === "transfer") {
+      if (data.type === "expense") {
+        return !!data.accountId;
+      }
+      return true;
+    },
+    {
+      message: "Source account is required for expenses",
+      path: ["accountId"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.type === "income") {
         return !!data.targetAccountId;
       }
       return true;
     },
     {
-      message: "Target account is required for transfers",
+      message: "Target account is required for income",
       path: ["targetAccountId"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.type === "transfer") {
+        return !!data.accountId && !!data.targetAccountId;
+      }
+      return true;
+    },
+    {
+      message: "Both source and target accounts are required for transfers",
+      path: ["accountId"],
     }
   )
   .refine(
@@ -123,12 +147,11 @@ export default function TransactionDialog({
       time: timeString,
       type: transaction.type,
       amount: transaction.amount.toString(),
-      category: transaction.category,
+      category: transaction.category || "",
       accountId: transaction.accountId || "",
       targetAccountId: transaction.targetAccountId || "",
     },
   });
-
   useEffect(() => {
     reset({
       concept: transaction.concept,
@@ -136,7 +159,7 @@ export default function TransactionDialog({
       time: timeString,
       type: transaction.type,
       amount: transaction.amount.toString(),
-      category: transaction.category,
+      category: transaction.category || "",
       accountId: transaction.accountId || "",
       targetAccountId: transaction.targetAccountId || "",
     });
@@ -181,7 +204,7 @@ export default function TransactionDialog({
       date: `${data.date}T${data.time}`,
       type: data.type,
       amount: Number(data.amount),
-      category: data.category || "",
+      category: data.type === "transfer" ? undefined : data.category || "",
       accountId: data.accountId,
       targetAccountId: data.targetAccountId,
     });
@@ -230,7 +253,7 @@ export default function TransactionDialog({
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Transaction Type
+                Transaction type
               </label>
               <Controller
                 name="type"
@@ -342,42 +365,40 @@ export default function TransactionDialog({
               </div>
             </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                {transactionType === "expense"
-                  ? "Source account"
-                  : transactionType === "income"
-                  ? "Target account"
-                  : "Source account"}
-              </label>
-              <Controller
-                name="accountId"
-                control={control}
-                render={({ field }: FieldProps<"accountId">) => (
-                  <Select.Root
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    size={size}
-                  >
-                    <Select.Trigger placeholder="Pick one" />
-                    <Select.Content>
-                      {accounts.map((account, i) => (
-                        <Select.Item key={i} value={account.id}>
-                          {account.name} (${account.balance})
-                        </Select.Item>
-                      ))}
-                    </Select.Content>
-                  </Select.Root>
+            {transactionType === "expense" && (
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                  Source account
+                </label>
+                <Controller
+                  name="accountId"
+                  control={control}
+                  render={({ field }: FieldProps<"accountId">) => (
+                    <Select.Root
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      size={size}
+                    >
+                      <Select.Trigger placeholder="Pick one" />
+                      <Select.Content>
+                        {accounts.map((account, i) => (
+                          <Select.Item key={i} value={account.id}>
+                            {account.name} (${account.balance})
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Root>
+                  )}
+                />
+                {errors.accountId && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.accountId.message}
+                  </p>
                 )}
-              />
-              {errors.accountId && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.accountId.message}
-                </p>
-              )}
-            </div>
+              </div>
+            )}
 
-            {transactionType === "transfer" && (
+            {transactionType === "income" && (
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                   Target account
@@ -393,15 +414,11 @@ export default function TransactionDialog({
                     >
                       <Select.Trigger placeholder="Pick one" />
                       <Select.Content>
-                        {accounts
-                          .filter(
-                            (account) => account.id !== watch("accountId")
-                          )
-                          .map((account, i) => (
-                            <Select.Item key={i} value={account.id}>
-                              {account.name} (${account.balance})
-                            </Select.Item>
-                          ))}
+                        {accounts.map((account, i) => (
+                          <Select.Item key={i} value={account.id}>
+                            {account.name} (${account.balance})
+                          </Select.Item>
+                        ))}
                       </Select.Content>
                     </Select.Root>
                   )}
@@ -412,6 +429,76 @@ export default function TransactionDialog({
                   </p>
                 )}
               </div>
+            )}
+
+            {transactionType === "transfer" && (
+              <>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                    Source account
+                  </label>
+                  <Controller
+                    name="accountId"
+                    control={control}
+                    render={({ field }: FieldProps<"accountId">) => (
+                      <Select.Root
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        size={size}
+                      >
+                        <Select.Trigger placeholder="Pick one" />
+                        <Select.Content>
+                          {accounts.map((account, i) => (
+                            <Select.Item key={i} value={account.id}>
+                              {account.name} (${account.balance})
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select.Root>
+                    )}
+                  />
+                  {errors.accountId && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.accountId.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                    Target account
+                  </label>
+                  <Controller
+                    name="targetAccountId"
+                    control={control}
+                    render={({ field }: FieldProps<"targetAccountId">) => (
+                      <Select.Root
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        size={size}
+                      >
+                        <Select.Trigger placeholder="Pick one" />
+                        <Select.Content>
+                          {accounts
+                            .filter(
+                              (account) => account.id !== watch("accountId")
+                            )
+                            .map((account, i) => (
+                              <Select.Item key={i} value={account.id}>
+                                {account.name} (${account.balance})
+                              </Select.Item>
+                            ))}
+                        </Select.Content>
+                      </Select.Root>
+                    )}
+                  />
+                  {errors.targetAccountId && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.targetAccountId.message}
+                    </p>
+                  )}
+                </div>
+              </>
             )}
 
             {transactionType !== "transfer" && (
