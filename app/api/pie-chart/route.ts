@@ -30,7 +30,8 @@ export async function GET() {
           gte(transactions.date, monthStart)
         )
       )
-      .groupBy(categories.name);
+      .groupBy(categories.name)
+      .orderBy(sql`SUM(${transactions.amount})`);
 
     return NextResponse.json(categorySum);
   } catch {
