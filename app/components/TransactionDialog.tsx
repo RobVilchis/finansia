@@ -163,7 +163,7 @@ export default function TransactionDialog({
       accountId: transaction.accountId || "",
       targetAccountId: transaction.targetAccountId || "",
     });
-  }, [transaction]);
+  }, [transaction, dateString, timeString, reset]);
 
   const transactionType = watch("type");
 

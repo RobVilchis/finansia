@@ -1,0 +1,42 @@
+import { db } from "@/lib/db";
+import { categories } from "@/lib/db/schema";
+import { transactions } from "@/lib/db/schema/transactions";
+import { currentUser } from "@clerk/nextjs/server";
+import { and, eq, gte, sql } from "drizzle-orm";
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  try {
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0);
+
+    const categorySum = await db
+      .select({
+        categoryName: categories.name,
+        totalAmount: sql`SUM(${transactions.amount})`.as("total_amount"),
+      })
+      .from(transactions)
+      .leftJoin(categories, eq(transactions.category, categories.id))
+      .where(
+        and(
+          eq(transactions.userId, user.id),
+          eq(transactions.type, "expense"),
+          gte(transactions.date, monthStart)
+        )
+      )
+      .groupBy(categories.name);
+
+    return NextResponse.json(categorySum);
+  } catch {
+    return NextResponse.json(
+      { error: `Failed to calculate sums` },
+      { status: 500 }
+    );
+  }
+}

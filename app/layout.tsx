@@ -5,7 +5,8 @@ import "@radix-ui/themes/styles.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
-import Navbar from "./components/Navbar";
+import MobileNavbar from "./components/MobileNavbar";
+import { Sidebar } from "./components/Sidebar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,11 +35,18 @@ export default function RootLayout({
     <ClerkProvider appearance={{ baseTheme: dark }}>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased relative`}
         >
           <Theme appearance="dark">
-            <Navbar />
-            <div className="md:mx-48">{children}</div>
+            <div className="relative md:hidden z-50">
+              <MobileNavbar />
+            </div>
+            <section className="flex">
+              <div className="hidden md:block">
+                <Sidebar />
+              </div>
+              <div className="mt-14 md:mt-0 md:ml-96 w-full">{children}</div>
+            </section>
           </Theme>
         </body>
       </html>
