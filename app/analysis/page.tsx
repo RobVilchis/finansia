@@ -18,25 +18,70 @@ export default function Analysis() {
   const [chatOpen, setChatOpen] = useState<boolean>(false);
   const [chartRefreshTrigger, setChartRefreshTrigger] = useState(0);
 
+  const monthStart = new Date();
+  monthStart.setDate(1);
+
+  const [startDate, setStartDate] = useState<Date>(monthStart);
+  const [endDate, setEndDate] = useState<Date>(new Date());
+
   useEffect(() => {
     fetch("/api/create-user");
     setChartRefreshTrigger(0);
   }, []);
 
+  useEffect(() => {
+    setChartRefreshTrigger((prev) => prev + 1);
+  }, [startDate, endDate]);
+
+  console.log(new Date().toString());
   return (
     <ThemeProvider theme={darkTheme}>
       <div className="flex container min-h-screen">
-        <main className="flex flex-col md:pt-10 gap-8  w-full">
+        <main className="p-3 md:px-0 md:pt-10  w-full">
           {/* <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4"></h1>
             <p className="text-gray-600 dark:text-gray-400">
               Analyze your spending patterns and financial insights
             </p>
           </div> */}
-
-          <div className="flex ">
-            <div className="w-full max-w-[500px]">
-              <ExpensesPieChart refreshTrigger={chartRefreshTrigger} />
+          <div className="flex flex-col gap 2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Expenses by category
+            </h3>
+            <div className="flex gap-3 mb-5">
+              <div className="space-y-1">
+                <p className="opacity-70 text-sm">Start date</p>
+                <input
+                  className="h-10 px-2 w-40 rounded-md bg-dark-50 border 
+                border-neutral-600 focus:outline-2 focus:outline-blue-600"
+                  type="date"
+                  id="startDate"
+                  value={startDate.toISOString().split("T")[0]}
+                  onChange={(e) => {
+                    setStartDate(new Date(e.target.value));
+                  }}
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="opacity-70 text-sm">End date</p>
+                <input
+                  className="h-10 px-2 w-40 rounded-md bg-dark-50 border 
+                  border-neutral-600 focus:outline-2 focus:outline-blue-600"
+                  type="date"
+                  id="endDate"
+                  value={endDate.toISOString().split("T")[0]}
+                  onChange={(e) => {
+                    setEndDate(new Date(e.target.value));
+                  }}
+                />
+              </div>
+            </div>
+            <div className="w-full max-w-[400px]">
+              <ExpensesPieChart
+                refreshTrigger={chartRefreshTrigger}
+                startDate={startDate}
+                endDate={endDate}
+              />
             </div>
           </div>
         </main>

@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import {
-  PieChart,
-  Pie,
   Cell,
-  ResponsiveContainer,
   Legend,
+  LegendPayload,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
   Tooltip,
 } from "recharts";
 
@@ -17,6 +18,12 @@ interface ExpenseData {
 
 interface ExpensesPieChartProps {
   refreshTrigger?: number;
+  startDate: Date;
+  endDate: Date;
+}
+
+interface Props {
+  payload?: readonly LegendPayload[];
 }
 
 const COLORS = [
@@ -34,13 +41,19 @@ const COLORS = [
 
 export default function ExpensesPieChart({
   refreshTrigger = 0,
+  startDate,
+  endDate,
 }: ExpensesPieChartProps) {
   const [data, setData] = useState<ExpenseData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = async () => {
     try {
-      const response = await fetch("/api/pie-chart");
+      const params = new URLSearchParams({
+        startDate: startDate.toISOString().split("T")[0],
+        endDate: endDate.toISOString().split("T")[0],
+      });
+      const response = await fetch(`/api/pie-chart?${params.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch data");
       const result = await response.json();
       setData(result);
@@ -86,19 +99,56 @@ export default function ExpensesPieChart({
 
   const totalExpenses = chartData.reduce((sum, item) => sum + item.value, 0);
 
+  // Custom legend renderer to preserve original order
+  const renderCustomLegend = (props: Props) => {
+    const { payload } = props;
+
+    if (!payload || payload.length === 0) {
+      return null;
+    }
+
+    return (
+      <ul
+        className="recharts-legend-item-list"
+        style={{ listStyle: "none", padding: 0, margin: 0 }}
+      >
+        {payload.toReversed().map((category, index) => (
+          <li
+            key={`legend-item-${index}`}
+            className="recharts-legend-item"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: "4px",
+              fontSize: "12px",
+              color: "#ffffff",
+            }}
+          >
+            <svg width="12" height="12" style={{ marginRight: "8px" }}>
+              <rect
+                width="12"
+                height="12"
+                fill={category.color}
+                stroke="none"
+              />
+            </svg>
+            <span>{category.value}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
   return (
-    <div className="bg-white dark:bg-transparent rounded-lg p-4 ">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-        Expenses by Category (This Month)
-      </h3>
-      <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+    <div>
+      <div className="text-sm text-gray-600 dark:text-gray-400 ">
         Total: ${totalExpenses.toFixed(2)}
       </div>
       <ResponsiveContainer width="100%" height={200}>
         <PieChart>
           <Pie
             data={chartData}
-            cx="50%"
+            cx="45%"
             cy="50%"
             labelLine={false}
             /* label={({ percent }) =>
@@ -107,6 +157,7 @@ export default function ExpensesPieChart({
             outerRadius={70}
             fill="#8884d8"
             dataKey="value"
+            strokeWidth={0.5}
           >
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
@@ -121,7 +172,13 @@ export default function ExpensesPieChart({
               borderRadius: "4px",
             }}
           />
-          <Legend layout="vertical" verticalAlign="middle" align="right" />
+          <Legend
+            layout="vertical"
+            verticalAlign="middle"
+            align="right"
+            wrapperStyle={{ paddingRight: "40px" }}
+            content={renderCustomLegend}
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>
