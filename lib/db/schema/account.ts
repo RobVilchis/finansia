@@ -8,7 +8,7 @@ export const accounts = pgTable("accounts", {
     .primaryKey()
     .$defaultFn(() => nanoid()),
   userId: varchar("user_id", { length: 191 }).references(() => users.id),
-  name: text("name").notNull().unique(),
+  name: text("name").notNull(),
   type: text("type"),
   createdAt: timestamp("created_at")
     .notNull()

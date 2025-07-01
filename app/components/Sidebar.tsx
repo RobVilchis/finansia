@@ -1,5 +1,6 @@
 "use client";
 
+import { UserButton } from "@clerk/nextjs";
 import { BarChart3, Home, Settings } from "lucide-react";
 
 import Link from "next/link";
@@ -83,8 +84,9 @@ export const Sidebar = () => {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-700">
-        {footerLinks.map(({ href, label, icon: Icon, className }) => (
+      <div className="flex justify-end p-4 border-t border-gray-700">
+        <UserButton></UserButton>
+        {/* {footerLinks.map(({ href, label, icon: Icon, className }) => (
           <Link
             key={href}
             href={href}
@@ -93,7 +95,7 @@ export const Sidebar = () => {
             <Icon className="w-5 h-5 group-hover:scale-110 transition-transform" />
             <span className="font-medium">{label}</span>
           </Link>
-        ))}
+        ))} */}
       </div>
     </aside>
   );
