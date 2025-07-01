@@ -33,7 +33,6 @@ export default function Analysis() {
     setChartRefreshTrigger((prev) => prev + 1);
   }, [startDate, endDate]);
 
-  console.log(new Date().toString());
   return (
     <ThemeProvider theme={darkTheme}>
       <div className="flex container min-h-screen">

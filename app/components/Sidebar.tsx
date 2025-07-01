@@ -1,7 +1,7 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { BarChart3, Home, Settings } from "lucide-react";
+import { BarChart3, Home } from "lucide-react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -44,14 +44,14 @@ export const Sidebar = () => {
     }, */
   ];
 
-  const footerLinks = [
+  /*   const footerLinks = [
     {
       href: "/settings",
       label: "Settings",
       icon: Settings,
       className: "text-gray-400",
     },
-  ];
+  ]; */
 
   return (
     <aside className="fixed top-0 left-0 flex flex-col bg-gradient-to-b from-gray-900 to-gray-800 h-screen w-80 shadow-xl">
