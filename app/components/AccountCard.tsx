@@ -23,11 +23,11 @@ export default function AccountCard({ account, onEdit }: AccountCardProps) {
     <div
       onClick={() => onEdit(account)}
       className="p-6 cursor-pointer border rounded-lg shadow-sm hover:shadow-md transition-shadow 
-      bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 
+      bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 
       w-40 h-36 flex flex-col justify-center items-start "
     >
       <div className="space-y-2">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+        <h3 className="text-lg font-medium text-slate-700 dark:text-slate-100">
           {account.name}
         </h3>
         <span className={`text-xl font-semibold ${balanceColor}`}>

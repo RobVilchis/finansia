@@ -1,9 +1,10 @@
 "use client";
 
-import { BarChart3, Home, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { navLinks } from "./Sidebar";
 
 export default function Navbar() {
   const [selectedPage, setSelectedPage] = useState<string>();
@@ -16,38 +17,11 @@ export default function Navbar() {
     setSelectedPage(page);
   }, [page]);
 
-  const navLinks = [
-    {
-      href: "/home",
-      label: "Home",
-      icon: Home,
-      className: "text-gray-300",
-    },
-    {
-      href: "/analysis",
-      label: "Analysis",
-      icon: BarChart3,
-      className: "text-gray-300",
-    },
-    /*     {
-          href: "/transactions",
-          label: "Transactions",
-          icon: CreditCard,
-          className: "text-gray-300",
-        },
-        {
-          href: "/profile",
-          label: "Profile",
-          icon: User,
-          className: "text-gray-300",
-        }, */
-  ];
-
   return (
     <nav className="fixed   w-full shadow-sm bg-gray-800 ">
       <div className=" flex  items-center justify-between px-6 py-4 h-14">
         <div className="flex items-center gap-2">
-          <span className="text-xl font-semibold text-white">Finance AI</span>
+          <span className="text-2xl font-semibold text-white">finansia</span>
         </div>
         <div className="flex items-center gap-4">
           {/* <button className="px-4 py-2 text-sm font-medium hover:text-gray-900 text-gray-200 dark:hover:text-white">
@@ -68,8 +42,8 @@ export default function Navbar() {
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex h-14 items-center justify-between  px-6 py-4 border-b border-gray-700 animate-in fade-in duration-300 delay-100">
-              <span className="text-xl font-semibold text-white">
-                Finance AI
+              <span className="text-2xl font-semibold text-white">
+                finansia
               </span>
               <button
                 onClick={() => setIsMenuOpen(false)}

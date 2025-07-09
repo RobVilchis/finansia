@@ -1,91 +1,14 @@
-import { db } from "@/lib/db";
-import { accounts } from "@/lib/db/schema/account";
-import { financialGoals } from "@/lib/db/schema/financial_goals";
-import { transactions } from "@/lib/db/schema/transactions";
-import { fetchChatTransactions } from "@/lib/fetchTransactions";
+import {
+  fetchAllFinancialData,
+  getFirst50,
+  errorHandler,
+} from "@/lib/financial-data";
 import { openai } from "@ai-sdk/openai";
 import { currentUser } from "@clerk/nextjs/server";
 import { streamText } from "ai";
-import { eq, sql } from "drizzle-orm";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
-
-function getFirst50<T>(list: T[]): T[] {
-  return list.length > 20 ? list.slice(0, 20) : list;
-}
-
-function errorHandler(error: unknown) {
-  if (error == null) {
-    return "unknown error";
-  }
-
-  if (typeof error === "string") {
-    return error;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return JSON.stringify(error);
-}
-
-async function fetchUserGoals(userId: string) {
-  const allGoals = await db
-    .select({
-      id: financialGoals.id,
-      name: financialGoals.name,
-      targetAmount: financialGoals.targetAmount,
-      targetDate: financialGoals.targetDate,
-      accountId: financialGoals.accountId,
-      currentAmount: sql`
-          COALESCE(SUM(CASE WHEN ${transactions.targetAccountId} = ${financialGoals.accountId} THEN ${transactions.amount} ELSE 0 END), 0)
-          -
-          COALESCE(SUM(CASE WHEN ${transactions.sourceAccountId} = ${financialGoals.accountId} THEN ${transactions.amount} ELSE 0 END), 0)
-      `.as("currentAmount"),
-    })
-    .from(financialGoals)
-    .leftJoin(
-      transactions,
-      sql`
-      ${transactions.targetAccountId} = ${financialGoals.accountId}
-      OR
-      ${transactions.sourceAccountId} = ${financialGoals.accountId}
-      `
-    )
-    .where(eq(financialGoals.userId, userId))
-    .groupBy(financialGoals.id)
-    .orderBy(financialGoals.createdAt);
-
-  return allGoals;
-}
-
-async function fetchUserAccounts(userId: string) {
-  const allAccounts = await db
-    .select({
-      id: accounts.id,
-      name: accounts.name,
-      balance: sql`
-      COALESCE(SUM(CASE WHEN ${transactions.targetAccountId} = ${accounts.id} THEN ${transactions.amount} ELSE 0 END), 0)
-      -
-      COALESCE(SUM(CASE WHEN ${transactions.sourceAccountId} = ${accounts.id} THEN ${transactions.amount} ELSE 0 END), 0)
-    `.as("balance"),
-    })
-    .from(accounts)
-    .leftJoin(
-      transactions,
-      sql`
-    ${transactions.targetAccountId} = ${accounts.id}
-    OR
-    ${transactions.sourceAccountId} = ${accounts.id}
-  `
-    )
-    .where(eq(accounts.userId, userId))
-    .groupBy(accounts.id, accounts.name);
-
-  return allAccounts;
-}
 
 export async function POST(req: Request) {
   const { messages } = await req.json();
@@ -94,25 +17,58 @@ export async function POST(req: Request) {
 
   if (!user) return new Response("Unauthorized", { status: 401 });
 
-  const [transactions, goals, accounts] = await Promise.all([
-    fetchChatTransactions(user.id),
-    fetchUserGoals(user.id),
-    fetchUserAccounts(user.id),
-  ]);
-
-  const lastTransactions = getFirst50(transactions);
+  const { transactions, goals, accounts, categorySum } =
+    await fetchAllFinancialData(user.id);
 
   const systemContext = `
-  You are an expert financial advisor. You are given a list of transactions (income/expenses), financial goals, and accounts information. You need to answer any questions or advice the user may ask in an honest and concise way. The information provided is already known by the user, so don't repeat it back, except for important details. Request any additional information you need from the user.
+  You are an expert financial advisor with deep knowledge of personal finance, budgeting, investment strategies, and financial planning. Your role is to provide personalized, actionable financial advice based on the user's financial data.
 
-  Here are the last transactions made by the user:
-  ${JSON.stringify(lastTransactions)}
+  RESPONSE GUIDELINES:
+  - Be concise, professional, and empathetic
+  - Provide specific, actionable recommendations when possible
+  - Use the financial data provided to give personalized insights
+  - Ask clarifying questions when you need more information
+  - Focus on practical advice rather than generic statements
+  - Consider the user's goals and current financial situation
+  - Suggest specific next steps when appropriate
 
-  Here are the user's financial goals:
-  ${JSON.stringify(goals)}
+  CURRENT DATE: ${new Date().toLocaleDateString()}
 
-  Here are the user's accounts and their current balances:
-  ${JSON.stringify(accounts)}
+  USER'S FINANCIAL DATA:
+
+  LOCATION:
+  Mexico
+
+  CURRENCY:
+  Mexican Pesos
+
+  RECENT TRANSACTIONS (last 20):
+  ${JSON.stringify(getFirst50(transactions), null, 2)}
+
+  SPENDING BY CATEGORY (last 30 days):
+  ${JSON.stringify(categorySum, null, 2)}
+
+  FINANCIAL GOALS:
+  ${JSON.stringify(goals, null, 2)}
+
+  ACCOUNTS & BALANCES:
+  ${JSON.stringify(accounts, null, 2)}
+
+  ANALYSIS CONTEXT:
+  - Review spending patterns and identify areas for improvement
+  - Assess progress toward financial goals
+  - Evaluate account balances and cash flow
+  - Suggest budgeting strategies based on spending data
+  - Recommend adjustments to goal timelines or amounts if needed
+  - Identify potential savings opportunities
+
+  When analyzing the data, consider:
+  - Spending trends and unusual patterns
+  - Goal progress relative to target dates
+  - Account balance distribution and liquidity
+  - Category-wise spending optimization opportunities
+  - Income vs expense ratios
+  - Emergency fund adequacy
   `;
 
   const result = streamText({

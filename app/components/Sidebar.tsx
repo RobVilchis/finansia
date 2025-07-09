@@ -1,11 +1,44 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { BarChart3, Home } from "lucide-react";
+import { BarChart3, Home, CircleDollarSign } from "lucide-react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+
+export const navLinks = [
+  {
+    href: "/home",
+    label: "Home",
+    icon: Home,
+    className: "text-gray-300",
+  },
+  {
+    href: "/data",
+    label: "Data",
+    icon: CircleDollarSign,
+    className: "text-gray-300",
+  },
+  {
+    href: "/analysis",
+    label: "Analysis",
+    icon: BarChart3,
+    className: "text-gray-300",
+  },
+  /*     {
+    href: "/transactions",
+    label: "Transactions",
+    icon: CreditCard,
+    className: "text-gray-300",
+  },
+  {
+    href: "/profile",
+    label: "Profile",
+    icon: User,
+    className: "text-gray-300",
+  }, */
+];
 
 export const Sidebar = () => {
   const [selectedPage, setSelectedPage] = useState<string>();
@@ -17,33 +50,6 @@ export const Sidebar = () => {
     setSelectedPage(page);
   }, [page]);
 
-  const navLinks = [
-    {
-      href: "/home",
-      label: "Home",
-      icon: Home,
-      className: "text-gray-300",
-    },
-    {
-      href: "/analysis",
-      label: "Analysis",
-      icon: BarChart3,
-      className: "text-gray-300",
-    },
-    /*     {
-      href: "/transactions",
-      label: "Transactions",
-      icon: CreditCard,
-      className: "text-gray-300",
-    },
-    {
-      href: "/profile",
-      label: "Profile",
-      icon: User,
-      className: "text-gray-300",
-    }, */
-  ];
-
   /*   const footerLinks = [
     {
       href: "/settings",
@@ -54,14 +60,14 @@ export const Sidebar = () => {
   ]; */
 
   return (
-    <aside className="fixed top-0 left-0 flex flex-col bg-gradient-to-b from-gray-900 to-gray-800 h-screen w-80 shadow-xl">
+    <aside className="fixed top-0 left-0 flex flex-col bg-slate-900 dark:bg-slate-900 h-screen w-80 shadow-xl">
       {/* Header */}
-      <div className="p-6 border-b border-gray-700">
+      <div className="p-6 border-b border-slate-700">
         <div className="flex items-center gap-3">
           {/* <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">F</span>
           </div> */}
-          <span className="text-xl font-bold text-white">Finance AI</span>
+          <span className="text-3xl font-bold text-white">finansia</span>
         </div>
       </div>
 
@@ -72,9 +78,9 @@ export const Sidebar = () => {
             key={href}
             href={href}
             className={`w-full flex items-center gap-3 px-4 py-3 ${className} 
-            hover:text-white hover:bg-gray-700 rounded-lg 
+            hover:text-white  hover:bg-slate-700 rounded-lg 
             transition-all duration-200 group ${
-              href.slice(1) == selectedPage ? "bg-gray-800" : ""
+              href.slice(1) == selectedPage ? "bg-slate-800" : ""
             } `}
           >
             <Icon className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -84,7 +90,7 @@ export const Sidebar = () => {
       </nav>
 
       {/* Footer */}
-      <div className="flex justify-end p-4 border-t border-gray-700">
+      <div className="flex justify-end p-4 border-t border-slate-700">
         <UserButton></UserButton>
         {/* {footerLinks.map(({ href, label, icon: Icon, className }) => (
           <Link

@@ -15,6 +15,13 @@
       "when": 1751395984833,
       "tag": "0001_rare_rafael_vega",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1751841287863,
+      "tag": "0002_silly_golden_guardian",
+      "breakpoints": true
     }
   ]
 }

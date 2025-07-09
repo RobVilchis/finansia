@@ -2,6 +2,7 @@
 
 import { TextArea } from "@radix-ui/themes";
 import { Message } from "ai";
+import Markdown from "react-markdown";
 
 interface ChatUIProps {
   messages: Message[];
@@ -36,7 +37,7 @@ export default function ChatUI({
                   : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
               }`}
             >
-              {message.content}
+              <Markdown>{message.content}</Markdown>
             </div>
           </div>
         ))}

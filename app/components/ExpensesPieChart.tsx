@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import { useBreakpoint } from "../hooks/useBreakpoint";
 
 interface ExpenseData {
   categoryName: string;
@@ -46,6 +47,8 @@ export default function ExpensesPieChart({
 }: ExpensesPieChartProps) {
   const [data, setData] = useState<ExpenseData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const bp = useBreakpoint();
+  const isMediumOrLarge = bp === "md" || bp === "lg";
 
   const fetchData = async () => {
     try {
@@ -80,10 +83,7 @@ export default function ExpensesPieChart({
 
   if (data.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-          Expenses by Category (This Month)
-        </h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 ">
         <div className="text-center text-gray-500 dark:text-gray-400">
           No expenses found for this month
         </div>
@@ -109,13 +109,15 @@ export default function ExpensesPieChart({
 
     return (
       <ul
-        className="recharts-legend-item-list"
+        className={`recharts-legend-item-list flex flex-col flex-wrap ${
+          isMediumOrLarge ? "h-fit w-30" : "h-36 w-80"
+        }`}
         style={{ listStyle: "none", padding: 0, margin: 0 }}
       >
         {payload.toReversed().map((category, index) => (
           <li
             key={`legend-item-${index}`}
-            className="recharts-legend-item"
+            className="recharts-legend-item w-fit"
             style={{
               display: "flex",
               alignItems: "center",
@@ -144,17 +146,17 @@ export default function ExpensesPieChart({
       <div className="text-sm text-gray-600 dark:text-gray-400 ">
         Total: ${totalExpenses.toFixed(2)}
       </div>
-      <ResponsiveContainer width="100%" height={200}>
+      <ResponsiveContainer width="100%" height={350}>
         <PieChart>
           <Pie
             data={chartData}
-            cx="45%"
+            cx={isMediumOrLarge ? "50%" : "45%"}
             cy="50%"
             labelLine={false}
             /* label={({ percent }) =>
               `${percent ? (percent * 100).toFixed(0) : 0}%`
             } */
-            outerRadius={70}
+            outerRadius={isMediumOrLarge ? 120 : 90}
             fill="#8884d8"
             dataKey="value"
             strokeWidth={0.5}
@@ -174,9 +176,12 @@ export default function ExpensesPieChart({
           />
           <Legend
             layout="vertical"
-            verticalAlign="middle"
-            align="right"
-            wrapperStyle={{ paddingRight: "40px" }}
+            verticalAlign={isMediumOrLarge ? "middle" : "bottom"}
+            align={isMediumOrLarge ? "right" : "center"}
+            wrapperStyle={{
+              paddingRight: isMediumOrLarge ? "40px" : "",
+              paddingTop: isMediumOrLarge ? "" : "15px",
+            }}
             content={renderCustomLegend}
           />
         </PieChart>

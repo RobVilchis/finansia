@@ -4,7 +4,7 @@ import { Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-
+import { ThemeProvider } from "next-themes";
 import MobileNavbar from "./components/MobileNavbar";
 import { Sidebar } from "./components/Sidebar";
 import "./globals.css";
@@ -37,17 +37,21 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased relative`}
         >
-          <Theme appearance="dark">
-            <div className="relative md:hidden z-50">
-              <MobileNavbar />
-            </div>
-            <section className="flex">
-              <div className="hidden md:block">
-                <Sidebar />
+          <ThemeProvider attribute="class">
+            <Theme appearance="inherit">
+              <div className="relative md:hidden z-50">
+                <MobileNavbar />
               </div>
-              <div className="mt-14 md:mt-0 md:ml-96 w-full">{children}</div>
-            </section>
-          </Theme>
+              <section className="flex">
+                <div className="hidden md:block">
+                  <Sidebar />
+                </div>
+                <div className="pt-14 md:pt-6 md:pl-80 w-full bg-white dark:bg-slate-950">
+                  {children}
+                </div>
+              </section>
+            </Theme>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>
