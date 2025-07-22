@@ -82,7 +82,12 @@ export async function POST(request: Request) {
       const category = await db
         .select()
         .from(categories)
-        .where(eq(categories.name, body.category))
+        .where(
+          and(
+            eq(categories.name, body.category),
+            eq(categories.userId, user.id)
+          )
+        )
         .limit(1);
 
       if (!category.length) {
@@ -169,7 +174,12 @@ export async function PATCH(request: Request) {
       const category = await db
         .select()
         .from(categories)
-        .where(eq(categories.name, body.category))
+        .where(
+          and(
+            eq(categories.name, body.category),
+            eq(categories.userId, user.id)
+          )
+        )
         .limit(1);
 
       if (!category.length) {

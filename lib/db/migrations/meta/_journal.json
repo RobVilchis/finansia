@@ -22,6 +22,20 @@
       "when": 1751841287863,
       "tag": "0002_silly_golden_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1752807529765,
+      "tag": "0003_sharp_shadowcat",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1753155002943,
+      "tag": "0004_acoustic_gideon",
+      "breakpoints": true
     }
   ]
 }

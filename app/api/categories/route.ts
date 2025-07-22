@@ -1,12 +1,20 @@
 import { db } from "@/lib/db";
 import { categories, insertCategorySchema } from "@/lib/db/schema/categories";
+import { currentUser } from "@clerk/nextjs/server";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const allCategories = await db
       .select({ name: categories.name, type: categories.type })
       .from(categories)
+      .where(eq(categories.userId, user.id))
       .orderBy(categories.name);
     return NextResponse.json(allCategories);
   } catch (error) {

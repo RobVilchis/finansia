@@ -35,8 +35,8 @@ export default function Analysis() {
 
   return (
     <ThemeProvider theme={darkTheme}>
-      <div className="flex container min-h-screen">
-        <main className="p-3 md:px-0 md:pt-10  w-full">
+      <div className="flex container px-5 md:px-10 p-4 min-h-screen w-full">
+        <div className="  w-full">
           {/* <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4"></h1>
             <p className="text-gray-600 dark:text-gray-400">
@@ -75,7 +75,7 @@ export default function Analysis() {
                 />
               </div>
             </div>
-            <div className="w-full max-w-[400px]">
+            <div className="w-full max-w-[500px]">
               <ExpensesPieChart
                 refreshTrigger={chartRefreshTrigger}
                 startDate={startDate}
@@ -83,7 +83,7 @@ export default function Analysis() {
               />
             </div>
           </div>
-        </main>
+        </div>
 
         <button
           onClick={() => setChatOpen(!chatOpen)}

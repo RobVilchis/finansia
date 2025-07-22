@@ -89,7 +89,7 @@ export default function TipsList() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <Button onClick={generateNewTips} disabled={generating}>
-          {generating ? "Generating..." : "Generate New Tips"}
+          {generating ? "Generating..." : "Generate new tips"}
         </Button>
       </div>
 

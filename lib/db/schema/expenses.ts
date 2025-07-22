@@ -1,5 +1,11 @@
 import { sql } from "drizzle-orm";
-import { text, varchar, timestamp, pgTable, numeric } from "drizzle-orm/pg-core";
+import {
+  text,
+  varchar,
+  timestamp,
+  pgTable,
+  numeric,
+} from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { nanoid } from "@/lib/utils";
 import { categories } from "./categories";
@@ -31,4 +37,4 @@ export const insertExpenseSchema = z.object({
 });
 
 // Type for expenses - used to type API request params and within Components
-export type NewExpenseParams = z.infer<typeof insertExpenseSchema>; 
+export type NewExpenseParams = z.infer<typeof insertExpenseSchema>;

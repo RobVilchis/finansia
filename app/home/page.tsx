@@ -6,6 +6,7 @@ import ExpensesPieChart from "../components/ExpensesPieChart";
 import HomeAccountsList from "../components/HomeAccountsList";
 import NewTransactionDialog from "../components/NewTransactionDialog";
 import TipsList from "../components/TipsList";
+import ChatButton from "../components/ChatButton";
 
 export default function DashboardPage() {
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
@@ -24,7 +25,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="w-full px-5 md:px-10 p-4 space-y-8">
+    <div className="w-full px-5 md:px-10 p-4 ">
       <h1 className="text-3xl font-bold mb-6">Home</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800">
@@ -57,6 +58,7 @@ export default function DashboardPage() {
         onOpenChange={setTransactionDialogOpen}
         onAddExpense={handleAddTransaction}
       />
+      <ChatButton />
     </div>
   );
 }
