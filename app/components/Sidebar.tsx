@@ -1,7 +1,7 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { BarChart3, Home, CircleDollarSign } from "lucide-react";
+import { BarChart3, Home, CircleDollarSign, AppWindow } from "lucide-react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,6 +24,12 @@ export const navLinks = [
     href: "/analysis",
     label: "Analysis",
     icon: BarChart3,
+    className: "text-gray-300",
+  },
+  {
+    href: "/categories",
+    label: "Categories",
+    icon: AppWindow,
     className: "text-gray-300",
   },
   /*     {

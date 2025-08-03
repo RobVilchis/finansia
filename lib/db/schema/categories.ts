@@ -22,7 +22,7 @@ export const categories = pgTable("categories", {
 
 export const insertCategorySchema = z.object({
   name: z.string(),
-  userId: z.string().optional(),
+  userId: z.string(),
   description: z.string().optional(),
   type: z.string(),
 });

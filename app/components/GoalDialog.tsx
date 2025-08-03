@@ -54,7 +54,6 @@ export default function GoalDialog({
       targetDate: goal.targetDate || "",
     },
   });
-
   const bp = useBreakpoint();
   const size = bp === "lg" ? "2" : bp === "md" ? "2" : "3";
 

@@ -12,10 +12,15 @@ export async function GET() {
     }
 
     const allCategories = await db
-      .select({ name: categories.name, type: categories.type })
+      .select({
+        id: categories.id,
+        name: categories.name,
+        type: categories.type,
+      })
       .from(categories)
       .where(eq(categories.userId, user.id))
       .orderBy(categories.name);
+
     return NextResponse.json(allCategories);
   } catch (error) {
     return NextResponse.json(
@@ -27,13 +32,22 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
-    const validatedData = insertCategorySchema.parse(body);
+    const validatedData = insertCategorySchema.parse({
+      ...body,
+      userId: user.id,
+    });
 
     const newCategory = await db
       .insert(categories)
       .values(validatedData)
       .returning();
+
     return NextResponse.json(newCategory[0]);
   } catch (error) {
     return NextResponse.json(

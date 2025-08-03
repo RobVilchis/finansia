@@ -125,6 +125,7 @@ export default function TransactionDialog({
   onDelete,
 }: TransactionDialogProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
 
@@ -224,148 +225,189 @@ export default function TransactionDialog({
           </Button>
         </div>
 
-        {showDeleteConfirm ? (
-          <div className="space-y-4">
-            <p className="text-gray-700 dark:text-gray-300">
-              Are you sure you want to delete this transaction? This action
-              cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="soft"
-                color="gray"
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                color="red"
-                onClick={() => {
-                  setShowDeleteConfirm(false);
-                  onDelete(transaction.id);
-                }}
-              >
-                Delete Transaction
-              </Button>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+              Transaction type
+            </label>
+            <Controller
+              name="type"
+              control={control}
+              render={({ field }: FieldProps<"type">) => (
+                <SegmentedControl.Root
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <SegmentedControl.Item value="expense">
+                    Expense
+                  </SegmentedControl.Item>
+                  <SegmentedControl.Item value="income">
+                    Income
+                  </SegmentedControl.Item>
+                  <SegmentedControl.Item value="transfer">
+                    Transfer
+                  </SegmentedControl.Item>
+                </SegmentedControl.Root>
+              )}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+              Description
+            </label>
+            <Controller
+              name="concept"
+              control={control}
+              render={({ field }: FieldProps<"concept">) => (
+                <TextField.Root
+                  size={size}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
+            {errors.concept && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.concept.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+              Amount
+            </label>
+            <Controller
+              name="amount"
+              control={control}
+              render={({ field }: FieldProps<"amount">) => (
+                <TextField.Root
+                  size={size}
+                  type="number"
+                  step="0.01"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
+            {errors.amount && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.amount.message}
+              </p>
+            )}
+          </div>
+
+          <div className="flex justify-start gap-2">
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                Date
+              </label>
+
+              <input
+                className="h-10 px-2 w-full rounded-md bg-dark-50 border 
+                  border-neutral-600 focus:outline-2 focus:outline-blue-600"
+                type="date"
+                id="date"
+                {...register("date")}
+              />
+
+              {errors.date && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.date.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                Time
+              </label>
+
+              <input
+                className="h-10 px-2 w-full rounded-md bg-dark-50 border 
+                  border-neutral-600 focus:outline-2 focus:outline-blue-600"
+                type="time"
+                id="time"
+                {...register("time")}
+              />
+
+              {errors.time && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.time.message}
+                </p>
+              )}
             </div>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+          {transactionType === "expense" && (
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Transaction type
+                Source account
               </label>
               <Controller
-                name="type"
+                name="accountId"
                 control={control}
-                render={({ field }: FieldProps<"type">) => (
-                  <SegmentedControl.Root
+                render={({ field }: FieldProps<"accountId">) => (
+                  <Select.Root
                     value={field.value}
                     onValueChange={field.onChange}
+                    size={size}
                   >
-                    <SegmentedControl.Item value="expense">
-                      Expense
-                    </SegmentedControl.Item>
-                    <SegmentedControl.Item value="income">
-                      Income
-                    </SegmentedControl.Item>
-                    <SegmentedControl.Item value="transfer">
-                      Transfer
-                    </SegmentedControl.Item>
-                  </SegmentedControl.Root>
+                    <Select.Trigger placeholder="Pick one" />
+                    <Select.Content>
+                      {accounts.map((account, i) => (
+                        <Select.Item key={i} value={account.id}>
+                          {account.name} (${account.balance})
+                        </Select.Item>
+                      ))}
+                    </Select.Content>
+                  </Select.Root>
                 )}
               />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Description
-              </label>
-              <Controller
-                name="concept"
-                control={control}
-                render={({ field }: FieldProps<"concept">) => (
-                  <TextField.Root
-                    size={size}
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-              {errors.concept && (
+              {errors.accountId && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors.concept.message}
+                  {errors.accountId.message}
                 </p>
               )}
             </div>
+          )}
 
+          {transactionType === "income" && (
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Amount
+                Target account
               </label>
               <Controller
-                name="amount"
+                name="targetAccountId"
                 control={control}
-                render={({ field }: FieldProps<"amount">) => (
-                  <TextField.Root
-                    size={size}
-                    type="number"
-                    step="0.01"
+                render={({ field }: FieldProps<"targetAccountId">) => (
+                  <Select.Root
                     value={field.value}
-                    onChange={field.onChange}
-                  />
+                    onValueChange={field.onChange}
+                    size={size}
+                  >
+                    <Select.Trigger placeholder="Pick one" />
+                    <Select.Content>
+                      {accounts.map((account, i) => (
+                        <Select.Item key={i} value={account.id}>
+                          {account.name} (${account.balance})
+                        </Select.Item>
+                      ))}
+                    </Select.Content>
+                  </Select.Root>
                 )}
               />
-              {errors.amount && (
+              {errors.targetAccountId && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors.amount.message}
+                  {errors.targetAccountId.message}
                 </p>
               )}
             </div>
+          )}
 
-            <div className="flex justify-start gap-2">
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Date
-                </label>
-
-                <input
-                  className="h-10 px-2 w-full rounded-md bg-dark-50 border 
-                  border-neutral-600 focus:outline-2 focus:outline-blue-600"
-                  type="date"
-                  id="date"
-                  {...register("date")}
-                />
-
-                {errors.date && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.date.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Time
-                </label>
-
-                <input
-                  className="h-10 px-2 w-full rounded-md bg-dark-50 border 
-                  border-neutral-600 focus:outline-2 focus:outline-blue-600"
-                  type="time"
-                  id="time"
-                  {...register("time")}
-                />
-
-                {errors.time && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.time.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {transactionType === "expense" && (
+          {transactionType === "transfer" && (
+            <>
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                   Source account
@@ -396,9 +438,7 @@ export default function TransactionDialog({
                   </p>
                 )}
               </div>
-            )}
 
-            {transactionType === "income" && (
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                   Target account
@@ -414,11 +454,15 @@ export default function TransactionDialog({
                     >
                       <Select.Trigger placeholder="Pick one" />
                       <Select.Content>
-                        {accounts.map((account, i) => (
-                          <Select.Item key={i} value={account.id}>
-                            {account.name} (${account.balance})
-                          </Select.Item>
-                        ))}
+                        {accounts
+                          .filter(
+                            (account) => account.id !== watch("accountId")
+                          )
+                          .map((account, i) => (
+                            <Select.Item key={i} value={account.id}>
+                              {account.name} (${account.balance})
+                            </Select.Item>
+                          ))}
                       </Select.Content>
                     </Select.Root>
                   )}
@@ -429,128 +473,86 @@ export default function TransactionDialog({
                   </p>
                 )}
               </div>
-            )}
+            </>
+          )}
 
-            {transactionType === "transfer" && (
-              <>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                    Source account
-                  </label>
-                  <Controller
-                    name="accountId"
-                    control={control}
-                    render={({ field }: FieldProps<"accountId">) => (
-                      <Select.Root
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        size={size}
-                      >
-                        <Select.Trigger placeholder="Pick one" />
-                        <Select.Content>
-                          {accounts.map((account, i) => (
-                            <Select.Item key={i} value={account.id}>
-                              {account.name} (${account.balance})
-                            </Select.Item>
-                          ))}
-                        </Select.Content>
-                      </Select.Root>
-                    )}
-                  />
-                  {errors.accountId && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.accountId.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                    Target account
-                  </label>
-                  <Controller
-                    name="targetAccountId"
-                    control={control}
-                    render={({ field }: FieldProps<"targetAccountId">) => (
-                      <Select.Root
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        size={size}
-                      >
-                        <Select.Trigger placeholder="Pick one" />
-                        <Select.Content>
-                          {accounts
-                            .filter(
-                              (account) => account.id !== watch("accountId")
-                            )
-                            .map((account, i) => (
-                              <Select.Item key={i} value={account.id}>
-                                {account.name} (${account.balance})
-                              </Select.Item>
-                            ))}
-                        </Select.Content>
-                      </Select.Root>
-                    )}
-                  />
-                  {errors.targetAccountId && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.targetAccountId.message}
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
-
-            {transactionType !== "transfer" && (
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Category
-                </label>
-                <Controller
-                  name="category"
-                  control={control}
-                  render={({ field }: FieldProps<"category">) => (
-                    <Select.Root
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      size={size}
-                    >
-                      <Select.Trigger placeholder="Pick one" />
-                      <Select.Content>
-                        {categories
-                          .filter(
-                            (category) => category.type === transactionType
-                          )
-                          .map((category, i) => (
-                            <Select.Item key={i} value={category.name}>
-                              {category.name}
-                            </Select.Item>
-                          ))}
-                      </Select.Content>
-                    </Select.Root>
-                  )}
-                />
-                {errors.category && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.category.message}
-                  </p>
+          {transactionType !== "transfer" && (
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                Category
+              </label>
+              <Controller
+                name="category"
+                control={control}
+                render={({ field }: FieldProps<"category">) => (
+                  <Select.Root
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    size={size}
+                  >
+                    <Select.Trigger placeholder="Pick one" />
+                    <Select.Content>
+                      {categories
+                        .filter((category) => category.type === transactionType)
+                        .map((category, i) => (
+                          <Select.Item key={i} value={category.name}>
+                            {category.name}
+                          </Select.Item>
+                        ))}
+                    </Select.Content>
+                  </Select.Root>
                 )}
-              </div>
-            )}
+              />
+              {errors.category && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.category.message}
+                </p>
+              )}
+            </div>
+          )}
 
-            <div className="flex justify-end gap-3 mt-6">
-              <Dialog.Close>
-                <Button variant="soft" color="gray">
-                  Cancel
-                </Button>
-              </Dialog.Close>
-              <Button type="submit" color="blue">
-                Update
+          <div className="flex justify-end gap-3 mt-6">
+            <Dialog.Close>
+              <Button variant="soft" color="gray">
+                Cancel
+              </Button>
+            </Dialog.Close>
+            <Button type="submit" color="blue">
+              Update
+            </Button>
+          </div>
+        </form>
+      </Dialog.Content>
+
+      <Dialog.Root open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <Dialog.Content maxWidth="400px">
+          <div className="space-y-4">
+            <Dialog.Title>Delete</Dialog.Title>
+            <p className="text-gray-700 dark:text-gray-300">
+              Are you sure you want to delete this transaction? This action
+              cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="soft"
+                color="gray"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                color="red"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  onDelete(transaction.id);
+                }}
+              >
+                Delete transaction
               </Button>
             </div>
-          </form>
-        )}
-      </Dialog.Content>
+          </div>
+        </Dialog.Content>
+      </Dialog.Root>
     </Dialog.Root>
   );
 }

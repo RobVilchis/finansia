@@ -1,6 +1,6 @@
 import { categories } from "@/lib/db/schema/categories";
 import { users } from "@/lib/db/schema/user";
-import { eq, ne } from "drizzle-orm";
+import { and, eq, ne, or } from "drizzle-orm";
 import { db } from "../lib/db";
 
 import { transactions } from "@/lib/db/schema/transactions";
@@ -41,6 +41,9 @@ async function main() {
         userId: users.id,
       })
       .from(transactions)
+      .where(
+        or(eq(transactions.type, "expense"), eq(transactions.type, "income"))
+      )
       .leftJoin(categories, eq(transactions.category, categories.id))
       .leftJoin(users, eq(transactions.userId, users.id));
 
@@ -53,9 +56,15 @@ async function main() {
             userId: users.id,
           })
           .from(categories)
-          .where(eq(users.id, transaction.userId!))
+          .where(
+            and(
+              eq(users.id, transaction.userId!),
+              eq(categories.name, transaction.categoryName!)
+            )
+          )
           .leftJoin(users, eq(categories.userId, users.id));
 
+        console.log(transaction.categoryName, transaction.userId, transaction);
         console.log(
           `Created category ${newCategory[0].id} for ${newCategory[0].userId}`
         );
