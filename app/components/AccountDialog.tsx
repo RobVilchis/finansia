@@ -20,8 +20,8 @@ interface AccountDialogProps {
 }
 
 const accountSchema = z.object({
-  name: z.string().min(1, "Account name is required"),
-  type: z.string().min(1, "Account type is required"),
+  name: z.string().min(1, "El nombre de la cuenta es requerido"),
+  type: z.string().min(1, "El tipo de cuenta es requerido"),
 });
 
 type AccountFormData = z.infer<typeof accountSchema>;
@@ -77,21 +77,21 @@ export default function AccountDialog({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="400px">
         <div className="flex justify-between items-center mb-2">
-          <Dialog.Title>Edit account</Dialog.Title>
+          <Dialog.Title>Editar cuenta</Dialog.Title>
           <Button
             variant="soft"
             color="red"
             onClick={() => setShowDeleteConfirm(true)}
           >
-            Delete
+            Eliminar
           </Button>
         </div>
 
         {showDeleteConfirm ? (
           <div className="space-y-4">
             <p className="text-gray-700 dark:text-gray-300">
-              Are you sure you want to delete this account? This action cannot
-              be undone.
+              ¿Estás seguro de que quieres eliminar esta cuenta? Esta acción no
+              se puede deshacer.
             </p>
             <div className="flex justify-end gap-3">
               <Button
@@ -99,10 +99,10 @@ export default function AccountDialog({
                 color="gray"
                 onClick={() => setShowDeleteConfirm(false)}
               >
-                Cancel
+                Cancelar
               </Button>
               <Button color="red" onClick={() => onDelete(account.id)}>
-                Delete Account
+                Eliminar cuenta
               </Button>
             </div>
           </div>
@@ -110,7 +110,7 @@ export default function AccountDialog({
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Account name
+                Nombre de la cuenta
               </label>
               <Controller
                 name="name"
@@ -132,7 +132,7 @@ export default function AccountDialog({
 
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Account type
+                Tipo de cuenta
               </label>
               <Controller
                 name="type"
@@ -142,7 +142,7 @@ export default function AccountDialog({
                     size={size}
                     value={field.value}
                     onChange={field.onChange}
-                    placeholder="e.g., Checking, Savings, Credit Card"
+                    placeholder="ej., Corriente, Ahorro, Tarjeta de crédito"
                   />
                 )}
               />
@@ -156,11 +156,11 @@ export default function AccountDialog({
             <div className="flex justify-end gap-3 mt-6">
               <Dialog.Close>
                 <Button variant="soft" color="gray">
-                  Cancel
+                  Cancelar
                 </Button>
               </Dialog.Close>
               <Button type="submit" color="blue">
-                Update
+                Actualizar
               </Button>
             </div>
           </form>

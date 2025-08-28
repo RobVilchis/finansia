@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { AddButton } from "./AddButton";
 import GoalCard from "./GoalCard";
 import GoalDialog from "./GoalDialog";
+import { Skeleton } from "./LoadingSkeleton";
 import NewGoalDialog from "./NewGoalDialog";
 
 export default function GoalsList() {
@@ -43,7 +44,13 @@ export default function GoalsList() {
   };
 
   if (loading) {
-    return <div>Loading goals...</div>;
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Skeleton key={i} height="h-28" />
+        ))}
+      </div>
+    );
   }
 
   if (error) {
@@ -54,7 +61,7 @@ export default function GoalsList() {
     <div>
       <div className="flex mb-8 gap-3 items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          My goals
+          Metas
         </h1>
         <AddButton
           onClick={() => {

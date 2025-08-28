@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import AccountCard from "./AccountCard";
 import AccountDialog from "./AccountDialog";
 
@@ -64,7 +64,24 @@ export default function AccountsList({ onAccountAdded }: AccountsListProps) {
   }, [onAccountAdded]);
 
   if (loading) {
-    return <div>Loading accounts...</div>;
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700"
+            >
+              <div className="space-y-3">
+                <div className="w-24 h-4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+                <div className="w-32 h-6 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+                <div className="w-20 h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (error) {

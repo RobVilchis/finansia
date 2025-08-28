@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await currentUser();
@@ -17,7 +17,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const categoryId = await params.id;
+    const { id: categoryId } = await params;
 
     // Get the category
     const category = await db
@@ -75,9 +75,9 @@ export async function GET(
     // Calculate summary statistics
     const totalAmount = categoryTransactions.reduce((sum, transaction) => {
       if (category[0].type === "expense") {
-        return sum + transaction.amount;
+        return sum + Number(transaction.amount);
       } else if (category[0].type === "income") {
-        return sum + transaction.amount;
+        return sum + Number(transaction.amount);
       }
       return sum;
     }, 0);
@@ -108,7 +108,7 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await currentUser();
@@ -116,7 +116,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const categoryId = await params.id;
+    const { id: categoryId } = await params;
 
     const body = await request.json();
     const { name, type } = body;
@@ -146,7 +146,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await currentUser();
@@ -154,7 +154,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const categoryId = await params.id;
+    const { id: categoryId } = await params;
 
     // Check if category has transactions
     const existingTransactions = await db
@@ -162,7 +162,7 @@ export async function DELETE(
       .from(transactions)
       .where(
         and(
-          eq(transactions.category, params.id),
+          eq(transactions.category, categoryId),
           eq(transactions.userId, user.id)
         )
       )
@@ -178,7 +178,7 @@ export async function DELETE(
     // Delete the category
     const deletedCategory = await db
       .delete(categories)
-      .where(and(eq(categories.id, params.id), eq(categories.userId, user.id)))
+      .where(and(eq(categories.id, categoryId), eq(categories.userId, user.id)))
       .returning();
 
     if (!deletedCategory.length) {

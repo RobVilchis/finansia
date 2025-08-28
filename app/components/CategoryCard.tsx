@@ -15,8 +15,8 @@ export default function CategoryCard({ category }: CategoryCardProps) {
     <Link href={`/categories/${category.id}`}>
       <div
         className={`
-          w-40 h-18 p-4 rounded-lg cursor-pointer transition-all
-          flex items-center justify-start bg-slate-700 hover:bg-slate-500 text-slate-200
+          w-full h-12 p-4 rounded-lg cursor-pointer transition-all
+          flex items-center justify-start border-2 border-slate-700 hover:bg-slate-700 text-slate-200
         `}
       >
         <div className="font-medium text-md line-clamp-2">{category.name}</div>

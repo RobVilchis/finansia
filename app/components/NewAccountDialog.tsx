@@ -13,8 +13,8 @@ interface NewAccountDialogProps {
 }
 
 const accountSchema = z.object({
-  name: z.string().min(1, "Account name is required"),
-  type: z.string().min(1, "Account type is required"),
+  name: z.string().min(1, "El nombre de la cuenta es requerido"),
+  type: z.string().min(1, "El tipo de cuenta es requerido"),
 });
 
 type AccountFormData = z.infer<typeof accountSchema>;
@@ -68,13 +68,13 @@ export default function NewAccountDialog({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="400px">
         <div className="flex justify-between items-center mb-2">
-          <Dialog.Title>Add new account</Dialog.Title>
+          <Dialog.Title>Agregar nueva cuenta</Dialog.Title>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-              Account name
+              Nombre de la cuenta
             </label>
             <Controller
               name="name"
@@ -94,7 +94,7 @@ export default function NewAccountDialog({
 
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-              Account type
+              Tipo de cuenta
             </label>
             <Controller
               name="type"
@@ -104,7 +104,7 @@ export default function NewAccountDialog({
                   size={size}
                   value={field.value}
                   onChange={field.onChange}
-                  placeholder="e.g., Checking, Savings, Credit Card"
+                  placeholder="ej., Corriente, Ahorro, Tarjeta de crédito"
                 />
               )}
             />
@@ -116,11 +116,11 @@ export default function NewAccountDialog({
           <div className="flex justify-end gap-3 mt-6">
             <Dialog.Close>
               <Button variant="soft" color="gray">
-                Cancel
+                Cancelar
               </Button>
             </Dialog.Close>
             <Button type="submit" color="blue">
-              Add account
+              Agregar cuenta
             </Button>
           </div>
         </form>

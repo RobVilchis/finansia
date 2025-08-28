@@ -11,6 +11,7 @@ import {
   Tooltip,
 } from "recharts";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import { ChartSkeleton, EmptyStateSkeleton } from "./LoadingSkeleton";
 
 interface ExpenseData {
   categoryName: string;
@@ -72,23 +73,11 @@ export default function ExpensesPieChart({
   }, [refreshTrigger]);
 
   if (isLoading) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          Loading chart...
-        </div>
-      </div>
-    );
+    return <ChartSkeleton />;
   }
 
   if (data.length === 0) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 ">
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          No expenses found for this month
-        </div>
-      </div>
-    );
+    return <EmptyStateSkeleton />;
   }
 
   const chartData = data.map((item, index) => ({

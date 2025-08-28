@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import AccountsList from "../components/AccountsList";
 import { AddButton } from "../components/AddButton";
-import ChatButton from "../components/ChatButton";
 import GoalsList from "../components/GoalsList";
 import NewAccountDialog from "../components/NewAccountDialog";
 import NewExpenseDialog from "../components/NewTransactionDialog";
@@ -151,12 +150,13 @@ export default function Home() {
   const groupTransactionsByDay = (transactions: Transaction[]) => {
     return transactions.reduce((groups, transaction) => {
       const date = new Date(transaction.date);
-      const dayKey = date.toLocaleDateString("default", {
+      let dayKey = date.toLocaleDateString("es-MX", {
         weekday: "long",
         month: "long",
         day: "numeric",
-        year: "numeric",
       });
+
+      dayKey = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
 
       if (!groups[dayKey]) {
         groups[dayKey] = [];
@@ -187,7 +187,7 @@ export default function Home() {
                 }}
                 value="transactions"
               >
-                Transactions
+                Transacciones
               </Tabs.Trigger>
               <Tabs.Trigger
                 onClick={() => {
@@ -195,7 +195,7 @@ export default function Home() {
                 }}
                 value="goals"
               >
-                Goals
+                Metas
               </Tabs.Trigger>
               <Tabs.Trigger
                 onClick={() => {
@@ -203,7 +203,7 @@ export default function Home() {
                 }}
                 value="accounts"
               >
-                Accounts
+                Cuentas
               </Tabs.Trigger>
             </Tabs.List>
             <Tabs.Content value="goals">
@@ -212,7 +212,7 @@ export default function Home() {
             <Tabs.Content value="accounts">
               <div className="flex mb-8 gap-3 items-center justify-between">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  My accounts
+                  Cuentas
                 </h1>
                 <AddButton
                   onClick={() => {
@@ -224,17 +224,28 @@ export default function Home() {
             </Tabs.Content>
             <Tabs.Content value="transactions">
               <div className="flex mb-8 gap-3 items-center justify-between">
-                <h1 className="text-2xl font-bold ">Recent transactions</h1>
+                <h1 className="text-2xl font-bold ">Transacciones recientes</h1>
                 <AddButton onClick={() => setNewTransactionDialogOpen(true)} />
               </div>
               <div className="grid gap-4 mx-auto">
                 {isLoading ? (
-                  <div className="text-center text-gray-500 dark:text-gray-400">
-                    Loading transactions...
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700"
+                      >
+                        <div className="space-y-3">
+                          <div className="w-32 h-4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+                          <div className="w-48 h-6 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+                          <div className="w-24 h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : transactions.length === 0 ? (
                   <div className="text-center text-gray-500 dark:text-gray-400">
-                    No transactions found
+                    No se encontraron transacciones
                   </div>
                 ) : (
                   Object.entries(groupTransactionsByDay(transactions)).map(
@@ -279,8 +290,6 @@ export default function Home() {
           </Tabs.Root>
         </div>
       </main>
-
-      <ChatButton />
 
       <NewExpenseDialog
         open={dialogOpen}

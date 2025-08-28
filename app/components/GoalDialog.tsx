@@ -22,8 +22,8 @@ interface GoalDialogProps {
 }
 
 const goalSchema = z.object({
-  name: z.string().min(1, "Goal name is required"),
-  targetAmount: z.string().min(1, "Target amount is required"),
+  name: z.string().min(1, "El nombre de la meta es requerido"),
+  targetAmount: z.string().min(1, "El monto objetivo es requerido"),
   targetDate: z.string().optional(),
 });
 
@@ -76,13 +76,13 @@ export default function GoalDialog({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="400px">
         <div className="flex justify-between items-center mb-2">
-          <Dialog.Title>Edit goal</Dialog.Title>
+          <Dialog.Title>Editar meta</Dialog.Title>
           {!showDeleteConfirm && (
             <Button
               variant="ghost"
               color="red"
               onClick={() => setShowDeleteConfirm(true)}
-              title="Delete expense"
+              title="Eliminar meta"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -105,8 +105,8 @@ export default function GoalDialog({
         {showDeleteConfirm ? (
           <div className="space-y-4">
             <p className="text-gray-700 dark:text-gray-300">
-              Are you sure you want to delete this goal? This action cannot be
-              undone.
+              ¿Estás seguro de que quieres eliminar esta meta? Esta acción no se
+              puede deshacer.
             </p>
             <div className="flex justify-end gap-3">
               <Button
@@ -114,10 +114,10 @@ export default function GoalDialog({
                 color="gray"
                 onClick={() => setShowDeleteConfirm(false)}
               >
-                Cancel
+                Cancelar
               </Button>
               <Button color="red" onClick={() => onDelete(goal.id)}>
-                Delete
+                Eliminar
               </Button>
             </div>
           </div>
@@ -126,7 +126,7 @@ export default function GoalDialog({
             <div className="flex flex-col gap-5">
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Goal name
+                  Nombre de la meta
                 </label>
                 <Controller
                   name="name"
@@ -148,7 +148,7 @@ export default function GoalDialog({
 
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Target amount
+                  Monto objetivo
                 </label>
                 <Controller
                   name="targetAmount"
@@ -172,7 +172,7 @@ export default function GoalDialog({
 
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Target date
+                  Fecha objetivo
                 </label>
                 <Controller
                   name="targetDate"
@@ -192,11 +192,11 @@ export default function GoalDialog({
             <div className="flex justify-end gap-3 mt-6">
               <Dialog.Close>
                 <Button variant="soft" color="gray">
-                  Cancel
+                  Cancelar
                 </Button>
               </Dialog.Close>
               <Button type="submit" color="blue">
-                Update
+                Actualizar
               </Button>
             </div>
           </form>

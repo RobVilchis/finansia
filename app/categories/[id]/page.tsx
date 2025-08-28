@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Pencil, Trash2, ArrowLeft } from "lucide-react";
+import TransactionCard from "@/app/components/TransactionCard";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button, Dialog, TextField } from "@radix-ui/themes";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import TransactionCard from "@/app/components/TransactionCard";
-import { Dialog, TextField, Button } from "@radix-ui/themes";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { use, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
 interface Transaction {
@@ -39,10 +39,13 @@ interface CategoryData {
 }
 
 const renameSchema = z.object({
-  name: z.string().min(1, "Category name is required"),
+  name: z.string().min(1, "El nombre de la categoría es requerido"),
 });
 
-export default function CategoryPage({ params }: { params: { id: string } }) {
+export default function CategoryPage(props: {
+  params: Promise<{ id: string }>;
+}) {
+  const params = use(props.params);
   const router = useRouter();
   const [categoryData, setCategoryData] = useState<CategoryData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,17 +78,21 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
       const response = await fetch(`/api/categories/${params.id}`);
       if (!response.ok) {
         if (response.status === 404) {
-          setError("Category not found");
+          setError("Categoría no encontrada");
         } else {
-          throw new Error("Failed to fetch category data");
+          throw new Error("Error al obtener datos de la categoría");
         }
         return;
       }
       const data = await response.json();
       setCategoryData(data);
       reset({ name: data.category.name });
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch category data");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "Error al obtener datos de la categoría");
+      } else {
+        setError("Error al obtener datos de la categoría");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -114,13 +121,17 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to rename category");
+        throw new Error("Error al renombrar la categoría");
       }
 
       setShowRenameDialog(false);
       fetchCategoryData(); // Refresh data
-    } catch (err: any) {
-      setError(err.message || "Failed to rename category");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "Error al renombrar la categoría");
+      } else {
+        setError("Error al renombrar la categoría");
+      }
     } finally {
       setIsRenaming(false);
     }
@@ -135,39 +146,30 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete category");
+        throw new Error(errorData.error || "Error al eliminar la categoría");
       }
 
       setShowDeleteDialog(false);
       router.push("/categories"); // Redirect to categories list
-    } catch (err: any) {
-      setError(err.message || "Failed to delete category");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "Error al eliminar la categoría");
+      } else {
+        setError("Error al eliminar la categoría");
+      }
     } finally {
       setIsDeleting(false);
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "expense":
-        return "text-red-600 dark:text-red-400";
-      case "income":
-        return "text-green-600 dark:text-green-400";
-      case "transfer":
-        return "text-blue-600 dark:text-blue-400";
-      default:
-        return "text-slate-600 dark:text-slate-400";
     }
   };
 
   const getTypeLabel = (type: string) => {
     switch (type) {
       case "expense":
-        return "Expense";
+        return "Gasto";
       case "income":
-        return "Income";
+        return "Ingreso";
       case "transfer":
-        return "Transfer";
+        return "Transferencia";
       default:
         return type;
     }
@@ -177,8 +179,62 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
     return (
       <div className="min-h-screen bg-white dark:bg-slate-950 p-6">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center py-12">
-            <div className="text-slate-600 dark:text-slate-400">Loading...</div>
+          {/* Back Button Skeleton */}
+          <div className="mb-6">
+            <div className="w-32 h-6 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+          </div>
+
+          {/* Category Header Skeleton */}
+          <div className="mb-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="flex gap-2 items-center mb-2">
+                  <div className="w-48 h-10 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                  <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-6 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
+                  <div className="w-32 h-6 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                </div>
+              </div>
+              <div className="w-24 h-10 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
+            </div>
+
+            {/* Category Summary Skeleton */}
+            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+              <div className="flex items-end justify-between gap-2 sm:gap-4">
+                <div className="text-center">
+                  <div className="w-20 h-4 bg-slate-200 dark:bg-slate-700 rounded mx-auto mb-2 animate-pulse"></div>
+                  <div className="w-24 h-8 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                </div>
+                <div className="text-center">
+                  <div className="w-32 h-4 bg-slate-200 dark:bg-slate-700 rounded mx-auto mb-2 animate-pulse"></div>
+                  <div className="w-28 h-8 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                </div>
+                <div className="text-center">
+                  <div className="w-24 h-4 bg-slate-200 dark:bg-slate-700 rounded mx-auto mb-2 animate-pulse"></div>
+                  <div className="w-20 h-8 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Transactions List Skeleton */}
+          <div className="space-y-4">
+            <div className="w-32 h-6 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+
+            {/* Month Group Skeleton */}
+            <div>
+              <div className="w-40 h-5 bg-slate-200 dark:bg-slate-700 rounded mb-2 animate-pulse"></div>
+              <div className="space-y-2">
+                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                  <div
+                    key={i}
+                    className="w-full h-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"
+                  ></div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -194,7 +250,7 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
             className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Categories
+            Volver a Categorías
           </Link>
           <div className="text-center py-12">
             <div className="text-red-500 mb-4">{error}</div>
@@ -202,7 +258,7 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
               href="/categories"
               className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
             >
-              Return to Categories
+              Volver a Categorías
             </Link>
           </div>
         </div>
@@ -216,13 +272,31 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-12">
             <div className="text-slate-600 dark:text-slate-400">
-              Category not found
+              Categoría no encontrada
             </div>
           </div>
         </div>
       </div>
     );
   }
+
+  const groupTransactionsByMonth = (transactions: Transaction[]) => {
+    return transactions.reduce((groups, transaction) => {
+      const date = new Date(transaction.date);
+      let monthKey = date.toLocaleDateString("es-MX", {
+        month: "long",
+        year: "numeric",
+      });
+
+      monthKey = monthKey.charAt(0).toUpperCase() + monthKey.slice(1);
+
+      if (!groups[monthKey]) {
+        groups[monthKey] = [];
+      }
+      groups[monthKey].push(transaction);
+      return groups;
+    }, {} as Record<string, Transaction[]>);
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 p-6">
@@ -233,7 +307,7 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
           className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Categories
+          Volver a Categorías
         </Link>
 
         {/* Error Display */}
@@ -244,22 +318,29 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
         )}
 
         {/* Category Header */}
-        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-6 mb-6 border border-slate-200 dark:border-slate-700">
+        <div className="mb-6 ">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                {categoryData.category.name}
-              </h1>
+              <div className="flex gap-2 items-center  mb-2">
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                  {categoryData.category.name}
+                </h1>
+                <button
+                  onClick={handleRename}
+                  className="flex items-center gap-2 px-2 py-2 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 rounded-lg transition-colors"
+                >
+                  <Pencil className="w-4 h-4 font-bold" />
+                </button>
+              </div>
+
               <div className="flex items-center gap-4">
                 <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium bg-slate-200 dark:bg-slate-700 ${getTypeColor(
-                    categoryData.category.type
-                  )}`}
+                  className={`px-3 py-1 rounded-full text-sm font-medium bg-slate-200 dark:bg-slate-700 `}
                 >
                   {getTypeLabel(categoryData.category.type)}
                 </span>
                 <span className="text-slate-600 dark:text-slate-400">
-                  {categoryData.summary.transactionCount} transactions
+                  {categoryData.summary.transactionCount} transacciones
                 </span>
               </div>
             </div>
@@ -267,54 +348,47 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
             {/* Action Buttons */}
             <div className="flex gap-2">
               <button
-                onClick={handleRename}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
-                <Pencil className="w-4 h-4" />
-                Rename
-              </button>
-              <button
                 onClick={handleDelete}
                 className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
-                Delete
+                Eliminar
               </button>
             </div>
           </div>
 
           {/* Category Summary */}
           <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-end justify-between gap-2 sm:gap-4">
               <div className="text-center">
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Total Amount
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                  Monto total
                 </p>
-                <p
-                  className={`text-2xl font-bold ${getTypeColor(
-                    categoryData.category.type
-                  )}`}
-                >
-                  ${categoryData.summary.totalAmount.toFixed(2)}
+                <p className={`text-lg sm:text-2xl font-bold`}>
+                  ${categoryData.summary.totalAmount}
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Average per Transaction
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                  Promedio por transacción
                 </p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <p className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
                   ${categoryData.summary.averageAmount.toFixed(2)}
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Last Transaction
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                  Última transacción
                 </p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <p className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
                   {categoryData.summary.lastTransactionDate
                     ? new Date(
                         categoryData.summary.lastTransactionDate
-                      ).toLocaleDateString()
+                      ).toLocaleDateString("es-MX", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
                     : "N/A"}
                 </p>
               </div>
@@ -325,33 +399,55 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
         {/* Transactions List */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-              Transactions
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+              Transacciones
             </h2>
-            <span className="text-sm text-slate-600 dark:text-slate-400">
-              Showing {categoryData.transactions.length} transactions
-            </span>
           </div>
 
           {categoryData.transactions.length > 0 ? (
-            <div className="space-y-3">
-              {categoryData.transactions.map((transaction) => (
-                <TransactionCard
-                  key={transaction.id}
-                  description={transaction.description}
-                  date={transaction.date}
-                  amount={transaction.amount}
-                  categoryName={transaction.categoryName}
-                  type={transaction.type}
-                  sourceAccountName={transaction.sourceAccountName}
-                  targetAccountName={transaction.targetAccountName}
-                />
-              ))}
-            </div>
+            Object.entries(
+              groupTransactionsByMonth(categoryData.transactions)
+            ).map(([day, monthTransactions]) => (
+              <div key={day}>
+                <h2 className="text-md font-semibold text-gray-900 dark:text-gray-400 mb-2">
+                  {day}
+                </h2>
+                <div className="space-y-2">
+                  {monthTransactions.map((transaction) => (
+                    <div
+                      key={transaction.id}
+                      /* onClick={() => {
+                          setSelectedTransaction(transaction);
+                          setTransactionDialogOpen(true);
+                        }} */
+                    >
+                      <TransactionCard
+                        description={transaction.description}
+                        date={new Date(transaction.date).toLocaleDateString(
+                          "es-MX",
+                          {
+                            day: "numeric",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                        amount={Number(transaction.amount)}
+                        showCategory={false}
+                        categoryName={transaction.categoryName}
+                        type={transaction.type}
+                        sourceAccountName={transaction.sourceAccountName}
+                        targetAccountName={transaction.targetAccountName}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
           ) : (
             <div className="text-center py-12">
               <p className="text-slate-600 dark:text-slate-400">
-                No transactions found in this category.
+                No se encontraron transacciones en esta categoría.
               </p>
             </div>
           )}
@@ -361,11 +457,11 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
       {/* Rename Dialog */}
       <Dialog.Root open={showRenameDialog} onOpenChange={setShowRenameDialog}>
         <Dialog.Content maxWidth="400px">
-          <Dialog.Title>Rename Category</Dialog.Title>
+          <Dialog.Title>Renombrar Categoría</Dialog.Title>
           <form onSubmit={handleSubmit(onSubmitRename)} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Category Name
+                Nombre de la Categoría
               </label>
               <Controller
                 name="name"
@@ -373,7 +469,7 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
                 render={({ field }) => (
                   <TextField.Root
                     {...field}
-                    placeholder="Enter category name"
+                    placeholder="Ingrese el nombre de la categoría"
                     className="w-full"
                   />
                 )}
@@ -390,10 +486,10 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
                 variant="soft"
                 onClick={() => setShowRenameDialog(false)}
               >
-                Cancel
+                Cancelar
               </Button>
               <Button type="submit" disabled={isRenaming}>
-                {isRenaming ? "Renaming..." : "Rename"}
+                {isRenaming ? "Renombrando..." : "Renombrar"}
               </Button>
             </div>
           </form>
@@ -403,22 +499,23 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
       {/* Delete Confirmation Dialog */}
       <Dialog.Root open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <Dialog.Content maxWidth="400px">
-          <Dialog.Title>Delete Category</Dialog.Title>
+          <Dialog.Title>Eliminar Categoría</Dialog.Title>
           <div className="space-y-4">
             <p className="text-slate-600 dark:text-slate-400">
-              Are you sure you want to delete "{categoryData.category.name}"?
-              This action cannot be undone.
+              ¿Está seguro de que desea eliminar &quot;
+              {categoryData.category.name}&quot;? Esta acción no se puede
+              deshacer.
             </p>
             {categoryData.summary.transactionCount > 0 && (
               <p className="text-red-600 dark:text-red-400 text-sm">
-                This category has {categoryData.summary.transactionCount}{" "}
-                transactions. You cannot delete a category with existing
-                transactions.
+                Esta categoría tiene {categoryData.summary.transactionCount}{" "}
+                transacciones. No puede eliminar una categoría con transacciones
+                existentes.
               </p>
             )}
             <div className="flex justify-end gap-2">
               <Button variant="soft" onClick={() => setShowDeleteDialog(false)}>
-                Cancel
+                Cancelar
               </Button>
               <Button
                 color="red"
@@ -427,7 +524,7 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
                 }
                 onClick={confirmDelete}
               >
-                {isDeleting ? "Deleting..." : "Delete"}
+                {isDeleting ? "Eliminando..." : "Eliminar"}
               </Button>
             </div>
           </div>

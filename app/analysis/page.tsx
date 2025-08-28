@@ -45,11 +45,11 @@ export default function Analysis() {
           </div> */}
           <div className="flex flex-col gap 2">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Expenses by category
+              Gastos por categoría
             </h3>
             <div className="flex gap-3 mb-5">
               <div className="space-y-1">
-                <p className="opacity-70 text-sm">Start date</p>
+                <p className="opacity-70 text-sm">Fecha de inicio</p>
                 <input
                   className="h-10 px-2 w-40 rounded-md bg-dark-50 border 
                 border-neutral-600 focus:outline-2 focus:outline-blue-600"
@@ -62,7 +62,7 @@ export default function Analysis() {
                 />
               </div>
               <div className="space-y-1">
-                <p className="opacity-70 text-sm">End date</p>
+                <p className="opacity-70 text-sm">Fecha de fin</p>
                 <input
                   className="h-10 px-2 w-40 rounded-md bg-dark-50 border 
                   border-neutral-600 focus:outline-2 focus:outline-blue-600"

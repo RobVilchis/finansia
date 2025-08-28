@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, TextField } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
 import z from "zod";
 
@@ -13,11 +13,6 @@ interface CategoryDialogProps {
   };
   onDelete: (id: string) => void;
   onCategoryUpdated: () => void;
-}
-
-interface Category {
-  name: string;
-  type: string;
 }
 
 interface CategoryFormData {
@@ -39,12 +34,7 @@ export default function CategoryDialog({
   open,
   onOpenChange,
 }: CategoryDialogProps) {
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<CategoryFormData>({
+  const { control, reset } = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
       name: category?.name,

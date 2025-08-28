@@ -22,11 +22,11 @@ export default function GoalCard({ goal, onEdit }: GoalCardProps) {
           <div className="space-y-3 md:space-y-1 w-full">
             <div className="space-y-1 md:flex justify-between">
               <p className="text-slate-600 dark:text-slate-400">
-                Target: ${goal.targetAmount}
+                Monto: ${goal.targetAmount}
               </p>
               {goal.targetDate && (
                 <p className=" text-slate-500 dark:text-slate-400">
-                  Target Date: {new Date(goal.targetDate).toLocaleDateString()}
+                  Fecha: {new Date(goal.targetDate).toLocaleDateString()}
                 </p>
               )}
             </div>

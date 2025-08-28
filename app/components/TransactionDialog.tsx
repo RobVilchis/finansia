@@ -53,10 +53,10 @@ interface TransactionDialogProps {
 
 const transactionSchema = z
   .object({
-    concept: z.string().min(1, "Description is required"),
-    date: z.string().min(10, "Date is required"),
-    time: z.string().min(4, "Time is required"),
-    amount: z.string().min(1, "Amount is required"),
+    concept: z.string().min(1, "La descripción es requerida"),
+    date: z.string().min(10, "La fecha es requerida"),
+    time: z.string().min(4, "La hora es requerida"),
+    amount: z.string().min(1, "El monto es requerido"),
     category: z.string().optional(),
     type: z.enum(["expense", "income", "transfer"]),
     accountId: z.string().optional(),
@@ -70,7 +70,7 @@ const transactionSchema = z
       return true;
     },
     {
-      message: "Source account is required for expenses",
+      message: "La cuenta origen es requerida para gastos",
       path: ["accountId"],
     }
   )
@@ -82,7 +82,7 @@ const transactionSchema = z
       return true;
     },
     {
-      message: "Target account is required for income",
+      message: "La cuenta destino es requerida para ingresos",
       path: ["targetAccountId"],
     }
   )
@@ -94,7 +94,8 @@ const transactionSchema = z
       return true;
     },
     {
-      message: "Both source and target accounts are required for transfers",
+      message:
+        "Ambas cuentas origen y destino son requeridas para transferencias",
       path: ["accountId"],
     }
   )
@@ -106,7 +107,7 @@ const transactionSchema = z
       return true;
     },
     {
-      message: "Category is required for expenses and income",
+      message: "La categoría es requerida para gastos e ingresos",
       path: ["category"],
     }
   );
@@ -215,20 +216,20 @@ export default function TransactionDialog({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="400px">
         <div className="flex justify-between items-center mb-2">
-          <Dialog.Title>Edit transaction</Dialog.Title>
+          <Dialog.Title>Editar transacción</Dialog.Title>
           <Button
             variant="soft"
             color="red"
             onClick={() => setShowDeleteConfirm(true)}
           >
-            Delete
+            Eliminar
           </Button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-              Transaction type
+              Tipo de transacción
             </label>
             <Controller
               name="type"
@@ -239,13 +240,13 @@ export default function TransactionDialog({
                   onValueChange={field.onChange}
                 >
                   <SegmentedControl.Item value="expense">
-                    Expense
+                    Gasto
                   </SegmentedControl.Item>
                   <SegmentedControl.Item value="income">
-                    Income
+                    Ingreso
                   </SegmentedControl.Item>
                   <SegmentedControl.Item value="transfer">
-                    Transfer
+                    Transferencia
                   </SegmentedControl.Item>
                 </SegmentedControl.Root>
               )}
@@ -254,7 +255,7 @@ export default function TransactionDialog({
 
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-              Description
+              Descripción
             </label>
             <Controller
               name="concept"
@@ -276,7 +277,7 @@ export default function TransactionDialog({
 
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-              Amount
+              Monto
             </label>
             <Controller
               name="amount"
@@ -301,7 +302,7 @@ export default function TransactionDialog({
           <div className="flex justify-start gap-2">
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Date
+                Fecha
               </label>
 
               <input
@@ -321,7 +322,7 @@ export default function TransactionDialog({
 
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Time
+                Hora
               </label>
 
               <input
@@ -343,7 +344,7 @@ export default function TransactionDialog({
           {transactionType === "expense" && (
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Source account
+                Cuenta origen
               </label>
               <Controller
                 name="accountId"
@@ -354,7 +355,7 @@ export default function TransactionDialog({
                     onValueChange={field.onChange}
                     size={size}
                   >
-                    <Select.Trigger placeholder="Pick one" />
+                    <Select.Trigger placeholder="Elige una" />
                     <Select.Content>
                       {accounts.map((account, i) => (
                         <Select.Item key={i} value={account.id}>
@@ -376,7 +377,7 @@ export default function TransactionDialog({
           {transactionType === "income" && (
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Target account
+                Cuenta destino
               </label>
               <Controller
                 name="targetAccountId"
@@ -387,7 +388,7 @@ export default function TransactionDialog({
                     onValueChange={field.onChange}
                     size={size}
                   >
-                    <Select.Trigger placeholder="Pick one" />
+                    <Select.Trigger placeholder="Elige una" />
                     <Select.Content>
                       {accounts.map((account, i) => (
                         <Select.Item key={i} value={account.id}>
@@ -410,7 +411,7 @@ export default function TransactionDialog({
             <>
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Source account
+                  Cuenta origen
                 </label>
                 <Controller
                   name="accountId"
@@ -421,7 +422,7 @@ export default function TransactionDialog({
                       onValueChange={field.onChange}
                       size={size}
                     >
-                      <Select.Trigger placeholder="Pick one" />
+                      <Select.Trigger placeholder="Elige una" />
                       <Select.Content>
                         {accounts.map((account, i) => (
                           <Select.Item key={i} value={account.id}>
@@ -441,7 +442,7 @@ export default function TransactionDialog({
 
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Target account
+                  Cuenta destino
                 </label>
                 <Controller
                   name="targetAccountId"
@@ -452,7 +453,7 @@ export default function TransactionDialog({
                       onValueChange={field.onChange}
                       size={size}
                     >
-                      <Select.Trigger placeholder="Pick one" />
+                      <Select.Trigger placeholder="Elige una" />
                       <Select.Content>
                         {accounts
                           .filter(
@@ -479,7 +480,7 @@ export default function TransactionDialog({
           {transactionType !== "transfer" && (
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Category
+                Categoría
               </label>
               <Controller
                 name="category"
@@ -490,7 +491,7 @@ export default function TransactionDialog({
                     onValueChange={field.onChange}
                     size={size}
                   >
-                    <Select.Trigger placeholder="Pick one" />
+                    <Select.Trigger placeholder="Elige una" />
                     <Select.Content>
                       {categories
                         .filter((category) => category.type === transactionType)
@@ -514,11 +515,11 @@ export default function TransactionDialog({
           <div className="flex justify-end gap-3 mt-6">
             <Dialog.Close>
               <Button variant="soft" color="gray">
-                Cancel
+                Cancelar
               </Button>
             </Dialog.Close>
             <Button type="submit" color="blue">
-              Update
+              Actualizar
             </Button>
           </div>
         </form>
@@ -527,10 +528,10 @@ export default function TransactionDialog({
       <Dialog.Root open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <Dialog.Content maxWidth="400px">
           <div className="space-y-4">
-            <Dialog.Title>Delete</Dialog.Title>
+            <Dialog.Title>Eliminar</Dialog.Title>
             <p className="text-gray-700 dark:text-gray-300">
-              Are you sure you want to delete this transaction? This action
-              cannot be undone.
+              ¿Estás seguro de que quieres eliminar esta transacción? Esta
+              acción no se puede deshacer.
             </p>
             <div className="flex justify-end gap-3">
               <Button
@@ -538,7 +539,7 @@ export default function TransactionDialog({
                 color="gray"
                 onClick={() => setShowDeleteConfirm(false)}
               >
-                Cancel
+                Cancelar
               </Button>
               <Button
                 color="red"
@@ -547,7 +548,7 @@ export default function TransactionDialog({
                   onDelete(transaction.id);
                 }}
               >
-                Delete transaction
+                Eliminar transacción
               </Button>
             </div>
           </div>

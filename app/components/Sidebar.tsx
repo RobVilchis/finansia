@@ -10,25 +10,25 @@ import { useEffect, useState } from "react";
 export const navLinks = [
   {
     href: "/home",
-    label: "Home",
+    label: "Inicio",
     icon: Home,
     className: "text-gray-300",
   },
   {
     href: "/data",
-    label: "Data",
+    label: "Datos",
     icon: CircleDollarSign,
     className: "text-gray-300",
   },
   {
     href: "/analysis",
-    label: "Analysis",
+    label: "Análisis",
     icon: BarChart3,
     className: "text-gray-300",
   },
   {
     href: "/categories",
-    label: "Categories",
+    label: "Categorías",
     icon: AppWindow,
     className: "text-gray-300",
   },

@@ -20,7 +20,7 @@ export default function ChatUI({
   return (
     <div className="w-full max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden">
       <h1 className="m-4 text-2xl  text-gray-900 dark:text-white mb-8">
-        Ask a question
+        Haz una pregunta
       </h1>
       <div className="h-[370px]  md:h-[350px] overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
@@ -48,7 +48,7 @@ export default function ChatUI({
           <TextArea
             value={input}
             onChange={handleInputChange}
-            placeholder="Ask about your expenses..."
+            placeholder="Pregunta sobre tus gastos..."
             className="flex-1 min-h-[44px] max-h-32 rounded-lg border dark:border-gray-700 bg-transparent px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={1}
           />
@@ -56,7 +56,7 @@ export default function ChatUI({
             type="submit"
             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            Send
+            Enviar
           </button>
         </div>
       </form>

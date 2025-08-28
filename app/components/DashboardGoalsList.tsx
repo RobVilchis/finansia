@@ -6,6 +6,7 @@ import { AddButton } from "./AddButton";
 import GoalCard from "./GoalCard";
 import GoalDialog from "./GoalDialog";
 import NewGoalDialog from "./NewGoalDialog";
+import { TextSkeleton } from "./LoadingSkeleton";
 
 export default function DashboardGoalsList() {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -42,7 +43,11 @@ export default function DashboardGoalsList() {
   };
 
   if (loading) {
-    return <div>Loading goals...</div>;
+    return (
+      <div className="space-y-4">
+        <TextSkeleton lines={3} />
+      </div>
+    );
   }
 
   if (error) {

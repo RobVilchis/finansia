@@ -42,13 +42,13 @@ interface NewTransactionDialogProps {
 
 const transactionSchema = z
   .object({
-    concept: z.string().min(1, "Description is required"),
-    date: z.string().min(10, "Date is required"),
-    time: z.string().min(4, "Time is required"),
-    amount: z.string().min(1, "Amount is required"),
+    concept: z.string().min(1, "La descripción es requerida"),
+    date: z.string().min(10, "La fecha es requerida"),
+    time: z.string().min(4, "La hora es requerida"),
+    amount: z.string().min(1, "El monto es requerido"),
     category: z.string().optional(),
     type: z.enum(["expense", "income", "transfer"]),
-    accountId: z.string().min(1, "Account is required"),
+    accountId: z.string().min(1, "La cuenta es requerida"),
     targetAccountId: z.string().optional(),
   })
   .refine(
@@ -59,7 +59,7 @@ const transactionSchema = z
       return true;
     },
     {
-      message: "Target account is required for transfers",
+      message: "La cuenta destino es requerida para transferencias",
       path: ["targetAccountId"],
     }
   )
@@ -71,7 +71,7 @@ const transactionSchema = z
       return true;
     },
     {
-      message: "Category is required for expenses and income",
+      message: "La categoría es requerida para gastos e ingresos",
       path: ["category"],
     }
   );
@@ -90,6 +90,10 @@ export default function NewTransactionDialog({
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
 
+  const currentDate = new Date();
+  const dateString = currentDate.toISOString().split("T")[0];
+  const timeString = currentDate.toTimeString().slice(0, 5);
+
   const {
     control,
     handleSubmit,
@@ -101,8 +105,8 @@ export default function NewTransactionDialog({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       concept: "",
-      date: "",
-      time: "",
+      date: dateString,
+      time: timeString,
       amount: "",
       category: "",
       type: "expense",
@@ -164,13 +168,13 @@ export default function NewTransactionDialog({
         className="z-40"
       >
         <div className="flex justify-between items-center mb-2">
-          <Dialog.Title>Add new transaction</Dialog.Title>
+          <Dialog.Title>Agregar nueva transacción</Dialog.Title>
         </div>
         <div className=" relative overflow-visible z-10">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Transaction Type
+                Tipo de transacción
               </label>
               <Controller
                 name="type"
@@ -181,13 +185,13 @@ export default function NewTransactionDialog({
                     onValueChange={field.onChange}
                   >
                     <SegmentedControl.Item value="expense">
-                      Expense
+                      Gasto
                     </SegmentedControl.Item>
                     <SegmentedControl.Item value="income">
-                      Income
+                      Ingreso
                     </SegmentedControl.Item>
                     <SegmentedControl.Item value="transfer">
-                      Transfer
+                      Transferencia
                     </SegmentedControl.Item>
                   </SegmentedControl.Root>
                 )}
@@ -196,7 +200,7 @@ export default function NewTransactionDialog({
 
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Description
+                Descripción
               </label>
               <Controller
                 name="concept"
@@ -218,7 +222,7 @@ export default function NewTransactionDialog({
 
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Amount
+                Monto
               </label>
               <Controller
                 name="amount"
@@ -243,7 +247,7 @@ export default function NewTransactionDialog({
             <div className="flex justify-start gap-2">
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Date
+                  Fecha
                 </label>
 
                 <input
@@ -263,7 +267,7 @@ export default function NewTransactionDialog({
 
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Time
+                  Hora
                 </label>
 
                 <input
@@ -285,10 +289,10 @@ export default function NewTransactionDialog({
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                 {transactionType === "expense"
-                  ? "Source account"
+                  ? "Cuenta origen"
                   : transactionType === "income"
-                  ? "Target account"
-                  : "Source account"}
+                  ? "Cuenta destino"
+                  : "Cuenta origen"}
               </label>
               <Controller
                 name="accountId"
@@ -299,7 +303,7 @@ export default function NewTransactionDialog({
                     onValueChange={field.onChange}
                     size={size}
                   >
-                    <Select.Trigger placeholder="Pick one" />
+                    <Select.Trigger placeholder="Elige una" />
                     <Select.Content>
                       {accounts.map((account, i) => (
                         <Select.Item key={i} value={account.id}>
@@ -320,7 +324,7 @@ export default function NewTransactionDialog({
             {transactionType === "transfer" && (
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Target account
+                  Cuenta destino
                 </label>
                 <Controller
                   name="targetAccountId"
@@ -331,7 +335,7 @@ export default function NewTransactionDialog({
                       onValueChange={field.onChange}
                       size={size}
                     >
-                      <Select.Trigger placeholder="Pick one" />
+                      <Select.Trigger placeholder="Elige una" />
                       <Select.Content>
                         {accounts
                           .filter(
@@ -357,7 +361,7 @@ export default function NewTransactionDialog({
             {transactionType !== "transfer" && (
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Category
+                  Categoría
                 </label>
                 <Controller
                   name="category"
@@ -368,7 +372,7 @@ export default function NewTransactionDialog({
                       onValueChange={field.onChange}
                       size={size}
                     >
-                      <Select.Trigger placeholder="Pick one" />
+                      <Select.Trigger placeholder="Elige una" />
                       <Select.Content>
                         {categories
                           .filter(
@@ -394,11 +398,11 @@ export default function NewTransactionDialog({
             <div className="flex justify-end gap-3 mt-6">
               <Dialog.Close>
                 <Button variant="soft" color="gray">
-                  Cancel
+                  Cancelar
                 </Button>
               </Dialog.Close>
               <Button type="submit" color="blue">
-                Add transaction
+                Agregar transacción
               </Button>
             </div>
           </form>
