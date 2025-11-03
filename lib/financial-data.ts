@@ -129,3 +129,16 @@ export async function fetchAllFinancialData(userId: string) {
     categorySum,
   };
 }
+
+export async function fetchUserCategories(userId: string) {
+  const allCategories = await db
+    .select({
+      id: categories.id,
+      name: categories.name,
+      type: categories.type,
+    })
+    .from(categories)
+    .where(eq(categories.userId, userId));
+
+  return allCategories;
+}

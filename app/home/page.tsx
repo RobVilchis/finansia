@@ -38,9 +38,7 @@ export default function DashboardPage() {
           />
         </section>
         <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800">
-          <h2 className="text-xl font-semibold mb-4">
-            Consejos de esta semana
-          </h2>
+          <h2 className="text-xl font-semibold mb-4">Tips de esta semana</h2>
           <TipsList />
         </section>
       </div>

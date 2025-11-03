@@ -1,13 +1,12 @@
-import {
-  fetchAllFinancialData,
-  getFirst50,
-  errorHandler,
-} from "@/lib/financial-data";
-import { openai } from "@ai-sdk/openai";
-import { currentUser } from "@clerk/nextjs/server";
-import { generateObject } from "ai";
 import { db } from "@/lib/db";
 import { financialTips } from "@/lib/db/schema/financial_tips";
+import {
+  errorHandler,
+  fetchAllFinancialData,
+  getFirst50,
+} from "@/lib/financial-data";
+import { currentUser } from "@clerk/nextjs/server";
+import { generateObject } from "ai";
 import { z } from "zod";
 
 // Allow responses up to 30 seconds
@@ -111,7 +110,7 @@ export async function GET() {
 
   try {
     const result = await generateObject({
-      model: openai("gpt-4o"),
+      model: "openai/gpt-5",
       system: systemContext,
       messages: [
         {

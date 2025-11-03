@@ -89,14 +89,14 @@ export default function TipsList() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <Button onClick={generateNewTips} disabled={generating}>
-          {generating ? "Generando..." : "Generar nuevos consejos"}
+          {generating ? "Generando..." : "Generar nuevos tips"}
         </Button>
       </div>
 
       {tips.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-500 dark:text-gray-400 mb-4 px-10">
-            Aún no se han generado consejos.
+            Aún no se han generado tips.
           </p>
         </div>
       ) : (

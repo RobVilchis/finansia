@@ -180,7 +180,7 @@ export default function Home() {
               router.push(`?${createQueryString("tab", value)}`);
             }}
           >
-            <Tabs.List className="mb-4">
+            <Tabs.List className="mb-4" color="indigo">
               <Tabs.Trigger
                 onClick={() => {
                   router.push(`?${createQueryString("tab", "transactions")}`);

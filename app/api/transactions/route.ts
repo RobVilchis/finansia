@@ -1,14 +1,12 @@
 import { db } from "@/lib/db";
 import { accounts } from "@/lib/db/schema/account";
 import { categories } from "@/lib/db/schema/categories";
-import {
-  insertTransactionSchema,
-  transactions,
-} from "@/lib/db/schema/transactions";
+import { transactions } from "@/lib/db/schema/transactions";
+import { createTransaction } from "@/lib/services/transactions";
+import { currentUser } from "@clerk/nextjs/server";
 import { and, desc, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
 
 export async function GET() {
   try {
@@ -63,65 +61,21 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    body.amount = body.amount.toString();
 
-    // Parse the UTC string and create a Date object that preserves UTC
-    const utcDate = new Date(body.date);
-    body.date = new Date(
-      utcDate.getTime() + utcDate.getTimezoneOffset() * 60000
-    );
-
-    const validatedData = insertTransactionSchema.parse({
-      ...body,
+    const created = await createTransaction({
       userId: user.id,
+      description: body.description,
+      amount: body.amount,
+      type: body.type,
+      date: body.date,
+      categoryName: body.category, // provided as name in existing API
+      accountId: body.accountId,
+      accountName: body.accountName,
+      targetAccountId: body.targetAccountId,
+      targetAccountName: body.targetAccountName,
     });
 
-    // Find the category ID based on the category name if it's not a transfer
-    let categoryId = null;
-    if (body.type !== "transfer" && body.category) {
-      const category = await db
-        .select()
-        .from(categories)
-        .where(
-          and(
-            eq(categories.name, body.category),
-            eq(categories.userId, user.id)
-          )
-        )
-        .limit(1);
-
-      if (!category.length) {
-        return NextResponse.json(
-          { error: "Invalid category" },
-          { status: 400 }
-        );
-      }
-      categoryId = category[0].id;
-    }
-
-    const newTransaction = await db
-      .insert(transactions)
-      .values({
-        ...validatedData,
-        amount: body.amount.toString(),
-        category: categoryId,
-        userId: user.id,
-        sourceAccountId:
-          body.type === "transfer"
-            ? body.accountId
-            : body.type === "expense"
-            ? body.accountId
-            : null,
-        targetAccountId:
-          body.type === "transfer"
-            ? body.targetAccountId
-            : body.type === "income"
-            ? body.accountId
-            : null,
-      })
-      .returning();
-
-    return NextResponse.json(newTransaction[0]);
+    return NextResponse.json(created);
   } catch (error) {
     return NextResponse.json(
       { error: `Failed to create transaction: ${error}` },

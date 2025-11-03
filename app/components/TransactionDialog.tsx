@@ -131,7 +131,13 @@ export default function TransactionDialog({
   const [accounts, setAccounts] = useState<Account[]>([]);
 
   const transactionDate = new Date(transaction.date);
-  const dateString = transactionDate.toISOString().split("T")[0];
+  const dateArray = transactionDate.toLocaleDateString().split("/");
+  const dateString =
+    dateArray[2] +
+    "-" +
+    dateArray[0].padStart(2, "0") +
+    "-" +
+    dateArray[1].padStart(2, "0");
   const timeString = transactionDate.toTimeString().slice(0, 5);
 
   const {

@@ -27,7 +27,7 @@ export default function TransactionCard({
   return (
     <>
       <div
-        className="w-full flex justify-between items-center bg-slate-50 dark:bg-slate-800 rounded-lg shadow-sm \
+        className="w-full flex justify-between items-center bg-white dark:bg-slate-800 rounded-lg shadow-sm \
          p-3 border border-slate-200 dark:border-slate-700 cursor-pointer hover:shadow-md \
         transition-shadow  dark:hover:bg-slate-700 transition-color"
       >

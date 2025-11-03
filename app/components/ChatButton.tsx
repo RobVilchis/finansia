@@ -3,10 +3,12 @@
 import { useChat } from "@ai-sdk/react";
 import { useState } from "react";
 import ChatUI from "./ChatUI";
+import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 
 export default function ChatButton() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat({
-    experimental_throttle: 50,
+  const { messages, sendMessage } = useChat({
+    // Automatically submit when all tool results are available
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   });
   const [chatOpen, setChatOpen] = useState<boolean>(false);
 
@@ -14,7 +16,7 @@ export default function ChatButton() {
     <>
       <button
         onClick={() => setChatOpen(!chatOpen)}
-        className="fixed right-8 bottom-8 md:right-16 md:bottom-16 bg-gray-600 rounded-lg p-3 flex items-center justify-center hover:bg-gray-500 transition-colors"
+        className="fixed md:right-10 md:bottom-10 bg-gray-200  dark:bg-gray-600 rounded-lg p-3 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -38,12 +40,7 @@ export default function ChatButton() {
             : "opacity-0 pointer-events-none"
         }`}
       >
-        <ChatUI
-          messages={messages}
-          input={input}
-          handleInputChange={handleInputChange}
-          handleSubmit={handleSubmit}
-        />
+        <ChatUI messages={messages} sendMessage={sendMessage} />
       </div>
     </>
   );
