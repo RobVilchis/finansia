@@ -93,11 +93,15 @@ export async function POST(req: Request) {
         inputSchema: z
           .object({
             name: z.string().describe("Name of the transaction"),
-            date: z.iso.date().describe("Date of the transaction"),
-            time: z.iso.time().describe("Time of the transaction"),
+            date: z.string().date().describe("Date of the transaction"),
+            time: z.string().time().describe("Time of the transaction"),
             amount: z.number().describe("Amount of the transaction"),
             category: z
-              .enum(userCategories.map((category) => category.name))
+              .enum(
+                (userCategories.length > 0
+                  ? userCategories.map((category) => category.name)
+                  : [""]) as [string, ...string[]]
+              )
               .describe(
                 "Category of the transaction. Must match the selected type (expense categories for expense, income categories for income)."
               ),
@@ -105,12 +109,20 @@ export async function POST(req: Request) {
               .enum(["expense", "income", "transfer"])
               .describe("Type of the transaction"),
             accountName: z
-              .enum(userAccounts.map((account) => account.name))
+              .enum(
+                (userAccounts.length > 0
+                  ? userAccounts.map((account) => account.name)
+                  : [""]) as [string, ...string[]]
+              )
               .describe(
                 "Source account for the transaction, if the type is expense or transfer"
               ),
             targetAccountName: z
-              .enum(userAccounts.map((account) => account.name))
+              .enum(
+                (userAccounts.length > 0
+                  ? userAccounts.map((account) => account.name)
+                  : [""]) as [string, ...string[]]
+              )
               .describe(
                 "Target Account ID of the transaction, if the type is transfer or income"
               ),
@@ -181,7 +193,11 @@ export async function POST(req: Request) {
               .optional(),
             amount: z.number().describe("Amount of the transaction").optional(),
             category: z
-              .enum(userCategories.map((category) => category.name))
+              .enum(
+                (userCategories.length > 0
+                  ? userCategories.map((category) => category.name)
+                  : [""]) as [string, ...string[]]
+              )
               .describe(
                 "Category of the transaction. Must match the selected type (expense categories for expense, income categories for income)."
               )
@@ -191,22 +207,32 @@ export async function POST(req: Request) {
               .describe("Type of the transaction")
               .optional(),
             accountName: z
-              .enum(userAccounts.map((account) => account.name))
+              .enum(
+                (userAccounts.length > 0
+                  ? userAccounts.map((account) => account.name)
+                  : [""]) as [string, ...string[]]
+              )
               .describe(
                 "Source account for the transaction, if the type is expense or transfer"
               )
               .optional(),
             targetAccountName: z
-              .enum(userAccounts.map((account) => account.name))
+              .enum(
+                (userAccounts.length > 0
+                  ? userAccounts.map((account) => account.name)
+                  : [""]) as [string, ...string[]]
+              )
               .describe(
                 "Target Account ID of the transaction, if the type is transfer or income"
               )
               .optional(),
-            startDatetime: z.iso
+            startDatetime: z
+              .string()
               .datetime()
               .describe("Start datetime for date range filtering")
               .optional(),
-            endDatetime: z.iso
+            endDatetime: z
+              .string()
               .datetime()
               .describe("End datetime for date range filtering")
               .optional(),
@@ -273,7 +299,11 @@ export async function POST(req: Request) {
               .optional(),
             amount: z.number().describe("Amount of the transaction").optional(),
             category: z
-              .enum(userCategories.map((category) => category.name))
+              .enum(
+                (userCategories.length > 0
+                  ? userCategories.map((category) => category.name)
+                  : [""]) as [string, ...string[]]
+              )
               .describe(
                 "Category of the transaction. Must match the selected type (expense categories for expense, income categories for income)."
               )
@@ -283,22 +313,32 @@ export async function POST(req: Request) {
               .describe("Type of the transaction")
               .optional(),
             accountName: z
-              .enum(userAccounts.map((account) => account.name))
+              .enum(
+                (userAccounts.length > 0
+                  ? userAccounts.map((account) => account.name)
+                  : [""]) as [string, ...string[]]
+              )
               .describe(
                 "Source account for the transaction, if the type is expense or transfer"
               )
               .optional(),
             targetAccountName: z
-              .enum(userAccounts.map((account) => account.name))
+              .enum(
+                (userAccounts.length > 0
+                  ? userAccounts.map((account) => account.name)
+                  : [""]) as [string, ...string[]]
+              )
               .describe(
                 "Target Account ID of the transaction, if the type is transfer or income"
               )
               .optional(),
-            startDatetime: z.iso
+            startDatetime: z
+              .string()
               .datetime()
               .describe("Start datetime for date range filtering")
               .optional(),
-            endDatetime: z.iso
+            endDatetime: z
+              .string()
               .datetime()
               .describe("End datetime for date range filtering")
               .optional(),
