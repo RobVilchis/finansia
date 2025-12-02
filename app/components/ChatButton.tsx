@@ -4,11 +4,26 @@ import { useChat } from "@ai-sdk/react";
 import { useState } from "react";
 import ChatUI from "./ChatUI";
 import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
+import { useTransactions } from "../contexts/TransactionsContext";
 
 export default function ChatButton() {
+  const { refreshTransactions } = useTransactions();
   const { messages, sendMessage } = useChat({
     // Automatically submit when all tool results are available
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+
+    onToolCall: ({ toolCall }) => {
+      if (toolCall.dynamic) {
+        return;
+      }
+
+      if (
+        toolCall.toolName === "createTransaction" ||
+        toolCall.toolName === "deleteTransactions"
+      ) {
+        refreshTransactions();
+      }
+    },
   });
   const [chatOpen, setChatOpen] = useState<boolean>(false);
 

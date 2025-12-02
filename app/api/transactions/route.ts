@@ -41,7 +41,12 @@ export async function GET() {
         targetAccounts,
         eq(transactions.targetAccountId, targetAccounts.id)
       )
-      .where(eq(transactions.userId, user.id))
+      .where(
+        and(
+          eq(transactions.userId, user.id),
+          eq(transactions.isUnverified, false)
+        )
+      )
       .orderBy(desc(transactions.date));
 
     return NextResponse.json(allTransactions);
@@ -82,6 +87,17 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+interface TransactionUpdateInput {
+  description: string;
+  date: Date;
+  amount: number;
+  type: string;
+  category: string | null;
+  sourceAccountId: string | null;
+  targetAccountId: string | null;
+  isUnverified?: boolean;
 }
 
 export async function PATCH(request: Request) {
@@ -148,25 +164,33 @@ export async function PATCH(request: Request) {
       categoryId = null;
     }
 
+    const updateData: TransactionUpdateInput = {
+      description: body.description,
+      date: body.date,
+      amount: body.amount,
+      type: body.type,
+      category: categoryId,
+      sourceAccountId:
+        body.type === "transfer"
+          ? body.accountId
+          : body.type === "expense"
+          ? body.accountId
+          : null,
+      targetAccountId:
+        body.type === "transfer"
+          ? body.targetAccountId
+          : body.type === "income"
+          ? body.targetAccountId
+          : null,
+    };
+
+    if (body.isUnverified !== undefined) {
+      updateData.isUnverified = body.isUnverified;
+    }
+
     const updatedTransaction = await db
       .update(transactions)
-      .set({
-        ...body,
-        amount: body.amount.toString(),
-        category: categoryId,
-        sourceAccountId:
-          body.type === "transfer"
-            ? body.accountId
-            : body.type === "expense"
-            ? body.accountId
-            : null,
-        targetAccountId:
-          body.type === "transfer"
-            ? body.targetAccountId
-            : body.type === "income"
-            ? body.targetAccountId
-            : null,
-      })
+      .set({ ...updateData, amount: updateData.amount?.toString() })
       .where(
         and(
           eq(transactions.id, transactionId),

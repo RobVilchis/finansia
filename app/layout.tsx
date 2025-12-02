@@ -9,6 +9,7 @@ import MobileNavbar from "./components/MobileNavbar";
 import { Sidebar } from "./components/Sidebar";
 import "./globals.css";
 import ChatButton from "./components/ChatButton";
+import { TransactionsProvider } from "./contexts/TransactionsContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,18 +41,20 @@ export default function RootLayout({
         >
           <ThemeProvider attribute="class">
             <Theme appearance="inherit">
-              <div className="relative md:hidden z-50">
-                <MobileNavbar />
-              </div>
-              <section className="flex">
-                <div className="hidden md:block">
-                  <Sidebar />
+              <TransactionsProvider>
+                <div className="relative md:hidden z-50">
+                  <MobileNavbar />
                 </div>
-                <div className="pt-14 md:pt-6 md:pl-80 w-full bg-white dark:bg-slate-950">
-                  {children}
-                </div>
-              </section>
-              <ChatButton />
+                <section className="flex">
+                  <div className="hidden md:block">
+                    <Sidebar />
+                  </div>
+                  <div className="pt-14 md:pt-6 md:pl-80 w-full bg-white dark:bg-slate-950">
+                    {children}
+                  </div>
+                </section>
+                <ChatButton />
+              </TransactionsProvider>
             </Theme>
           </ThemeProvider>
         </body>

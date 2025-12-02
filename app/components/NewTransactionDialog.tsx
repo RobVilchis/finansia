@@ -85,7 +85,7 @@ export type FieldProps<T extends keyof TransactionFormData> = {
 export default function NewTransactionDialog({
   open,
   onOpenChange,
-  onAddExpense,
+  onAddExpense: onAddTransaction,
 }: NewTransactionDialogProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -148,7 +148,7 @@ export default function NewTransactionDialog({
   }, []);
 
   const onSubmit = (data: TransactionFormData) => {
-    onAddExpense({
+    onAddTransaction({
       concept: data.concept,
       date: `${data.date}T${data.time}`,
       amount: Number(data.amount),

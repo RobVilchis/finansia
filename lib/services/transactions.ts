@@ -17,12 +17,13 @@ export type CreateTransactionInput = {
   type: TransactionType;
   date: string | Date;
   time?: string; // optional HH:mm or HH:mm:ss, used mainly by chat tool
-  categoryName?: string; // category by name (non-transfer)
+  categoryName?: string | null; // category by name (non-transfer)
   categoryId?: string | null; // or category by id
   accountId?: string; // source for expense/transfer, target for income if target not given
   accountName?: string; // alternative to accountId
   targetAccountId?: string; // target for transfer or income
   targetAccountName?: string; // alternative to targetAccountId
+  needsVerification?: boolean;
 };
 
 export type GetTransactionsInput = {
@@ -88,22 +89,21 @@ async function resolveCategoryId(
   return rows.length ? rows[0].id : null;
 }
 
-export async function createTransaction(input: CreateTransactionInput) {
-  const {
-    userId,
-    description,
-    amount,
-    type,
-    date,
-    time,
-    categoryName,
-    categoryId: providedCategoryId,
-    accountId,
-    accountName,
-    targetAccountId,
-    targetAccountName,
-  } = input;
-
+export async function createTransaction({
+  userId,
+  description,
+  amount,
+  type,
+  date,
+  time,
+  categoryName,
+  categoryId: providedCategoryId,
+  accountId,
+  accountName,
+  targetAccountId,
+  targetAccountName,
+  needsVerification,
+}: CreateTransactionInput) {
   const normalizedDate = normalizeDate(date, time);
   const amountAsString =
     typeof amount === "number" ? amount.toString() : amount;
@@ -114,8 +114,8 @@ export async function createTransaction(input: CreateTransactionInput) {
     categoryName,
     providedCategoryId ?? null
   );
-
-  if (type !== "transfer" && !resolvedCategoryId) {
+  console.log(userId, categoryName, providedCategoryId, resolvedCategoryId);
+  if (type !== "transfer" && !resolvedCategoryId && !needsVerification) {
     throw new Error("Invalid or unknown category");
   }
 
@@ -160,11 +160,48 @@ export async function createTransaction(input: CreateTransactionInput) {
       category: type === "transfer" ? null : resolvedCategoryId,
       sourceAccountId,
       targetAccountId: finalTargetAccountId,
+      isUnverified: needsVerification,
       userId,
     })
     .returning();
 
   return inserted[0];
+}
+
+export async function getUnverifiedTransactions(userId: string) {
+  const sourceAccounts = alias(accounts, "sourceAccounts");
+  const targetAccounts = alias(accounts, "targetAccounts");
+
+  const results = await db
+    .select({
+      id: transactions.id,
+      description: transactions.description,
+      amount: transactions.amount,
+      date: transactions.date,
+      type: transactions.type,
+      categoryName: categories.name,
+      sourceAccountId: transactions.sourceAccountId,
+      targetAccountId: transactions.targetAccountId,
+      sourceAccountName: sourceAccounts.name,
+      targetAccountName: targetAccounts.name,
+      isUnverified: transactions.isUnverified,
+    })
+    .from(transactions)
+    .leftJoin(categories, eq(transactions.category, categories.id))
+    .leftJoin(
+      sourceAccounts,
+      eq(transactions.sourceAccountId, sourceAccounts.id)
+    )
+    .leftJoin(
+      targetAccounts,
+      eq(transactions.targetAccountId, targetAccounts.id)
+    )
+    .where(
+      and(eq(transactions.userId, userId), eq(transactions.isUnverified, true))
+    )
+    .orderBy(transactions.date);
+
+  return results;
 }
 
 export async function getTransactions(filters: GetTransactionsInput) {
@@ -221,7 +258,7 @@ export async function getTransactions(filters: GetTransactionsInput) {
           targetAccounts,
           eq(transactions.targetAccountId, targetAccounts.id)
         )
-        .where(and(...conditions))
+        .where(and(eq(transactions.isUnverified, false), ...conditions))
     : db.select().from(transactions);
   return await query;
 }

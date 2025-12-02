@@ -1,5 +1,6 @@
 import { nanoid } from "@/lib/utils";
 import {
+  boolean,
   decimal,
   pgTable,
   text,
@@ -24,6 +25,7 @@ export const transactions = pgTable("transactions", {
   sourceAccountId: varchar("source_account_id").references(() => accounts.id),
   targetAccountId: varchar("target_account_id").references(() => accounts.id),
   createdAt: timestamp("created_at").defaultNow(),
+  isUnverified: boolean("is_unverified").default(false),
 });
 
 export const insertTransactionSchema = z.object({
