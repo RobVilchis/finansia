@@ -144,7 +144,7 @@ export default function UploadStatementDialog({
               </div>
               <div className="mb-4">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-400 mb-3 block">
-                  ¿Tu estado de cuenta es de débito, o de crédito?
+                  ¿Tu estado de cuenta es de débito o crédito?
                 </label>
                 <Controller
                   name="accountType"

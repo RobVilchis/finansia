@@ -129,7 +129,11 @@ export async function POST(request: Request) {
         console.log(transactionsToVerify);
 
         for (const transaction of response.object) {
-          createTransaction({ userId: user.id, ...transaction });
+          createTransaction({
+            userId: user.id,
+            ...transaction,
+            accountId: transaction.accountName,
+          });
         }
       } catch (error) {
         await updateStatementUploadStatus(statement.id, "error");

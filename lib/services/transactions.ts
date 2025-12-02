@@ -123,6 +123,12 @@ export async function createTransaction({
     accountId,
     accountName,
   });
+  console.log(
+    "resolvedSourceAccountId",
+    accountId,
+    accountName,
+    resolvedSourceAccountId
+  );
 
   const resolvedTargetAccountId = await resolveAccountId(userId, {
     accountId: targetAccountId,

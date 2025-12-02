@@ -245,7 +245,7 @@ export default function ReviewPage() {
               type: expense.type,
               accountId: expense.accountId,
               targetAccountId: expense.targetAccountId,
-              isUnverified: true, // Keep as unverified until explicitly verified
+              isUnverified: false,
             })
           }
           onDelete={handleDeleteTransaction}

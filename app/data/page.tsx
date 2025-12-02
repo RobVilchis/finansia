@@ -111,6 +111,7 @@ export default function Home() {
   useEffect(() => {
     if (pendingStatements.length === 0) {
       fetchPendingStatements();
+      fetchTransactions();
       return;
     }
 
