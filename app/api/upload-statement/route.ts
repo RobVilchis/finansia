@@ -5,7 +5,7 @@ import {
   createStatementUpload,
   updateStatementUploadStatus,
 } from "@/lib/services/statements";
-import { createTransaction } from "@/lib/services/transactions";
+import { createTransactionIfUnique } from "@/lib/services/transactions";
 import { currentUser } from "@clerk/nextjs/server";
 import { generateObject } from "ai";
 import { promises as fs } from "fs";
@@ -66,7 +66,6 @@ export async function POST(request: Request) {
 
     pdfParser.on("pdfParser_dataError", (error) => console.log(error));
     pdfParser.on("pdfParser_dataReady", async () => {
-      console.log("data ready");
       // console.log((pdfParser as any).getRawTextContent());
       parsedText = pdfParser.getRawTextContent();
 
@@ -116,25 +115,25 @@ export async function POST(request: Request) {
           prompt: prompt(parsedText),
         });
 
-        await updateStatementUploadStatus(statement.id, "ready");
-
         const transactionsToVerify = response.object.filter(
           (t) => t.needsVerification
         );
         const completeTransactions = response.object.filter(
           (t) => !t.needsVerification
         );
-
+        
         console.log(completeTransactions);
         console.log(transactionsToVerify);
-
+        
         for (const transaction of response.object) {
-          createTransaction({
+          createTransactionIfUnique({
             userId: user.id,
             ...transaction,
             accountId: transaction.accountName,
           });
         }
+
+        await updateStatementUploadStatus(statement.id, "ready");
       } catch (error) {
         await updateStatementUploadStatus(statement.id, "error");
         console.error("Failed to parse statement", error);

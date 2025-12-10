@@ -1,9 +1,10 @@
 "use client";
 
 import { Tabs } from "@radix-ui/themes";
+import { Loader2, Upload } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Upload, Loader2 } from "lucide-react";
 import AccountsList from "../components/AccountsList";
 import { AddButton } from "../components/AddButton";
 import GoalsList from "../components/GoalsList";
@@ -13,7 +14,6 @@ import TransactionCard from "../components/TransactionCard";
 import TransactionDialog from "../components/TransactionDialog";
 import UploadStatementDialog from "../components/UploadStatementDialog";
 import { useTransactions } from "../contexts/TransactionsContext";
-import Link from "next/link";
 
 interface Transaction {
   id: string;
@@ -54,6 +54,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
+  /*   const [statementProcessedToastOpen, setStatementProcessedToastOpen] =
+      useState(false); */
 
   // Get a new searchParams string by merging the current
   // searchParams with a provided key/value pair
@@ -112,6 +114,7 @@ export default function Home() {
     if (pendingStatements.length === 0) {
       fetchPendingStatements();
       fetchTransactions();
+      // setStatementProcessedToastOpen(true);
       return;
     }
 
@@ -251,6 +254,7 @@ export default function Home() {
   }, []);
 
   return (
+    //<StatementProcessedToastProvider open={statementProcessedToastOpen} setOpen={setStatementProcessedToastOpen}>
     <div className="flex justify-center container mx-auto px-8 py-4 min-h-screen">
       <main className="flex flex-col w-full max-w-[500px] ">
         <div className="grow">
@@ -304,9 +308,8 @@ export default function Home() {
             </Tabs.Content>
             <Tabs.Content value="transactions">
               <div
-                className={`flex gap-3 items-center justify-between ${
-                  unverifiedTransactions.length > 0 ? "mb-4" : "mb-8"
-                }`}
+                className={`flex gap-3 items-center justify-between ${unverifiedTransactions.length > 0 ? "mb-4" : "mb-8"
+                  }`}
               >
                 <h1 className="text-2xl font-bold ">Transacciones recientes</h1>
                 <div className="flex items-center gap-2">
@@ -463,5 +466,6 @@ export default function Home() {
         />
       )}
     </div>
+    //</StatementProcessedToastProvider>
   );
 }

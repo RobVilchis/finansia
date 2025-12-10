@@ -85,9 +85,8 @@ export const Sidebar = () => {
             href={href}
             className={`w-full flex items-center gap-3 px-4 py-3 ${className} 
             hover:text-white  hover:bg-slate-700 rounded-lg 
-            transition-all duration-200 group ${
-              href.slice(1) == selectedPage ? "bg-slate-800" : ""
-            } `}
+            transition-all duration-200 group ${href.slice(1) == selectedPage ? "bg-slate-800" : ""
+              } `}
           >
             <Icon className="w-5 h-5 group-hover:scale-110 transition-transform" />
             <span className="font-medium">{label}</span>

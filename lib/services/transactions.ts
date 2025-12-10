@@ -114,8 +114,8 @@ export async function createTransaction({
     categoryName,
     providedCategoryId ?? null
   );
-  console.log(userId, categoryName, providedCategoryId, resolvedCategoryId);
-  if (type !== "transfer" && !resolvedCategoryId && !needsVerification) {
+
+    if (type !== "transfer" && !resolvedCategoryId && !needsVerification) {
     throw new Error("Invalid or unknown category");
   }
 
@@ -123,12 +123,6 @@ export async function createTransaction({
     accountId,
     accountName,
   });
-  console.log(
-    "resolvedSourceAccountId",
-    accountId,
-    accountName,
-    resolvedSourceAccountId
-  );
 
   const resolvedTargetAccountId = await resolveAccountId(userId, {
     accountId: targetAccountId,
@@ -173,6 +167,115 @@ export async function createTransaction({
 
   return inserted[0];
 }
+
+export async function createTransactionIfUnique({
+  userId,
+  description,
+  amount,
+  type,
+  date,
+  time,
+  categoryName,
+  categoryId: providedCategoryId,
+  accountId,
+  accountName,
+  targetAccountId,
+  targetAccountName,
+  needsVerification,
+}: CreateTransactionInput) {
+  const normalizedDate = normalizeDate(date, time);
+  const amountAsString =
+    typeof amount === "number" ? amount.toString() : amount;
+
+  console.log("Creating transaction", {
+    userId,
+    description,
+    amount,
+    type,
+    date,
+    time,
+    categoryName,
+  });
+  const existingTransaction = await db
+    .select()
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        eq(transactions.date, normalizedDate),
+        eq(transactions.amount, amountAsString),
+        eq(transactions.type, type),
+      )
+    )
+    .limit(1);
+
+  if (existingTransaction.length) {
+    console.log("Transaction already exists, skipping");
+    return existingTransaction[0];
+  }
+
+  const resolvedCategoryId = await resolveCategoryId(
+    userId,
+    type,
+    categoryName,
+    providedCategoryId ?? null
+  );
+
+  if (type !== "transfer" && !resolvedCategoryId && !needsVerification) {
+    throw new Error("Invalid or unknown category");
+  }
+
+  const resolvedSourceAccountId = await resolveAccountId(userId, {
+    accountId,
+    accountName,
+  });
+
+  const resolvedTargetAccountId = await resolveAccountId(userId, {
+    accountId: targetAccountId,
+    accountName: targetAccountName,
+  });
+
+  // Build DB values depending on type
+  const sourceAccountId =
+    type === "transfer"
+      ? resolvedSourceAccountId
+      : type === "expense"
+      ? resolvedSourceAccountId
+      : null;
+
+  const finalTargetAccountId =
+    type === "transfer"
+      ? resolvedTargetAccountId
+      : type === "income"
+      ? resolvedTargetAccountId ?? resolvedSourceAccountId ?? null
+      : null;
+
+  const base = insertTransactionSchema.parse({
+    userId,
+    date: normalizedDate,
+    amount: amountAsString,
+    type,
+    category: resolvedCategoryId ?? "",
+    description,
+  });
+
+  const inserted = await db
+    .insert(transactions)
+    .values({
+      ...base,
+      amount: amountAsString,
+      category: type === "transfer" ? null : resolvedCategoryId,
+      sourceAccountId,
+      targetAccountId: finalTargetAccountId,
+      isUnverified: needsVerification,
+      userId,
+    })
+    .returning();
+
+  return inserted[0];
+}
+
+
 
 export async function getUnverifiedTransactions(userId: string) {
   const sourceAccounts = alias(accounts, "sourceAccounts");

@@ -22,7 +22,7 @@ export default function DashboardGoalsList() {
       setGoals(data);
       setError(null);
     } catch (err) {
-      setError("Failed to fetch goals");
+      setError("Ocurrió un error al cargar tus metas");
       console.error(err);
     } finally {
       setLoading(false);
@@ -38,7 +38,7 @@ export default function DashboardGoalsList() {
       await deleteGoal(id);
       await fetchGoals();
     } catch (err) {
-      console.error("Failed to delete goal:", err);
+      console.error("Ocurrió un error al eliminar la meta:", err);
     }
   };
 

@@ -3,13 +3,13 @@ import { dark } from "@clerk/themes";
 import { Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Geist, Geist_Mono } from "next/font/google";
+import ChatButton from "./components/ChatButton";
 import MobileNavbar from "./components/MobileNavbar";
 import { Sidebar } from "./components/Sidebar";
-import "./globals.css";
-import ChatButton from "./components/ChatButton";
 import { TransactionsProvider } from "./contexts/TransactionsContext";
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

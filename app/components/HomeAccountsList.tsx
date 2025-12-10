@@ -31,7 +31,7 @@ export default function AccountsList({ onAccountAdded }: AccountsListProps) {
       setAccounts(data);
       setError(null);
     } catch (err) {
-      setError("Failed to fetch accounts");
+      setError("Ocurrió un error al cargar tus cuentas");
       console.error(err);
     } finally {
       setLoading(false);
@@ -55,7 +55,7 @@ export default function AccountsList({ onAccountAdded }: AccountsListProps) {
       if (!response.ok) throw new Error("Failed to delete account");
       await fetchAccounts();
     } catch (err) {
-      console.error("Failed to delete account:", err);
+      console.error("Ocurrió un error al eliminar la cuenta:", err);
     }
   };
 
