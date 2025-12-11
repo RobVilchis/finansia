@@ -1,10 +1,10 @@
 "use client";
 
-import { Button, Dialog, SegmentedControl, Select } from "@radix-ui/themes";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button, Dialog, SegmentedControl, Select, TextField } from "@radix-ui/themes";
 import { Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 
@@ -23,6 +23,7 @@ interface Account {
 const uploadSchema = z.object({
   accountId: z.string(),
   accountType: z.string(),
+  comments: z.string().optional(),
   file: z.any(),
 });
 type UploadFormData = z.infer<typeof uploadSchema>;
@@ -41,7 +42,7 @@ export default function UploadStatementDialog({
 
   const { control, handleSubmit, register } = useForm<UploadFormData>({
     resolver: zodResolver(uploadSchema),
-    defaultValues: { accountType: "checking" },
+    defaultValues: { accountType: "checking", comments: "" },
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +54,6 @@ export default function UploadStatementDialog({
 
   const onSubmit = async (data: UploadFormData) => {
     if (!selectedFile) return;
-    console.log(data);
 
     setIsUploading(true);
     try {
@@ -65,6 +65,10 @@ export default function UploadStatementDialog({
 
       formData.append("accountId", data.accountId);
       formData.append("accountType", data.accountType);
+
+      if (data.comments) {
+        formData.append("comments", data.comments);
+      }
 
       const response = await fetch("/api/upload-statement", {
         method: "POST",
@@ -161,6 +165,23 @@ export default function UploadStatementDialog({
                         Crédito
                       </SegmentedControl.Item>
                     </SegmentedControl.Root>
+                  )}
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-400 mb-3 block">
+                  ¿Alguna instrucción adicional? (opcional)
+                </label>
+                <Controller
+                  name="comments"
+                  control={control}
+                  render={({ field }: FieldProps<"comments">) => (
+                    <TextField.Root
+                      size={size}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
                   )}
                 />
               </div>

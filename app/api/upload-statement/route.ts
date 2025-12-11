@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     const file = formData.get("file") as File;
     const accountType = formData.get("accountType");
     const accountId = formData.get("accountId");
-    console.log(accountId, accountType);
+    const comments = formData.get("comments");
 
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
@@ -57,6 +57,8 @@ export async function POST(request: Request) {
     - For each transaction, generate a short description in spanish, based on the available information.
     - If there is no time value, set it to 12:00 PM by default.
     - If you can't accurately classify the transaction with the available information, leave the category as null and set needsVerification to true, for the user to classify later 
+
+    ${comments ? "ADDITIONAL INSTRUCTIONS PROVIDED BY USER: " + comments : ""}
 
     STATEMENT TYPE: ${accountType}
     ACCOUNT NAME: ${accountId}

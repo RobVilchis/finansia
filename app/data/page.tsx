@@ -334,7 +334,7 @@ export default function Home() {
                 </div>
               )}
               {unverifiedTransactions.length > 0 && (
-                <div className="mb-4">
+                <div className="mb-2">
                   <Link
                     href="/data/review"
                     className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
