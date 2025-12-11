@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     - For each transaction, generate a short description in spanish, based on the available information.
     - If there is no time value, set it to 12:00 PM by default.
     - If you can't accurately classify the transaction with the available information, leave the category as null and set needsVerification to true, for the user to classify later 
-
+    
     ${comments ? "ADDITIONAL INSTRUCTIONS PROVIDED BY USER: " + comments : ""}
 
     STATEMENT TYPE: ${accountType}
@@ -68,85 +68,88 @@ export async function POST(request: Request) {
     ${content}
     `;
 
-    pdfParser.on("pdfParser_dataError", (error) => console.log(error));
-    pdfParser.on("pdfParser_dataReady", async () => {
-      // console.log((pdfParser as any).getRawTextContent());
-      console.log("File processed successfully");
-      parsedText = pdfParser.getRawTextContent();
-
-      const statement = await createStatementUpload({
-        userId: user.id,
-        originalFileName: fileName,
-        extractedText: parsedText,
-        status: "processing",
+    // Wrap PDF parsing in a promise to ensure it completes before proceeding
+    parsedText = await new Promise<string>((resolve, reject) => {
+      pdfParser.on("pdfParser_dataError", (error) => reject(error));
+      pdfParser.on("pdfParser_dataReady", () => {
+        resolve(pdfParser.getRawTextContent());
       });
-
-      try {
-        const response = await generateObject({
-          model: "anthropic/claude-sonnet-4.5",
-          output: "array",
-          schema: z.object({
-            description: z.string().describe("Description of the transaction"),
-            date: z.string().date().describe("Date of the transaction"),
-            time: z.string().time().describe("Time of the transaction"),
-            amount: z.number().describe("Amount of the transaction"),
-            categoryName: z
-              .enum(
-                (userCategories.length > 0
-                  ? userCategories.map((category) => category.name)
-                  : [""]) as [string, ...string[]]
-              )
-              .nullable()
-              .describe(
-                "Category of the transaction. Must match the selected type (expense categories for expense, income categories for income). Leave as null if the transaction cannot be accurately classified."
-              ),
-            type: z
-              .enum(["expense", "income", "transfer"])
-              .describe("Type of the transaction"),
-            accountName: z
-              .string()
-              .describe(
-                "User-provided acccount for expenses. Leave empty if it is income."
-              ),
-            targetAccountName: z
-              .string()
-              .describe(
-                "User-provided account for income. Leave empty if it is an expense."
-              ),
-            needsVerification: z
-              .boolean()
-              .describe("Set to true if user verification is needed"),
-          }),
-          prompt: prompt(parsedText),
-        });
-
-        const transactionsToVerify = response.object.filter(
-          (t) => t.needsVerification
-        );
-        const completeTransactions = response.object.filter(
-          (t) => !t.needsVerification
-        );
-        
-        console.log(`Generated ${completeTransactions.length} transactions`);
-        console.log(`Generated ${transactionsToVerify.length} transactions that need verification`);
-        
-        for (const transaction of response.object) {
-          createTransactionIfUnique({
-            userId: user.id,
-            ...transaction,
-            accountId: transaction.accountName,
-          });
-        }
-
-        await updateStatementUploadStatus(statement.id, "ready");
-      } catch (error) {
-        await updateStatementUploadStatus(statement.id, "error");
-        console.error("Failed to parse statement", error);
-        throw error;
-      }
+      pdfParser.loadPDF(tempFilePath);
     });
 
-    pdfParser.loadPDF(tempFilePath);
+    console.log("File processed successfully");
+
+    const statement = await createStatementUpload({
+      userId: user.id,
+      originalFileName: fileName,
+      extractedText: parsedText,
+      status: "processing",
+    });
+
+    try {
+      const response = await generateObject({
+        model: "anthropic/claude-sonnet-4.5",
+        output: "array",
+        schema: z.object({
+          description: z.string().describe("Description of the transaction"),
+          date: z.string().date().describe("Date of the transaction"),
+          time: z.string().time().describe("Time of the transaction"),
+          amount: z.number().describe("Amount of the transaction"),
+          categoryName: z
+            .enum(
+              (userCategories.length > 0
+                ? userCategories.map((category) => category.name)
+                : [""]) as [string, ...string[]]
+            )
+            .nullable()
+            .describe(
+              "Category of the transaction. Must match the selected type (expense categories for expense, income categories for income). Leave as null if the transaction cannot be accurately classified."
+            ),
+          type: z
+            .enum(["expense", "income", "transfer"])
+            .describe("Type of the transaction"),
+          accountName: z
+            .string()
+            .describe(
+              "User-provided acccount for expenses. Leave empty if it is income."
+            ),
+          targetAccountName: z
+            .string()
+            .describe(
+              "User-provided account for income. Leave empty if it is an expense."
+            ),
+          needsVerification: z
+            .boolean()
+            .describe("Set to true if user verification is needed"),
+        }),
+        prompt: prompt(parsedText),
+      });
+
+      const transactionsToVerify = response.object.filter(
+        (t) => t.needsVerification
+      );
+      const completeTransactions = response.object.filter(
+        (t) => !t.needsVerification
+      );
+      
+      console.log(`Generated ${completeTransactions.length} transactions`);
+      console.log(`Generated ${transactionsToVerify.length} transactions that need verification`);
+      
+      // Await database operations to ensure they complete
+      await Promise.all(response.object.map(transaction => 
+        createTransactionIfUnique({
+          userId: user.id,
+          ...transaction,
+          accountId: transaction.accountName,
+        })
+      ));
+
+      await updateStatementUploadStatus(statement.id, "ready");
+    } catch (error) {
+      await updateStatementUploadStatus(statement.id, "error");
+      console.error("Failed to parse statement", error);
+      throw error;
+    }
 
     const response = new NextResponse(parsedText);
     response.headers.set("FileName", fileName);
