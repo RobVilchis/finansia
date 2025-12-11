@@ -35,6 +35,8 @@ export async function POST(request: Request) {
     // Convert the uploaded file into a temporary file
     const tempFilePath = `/tmp/${fileName}.pdf`;
 
+    console.log("Processing file: ", tempFilePath);
+
     // Convert Web File → Buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -69,6 +71,7 @@ export async function POST(request: Request) {
     pdfParser.on("pdfParser_dataError", (error) => console.log(error));
     pdfParser.on("pdfParser_dataReady", async () => {
       // console.log((pdfParser as any).getRawTextContent());
+      console.log("File processed successfully");
       parsedText = pdfParser.getRawTextContent();
 
       const statement = await createStatementUpload({
@@ -124,8 +127,8 @@ export async function POST(request: Request) {
           (t) => !t.needsVerification
         );
         
-        console.log(completeTransactions);
-        console.log(transactionsToVerify);
+        console.log(`Generated ${completeTransactions.length} transactions`);
+        console.log(`Generated ${transactionsToVerify.length} transactions that need verification`);
         
         for (const transaction of response.object) {
           createTransactionIfUnique({
