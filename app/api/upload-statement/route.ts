@@ -42,11 +42,14 @@ async function processStatement(
   statementId: string,
   tempFilePath: string,
   userId: string,
-  userCategories: any[],
+  userCategories: {
+    id: string;
+    name: string;
+    type: string;
+  }[],
   accountType: string,
   accountId: string,
   comments: string,
-  fileName: string
 ) {
   try {
     console.log(`Starting background processing for statement ${statementId}`);
@@ -62,7 +65,7 @@ async function processStatement(
     });
 
     console.log("File processed successfully, updating text...");
-    
+
     await updateStatementText(statementId, parsedText);
     const prompt = createPrompt(parsedText, accountType, accountId, comments);
 
@@ -110,10 +113,11 @@ async function processStatement(
     const completeTransactions = response.object.filter(
       (t) => !t.needsVerification
     );
-    
+
     console.log(`Generated ${completeTransactions.length} transactions`);
-    
-    await Promise.all(response.object.map(transaction => 
+    console.log(`Generated ${transactionsToVerify.length} transactions to verify`);
+
+    await Promise.all(response.object.map(transaction =>
       createTransactionIfUnique({
         userId: userId,
         ...transaction,
@@ -166,18 +170,17 @@ export async function POST(request: Request) {
 
     // Start background processing WITHOUT awaiting
     processStatement(
-        statement.id,
-        tempFilePath,
-        user.id,
-        userCategories,
-        accountType,
-        accountId,
-        comments,
-        fileName
+      statement.id,
+      tempFilePath,
+      user.id,
+      userCategories,
+      accountType,
+      accountId,
+      comments,
     ).catch(err => console.error("Detached process error:", err));
 
-    return NextResponse.json({ 
-      status: "processing", 
+    return NextResponse.json({
+      status: "processing",
       statementId: statement.id,
       message: "File processing started in background"
     }, { status: 202 });
