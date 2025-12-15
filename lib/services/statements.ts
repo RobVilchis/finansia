@@ -24,7 +24,20 @@ export async function createStatementUpload(input: CreateStatementInput) {
     })
     .returning();
 
-  return inserted;
+  return inserted
+}
+
+export async function updateStatementText(
+  statementId: string,
+  extractedText: string
+) {
+  const [updated] = await db
+    .update(statementeUplods)
+    .set({ extractedText })
+    .where(eq(statementeUplods.id, statementId))
+    .returning();
+
+  return updated;
 }
 
 export async function updateStatementUploadStatus(
