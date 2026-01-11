@@ -19,7 +19,7 @@ export default function CategoriesPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
-  const [toastOpen, setToastOpen] = useState(true);
+  const [toastOpen, setToastOpen] = useState(false);
   const timerRef = useRef(0);
 
   const fetchCategories = useCallback(async () => {
