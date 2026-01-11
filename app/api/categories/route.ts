@@ -45,11 +45,17 @@ export async function POST(request: Request) {
 
     const newCategory = await db
       .insert(categories)
-      .values(validatedData)
+      .values({
+        ...validatedData,
+        ...(validatedData.type === "expense"
+          ? { budget: validatedData.budget?.toString() }
+          : { budget: null }),
+      })
       .returning();
 
     return NextResponse.json(newCategory[0]);
   } catch (error) {
+    console.error(error);
     return NextResponse.json(
       { error: `Failed to create category: ${error}` },
       { status: 500 }

@@ -16,7 +16,8 @@ export default function CategoryCard({ category }: CategoryCardProps) {
       <div
         className={`
           w-full h-12 p-4 rounded-lg cursor-pointer transition-all
-          flex items-center justify-start border-2 border-slate-700 hover:bg-slate-700 text-slate-200
+          flex items-center justify-start border border-slate-200 dark:border-none text-slate-700 dark:text-slate-100 shadow-sm
+           dark:bg-slate-800 dark:hover:bg-slate-700  hover:shadow-md 
         `}
       >
         <div className="font-medium text-md line-clamp-2">{category.name}</div>

@@ -149,8 +149,10 @@ export default function ReviewPage() {
             )}
           </div>
 
-          <div className="py-3 px-4 bg-slate-300 dark:bg-slate-800 
-          rounded-md font-medium dark:text-slate-300   text-slate-500 mb-4">
+          <div
+            className="py-3 px-4 bg-slate-300 dark:bg-slate-800 
+          rounded-md font-medium dark:text-slate-300   text-slate-500 mb-4"
+          >
             Estas transacciones no pudieron ser clasificadas automáticamente de
             tus estados de cuenta. Por favor revísalas.
           </div>

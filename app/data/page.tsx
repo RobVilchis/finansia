@@ -41,6 +41,7 @@ interface Statement {
 export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const { transactionUpdateCount } = useTransactions();
   const [dialogOpen, setNewTransactionDialogOpen] = useState(false);
   const [statementDialogOpen, setStatementDialogOpen] = useState(false);
@@ -308,8 +309,9 @@ export default function Home() {
             </Tabs.Content>
             <Tabs.Content value="transactions">
               <div
-                className={`flex gap-3 items-center justify-between ${unverifiedTransactions.length > 0 ? "mb-4" : "mb-8"
-                  }`}
+                className={`flex gap-3 items-center justify-between ${
+                  unverifiedTransactions.length > 0 ? "mb-4" : "mb-8"
+                }`}
               >
                 <h1 className="text-2xl font-bold ">Transacciones recientes</h1>
                 <div className="flex items-center gap-2">

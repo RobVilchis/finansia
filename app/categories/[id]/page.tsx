@@ -247,7 +247,8 @@ export default function CategoryPage(props: {
         <div className="max-w-4xl mx-auto">
           <Link
             href="/categories"
-            className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 mb-6 transition-colors"
+            className="inline-flex items-center gap-2  text-slate-600 
+            dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Volver a Categorías
@@ -304,7 +305,8 @@ export default function CategoryPage(props: {
         {/* Back Button */}
         <Link
           href="/categories"
-          className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 mb-6 transition-colors"
+          className="inline-flex items-center font-medium gap-2 text-slate-500 
+          dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver a Categorías
@@ -349,7 +351,8 @@ export default function CategoryPage(props: {
             <div className="flex gap-2">
               <button
                 onClick={handleDelete}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 dark:bg-red-950 bg-red-100 
+                hover:bg-red-200 dark:hover:bg-red-800 text-red-800 dark:text-red-100 rounded-lg transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
                 Eliminar
@@ -407,43 +410,56 @@ export default function CategoryPage(props: {
           {categoryData.transactions.length > 0 ? (
             Object.entries(
               groupTransactionsByMonth(categoryData.transactions)
-            ).map(([day, monthTransactions]) => (
-              <div key={day}>
-                <h2 className="text-md font-semibold text-gray-900 dark:text-gray-400 mb-2">
-                  {day}
-                </h2>
-                <div className="space-y-2">
-                  {monthTransactions.map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      /* onClick={() => {
-                          setSelectedTransaction(transaction);
-                          setTransactionDialogOpen(true);
-                        }} */
-                    >
-                      <TransactionCard
-                        description={transaction.description}
-                        date={new Date(transaction.date).toLocaleDateString(
-                          "es-MX",
-                          {
-                            day: "numeric",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }
-                        )}
-                        amount={Number(transaction.amount)}
-                        showCategory={false}
-                        categoryName={transaction.categoryName}
-                        type={transaction.type}
-                        sourceAccountName={transaction.sourceAccountName}
-                        targetAccountName={transaction.targetAccountName}
-                      />
-                    </div>
-                  ))}
+            ).map(([month, monthTransactions]) => {
+              const monthlyTotal = monthTransactions.reduce(
+                (sum, transaction) => sum + Number(transaction.amount),
+                0
+              );
+              return (
+                <div key={month}>
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-md font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                      {month}
+                    </h2>
+                    {monthTransactions.length > 1 && (
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mr-2">
+                        Total - ${monthlyTotal}
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {monthTransactions.map((transaction) => (
+                      <div
+                        key={transaction.id}
+                        /* onClick={() => {
+                        setSelectedTransaction(transaction);
+                        setTransactionDialogOpen(true);
+                      }} */
+                      >
+                        <TransactionCard
+                          description={transaction.description}
+                          date={new Date(transaction.date).toLocaleDateString(
+                            "es-MX",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                          amount={Number(transaction.amount)}
+                          showCategory={false}
+                          categoryName={transaction.categoryName}
+                          type={transaction.type}
+                          sourceAccountName={transaction.sourceAccountName}
+                          targetAccountName={transaction.targetAccountName}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="text-center py-12">
               <p className="text-slate-600 dark:text-slate-400">
@@ -499,7 +515,7 @@ export default function CategoryPage(props: {
       {/* Delete Confirmation Dialog */}
       <Dialog.Root open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <Dialog.Content maxWidth="400px">
-          <Dialog.Title>Eliminar Categoría</Dialog.Title>
+          <Dialog.Title>Eliminar categoría</Dialog.Title>
           <div className="space-y-4">
             <p className="text-slate-600 dark:text-slate-400">
               ¿Está seguro de que desea eliminar &quot;
@@ -514,7 +530,11 @@ export default function CategoryPage(props: {
               </p>
             )}
             <div className="flex justify-end gap-2">
-              <Button variant="soft" onClick={() => setShowDeleteDialog(false)}>
+              <Button
+                color="gray"
+                variant="soft"
+                onClick={() => setShowDeleteDialog(false)}
+              >
                 Cancelar
               </Button>
               <Button

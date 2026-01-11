@@ -74,23 +74,18 @@ export async function GET(
 
     // Calculate summary statistics
     const totalAmount = categoryTransactions.reduce((sum, transaction) => {
-      if (category[0].type === "expense") {
-        return sum + Number(transaction.amount);
-      } else if (category[0].type === "income") {
-        return sum + Number(transaction.amount);
-      }
-      return sum;
+      return sum + Number(transaction.amount);
     }, 0);
 
     const response = {
       category: category[0],
       transactions: categoryTransactions,
       summary: {
-        totalAmount,
+        totalAmount: Number(totalAmount.toFixed(2)),
         transactionCount: categoryTransactions.length,
         averageAmount:
           categoryTransactions.length > 0
-            ? totalAmount / categoryTransactions.length
+            ? Number((totalAmount / categoryTransactions.length).toFixed(2))
             : 0,
         lastTransactionDate:
           categoryTransactions.length > 0 ? categoryTransactions[0].date : null,
