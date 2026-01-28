@@ -1,25 +1,15 @@
 "use client";
 
 import TransactionCard from "@/app/components/TransactionCard";
+import { Transaction } from "@/app/data/DataDashboard";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Dialog, TextField } from "@radix-ui/themes";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
-
-interface Transaction {
-  id: string;
-  description: string;
-  date: string;
-  amount: number;
-  categoryName: string;
-  type: "income" | "expense" | "transfer";
-  sourceAccountName: string | null;
-  targetAccountName: string | null;
-}
 
 interface Category {
   id: string;
@@ -67,11 +57,7 @@ export default function CategoryPage(props: {
     },
   });
 
-  useEffect(() => {
-    fetchCategoryData();
-  }, [params.id]);
-
-  const fetchCategoryData = async () => {
+  const fetchCategoryData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -96,7 +82,11 @@ export default function CategoryPage(props: {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchCategoryData();
+  }, [params.id, fetchCategoryData]);
 
   const handleRename = () => {
     setShowRenameDialog(true);
@@ -282,21 +272,24 @@ export default function CategoryPage(props: {
   }
 
   const groupTransactionsByMonth = (transactions: Transaction[]) => {
-    return transactions.reduce((groups, transaction) => {
-      const date = new Date(transaction.date);
-      let monthKey = date.toLocaleDateString("es-MX", {
-        month: "long",
-        year: "numeric",
-      });
+    return transactions.reduce(
+      (groups, transaction) => {
+        const date = new Date(transaction.date);
+        let monthKey = date.toLocaleDateString("es-MX", {
+          month: "long",
+          year: "numeric",
+        });
 
-      monthKey = monthKey.charAt(0).toUpperCase() + monthKey.slice(1);
+        monthKey = monthKey.charAt(0).toUpperCase() + monthKey.slice(1);
 
-      if (!groups[monthKey]) {
-        groups[monthKey] = [];
-      }
-      groups[monthKey].push(transaction);
-      return groups;
-    }, {} as Record<string, Transaction[]>);
+        if (!groups[monthKey]) {
+          groups[monthKey] = [];
+        }
+        groups[monthKey].push(transaction);
+        return groups;
+      },
+      {} as Record<string, Transaction[]>,
+    );
   };
 
   return (
@@ -386,7 +379,7 @@ export default function CategoryPage(props: {
                 <p className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
                   {categoryData.summary.lastTransactionDate
                     ? new Date(
-                        categoryData.summary.lastTransactionDate
+                        categoryData.summary.lastTransactionDate,
                       ).toLocaleDateString("es-MX", {
                         day: "numeric",
                         month: "short",
@@ -409,11 +402,11 @@ export default function CategoryPage(props: {
 
           {categoryData.transactions.length > 0 ? (
             Object.entries(
-              groupTransactionsByMonth(categoryData.transactions)
+              groupTransactionsByMonth(categoryData.transactions),
             ).map(([month, monthTransactions]) => {
               const monthlyTotal = monthTransactions.reduce(
                 (sum, transaction) => sum + Number(transaction.amount),
-                0
+                0,
               );
               return (
                 <div key={month}>
@@ -438,16 +431,8 @@ export default function CategoryPage(props: {
                       >
                         <TransactionCard
                           description={transaction.description}
-                          date={new Date(transaction.date).toLocaleDateString(
-                            "es-MX",
-                            {
-                              day: "numeric",
-                              month: "short",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
-                          amount={Number(transaction.amount)}
+                          date={transaction.date}
+                          amount={transaction.amount}
                           showCategory={false}
                           categoryName={transaction.categoryName}
                           type={transaction.type}

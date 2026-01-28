@@ -5,6 +5,7 @@ import { Button, Dialog, TextField } from "@radix-ui/themes";
 import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
 import * as z from "zod";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import { createAccountAction } from "@/app/actions/accounts";
 
 interface NewAccountDialogProps {
   open: boolean;
@@ -17,7 +18,7 @@ const accountSchema = z.object({
   type: z.string().min(1, "El tipo de cuenta es requerido"),
 });
 
-type AccountFormData = z.infer<typeof accountSchema>;
+export type AccountFormData = z.infer<typeof accountSchema>;
 
 type FieldProps = {
   field: ControllerRenderProps<AccountFormData, keyof AccountFormData>;
@@ -44,25 +45,19 @@ export default function NewAccountDialog({
   const bp = useBreakpoint();
   const size = bp === "lg" ? "2" : bp === "md" ? "2" : "3";
 
-  const onSubmit = async (data: AccountFormData) => {
+  const action: () => void = handleSubmit(async (formData) => {
     try {
-      const response = await fetch("/api/accounts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+      await createAccountAction({
+        name: formData.name,
+        type: formData.type,
       });
-
-      if (!response.ok) throw new Error("Failed to create account");
-
       reset();
       onAccountAdded();
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to create account:", error);
     }
-  };
+  });
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -71,7 +66,7 @@ export default function NewAccountDialog({
           <Dialog.Title>Agregar nueva cuenta</Dialog.Title>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form action={action} className="space-y-4">
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
               Nombre de la cuenta

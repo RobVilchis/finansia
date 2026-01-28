@@ -1,6 +1,6 @@
 "use client";
 
-import { createGoal } from "@/lib/services/goals";
+import { createGoalAction } from "@/app/actions/goals";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Dialog, TextField } from "@radix-ui/themes";
 import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
@@ -19,7 +19,7 @@ const goalSchema = z.object({
   targetDate: z.string().optional(),
 });
 
-type GoalFormData = z.infer<typeof goalSchema>;
+export type GoalFormData = z.infer<typeof goalSchema>;
 
 type FieldProps = {
   field: ControllerRenderProps<GoalFormData, keyof GoalFormData>;
@@ -47,12 +47,12 @@ export default function NewGoalDialog({
   const bp = useBreakpoint();
   const size = bp === "lg" ? "2" : bp === "md" ? "2" : "3";
 
-  const onSubmit = async (data: GoalFormData) => {
+  const action: () => void = handleSubmit(async (formData) => {
     try {
-      await createGoal({
-        name: data.name,
-        targetAmount: data.targetAmount,
-        targetDate: data.targetDate || undefined,
+      await createGoalAction({
+        name: formData.name,
+        targetAmount: formData.targetAmount,
+        targetDate: formData.targetDate || undefined,
       });
       reset();
       onGoalAdded();
@@ -60,7 +60,7 @@ export default function NewGoalDialog({
     } catch (error) {
       console.error("Failed to create goal:", error);
     }
-  };
+  });
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -69,7 +69,7 @@ export default function NewGoalDialog({
           <Dialog.Title>Agregar nueva meta</Dialog.Title>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form action={action} className="space-y-4">
           <div className="flex flex-col gap-5">
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">

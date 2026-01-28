@@ -31,7 +31,7 @@ export default function ChatButton() {
     <>
       <button
         onClick={() => setChatOpen(!chatOpen)}
-        className="fixed md:right-10 md:bottom-10 bg-gray-200  dark:bg-gray-600 
+        className="fixed right-10 bottom-10 bg-gray-200  dark:bg-gray-600 
         rounded-lg p-3 flex items-center justify-center hover:bg-gray-300 
         dark:hover:bg-gray-500 transition-colors"
       >
@@ -54,7 +54,7 @@ export default function ChatButton() {
         </svg>
       </button>
       <div
-        className={`z-50 fixed bottom-30 right-8 ml-8 md:bottom-10 md:right-35
+        className={`z-50 w-[350px] fixed bottom-30 right-8 ml-8 md:bottom-10 md:right-35
           md:w-md transition-all duration-200 ${
             chatOpen
               ? "opacity-100 pointer-events-auto"

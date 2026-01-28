@@ -6,6 +6,10 @@ import { useForm, Controller, ControllerRenderProps } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import {
+  updateAccountAction,
+  deleteAccountAction,
+} from "@/app/actions/accounts";
 
 interface AccountDialogProps {
   open: boolean;
@@ -13,9 +17,9 @@ interface AccountDialogProps {
   account: {
     id: string;
     name: string;
-    type: string;
   };
-  onDelete: (id: string) => void;
+  onDeleteSuccess: () => void;
+  onFailed: (payload: { title: string; message: string }) => void;
   onAccountUpdated: () => void;
 }
 
@@ -34,7 +38,8 @@ export default function AccountDialog({
   open,
   onOpenChange,
   account,
-  onDelete,
+  onDeleteSuccess,
+  onFailed,
   onAccountUpdated,
 }: AccountDialogProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -47,44 +52,44 @@ export default function AccountDialog({
     resolver: zodResolver(accountSchema),
     defaultValues: {
       name: account.name,
-      type: account.type,
+      type: "",
     },
   });
 
   const bp = useBreakpoint();
   const size = bp === "lg" ? "2" : bp === "md" ? "2" : "3";
 
-  const onSubmit = async (data: AccountFormData) => {
+  const action: () => void = handleSubmit(async (formData) => {
     try {
-      const response = await fetch(`/api/accounts/${account.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+      await updateAccountAction(account.id, {
+        name: formData.name,
+        type: formData.type,
       });
-
-      if (!response.ok) throw new Error("Failed to update account");
-
       onAccountUpdated();
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to update account:", error);
+    }
+  });
+
+  const handleDelete = async () => {
+    const { success, message } = await deleteAccountAction(account.id);
+    onOpenChange(false);
+
+    if (!success) {
+      onFailed({ title: "Ocurrió un error", message: message });
+    } else {
+      onDeleteSuccess();
     }
   };
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="400px">
-        <div className="flex justify-between items-center mb-2">
-          <Dialog.Title>Editar cuenta</Dialog.Title>
-          <Button
-            variant="soft"
-            color="red"
-            onClick={() => setShowDeleteConfirm(true)}
-          >
-            Eliminar
-          </Button>
+        <div className="mb-2">
+          <Dialog.Title>
+            {showDeleteConfirm ? "Eliminar cuenta" : "Editar cuenta"}{" "}
+          </Dialog.Title>
         </div>
 
         {showDeleteConfirm ? (
@@ -101,13 +106,13 @@ export default function AccountDialog({
               >
                 Cancelar
               </Button>
-              <Button color="red" onClick={() => onDelete(account.id)}>
+              <Button color="red" onClick={handleDelete}>
                 Eliminar cuenta
               </Button>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form action={action} className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                 Nombre de la cuenta
@@ -153,15 +158,42 @@ export default function AccountDialog({
               )}
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
-              <Dialog.Close>
-                <Button variant="soft" color="gray">
-                  Cancelar
+            <div className="flex justify-between items-center mt-6">
+              {!showDeleteConfirm && (
+                <Button
+                  variant="ghost"
+                  color="gray"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  title="Eliminar cuenta"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M3 6h18" />
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                  </svg>
                 </Button>
-              </Dialog.Close>
-              <Button type="submit" color="blue">
-                Actualizar
-              </Button>
+              )}
+
+              <div className="flex justify-end gap-3">
+                <Dialog.Close>
+                  <Button variant="soft" color="gray">
+                    Cancelar
+                  </Button>
+                </Dialog.Close>
+                <Button type="submit" color="blue">
+                  Actualizar
+                </Button>
+              </div>
             </div>
           </form>
         )}

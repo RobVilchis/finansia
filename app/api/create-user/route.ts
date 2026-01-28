@@ -19,7 +19,7 @@ export async function GET() {
 
     await db.insert(accounts).values({
       userId: user.id,
-      name: "Card",
+      name: "Tarjeta",
     });
   }
 

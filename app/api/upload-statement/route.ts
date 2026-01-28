@@ -9,6 +9,7 @@ import { createTransactionIfUnique } from "@/lib/services/transactions";
 import { currentUser } from "@clerk/nextjs/server";
 import { generateObject } from "ai";
 import { promises as fs } from "fs";
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import PDFParser from "pdf2json";
 import { v4 as uuidv4 } from "uuid";
@@ -49,7 +50,7 @@ async function processStatement(
   }[],
   accountType: string,
   accountId: string,
-  comments: string,
+  comments: string
 ) {
   try {
     console.log(`Starting background processing for statement ${statementId}`);
@@ -115,21 +116,30 @@ async function processStatement(
     );
 
     console.log(`Generated ${completeTransactions.length} transactions`);
-    console.log(`Generated ${transactionsToVerify.length} transactions to verify`);
+    console.log(
+      `Generated ${transactionsToVerify.length} transactions to verify`
+    );
 
-    await Promise.all(response.object.map(transaction =>
-      createTransactionIfUnique({
-        userId: userId,
-        ...transaction,
-        accountId: transaction.accountName,
-      })
-    ));
+    await Promise.all(
+      response.object.map((transaction) =>
+        createTransactionIfUnique({
+          userId: userId,
+          ...transaction,
+          sourceAccountId: transaction.accountName,
+        })
+      )
+    );
 
     await updateStatementUploadStatus(statementId, "ready");
-    console.log(`Background processing complete for statement ${statementId}`);
 
+    revalidateTag("unverified");
+    revalidateTag("pending-statements");
+    console.log(`Background processing complete for statement ${statementId}`);
   } catch (error) {
-    console.error(`Background processing failed for statement ${statementId}`, error);
+    console.error(
+      `Background processing failed for statement ${statementId}`,
+      error
+    );
     await updateStatementUploadStatus(statementId, "error");
   }
 }
@@ -176,15 +186,17 @@ export async function POST(request: Request) {
       userCategories,
       accountType,
       accountId,
-      comments,
-    ).catch(err => console.error("Detached process error:", err));
+      comments
+    ).catch((err) => console.error("Detached process error:", err));
 
-    return NextResponse.json({
-      status: "processing",
-      statementId: statement.id,
-      message: "File processing started in background"
-    }, { status: 202 });
-
+    return NextResponse.json(
+      {
+        status: "processing",
+        statementId: statement.id,
+        message: "File processing started in background",
+      },
+      { status: 202 }
+    );
   } catch (err) {
     return NextResponse.json({ error: err }, { status: 500 });
   }

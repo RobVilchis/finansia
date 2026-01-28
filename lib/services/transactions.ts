@@ -19,7 +19,7 @@ export type CreateTransactionInput = {
   time?: string; // optional HH:mm or HH:mm:ss, used mainly by chat tool
   categoryName?: string | null; // category by name (non-transfer)
   categoryId?: string | null; // or category by id
-  accountId?: string; // source for expense/transfer, target for income if target not given
+  sourceAccountId?: string; // source for expense/transfer, target for income if target not given
   accountName?: string; // alternative to accountId
   targetAccountId?: string; // target for transfer or income
   targetAccountName?: string; // alternative to targetAccountId
@@ -98,7 +98,7 @@ export async function createTransaction({
   time,
   categoryName,
   categoryId: providedCategoryId,
-  accountId,
+  sourceAccountId: accountId,
   accountName,
   targetAccountId,
   targetAccountName,
@@ -115,7 +115,7 @@ export async function createTransaction({
     providedCategoryId ?? null
   );
 
-    if (type !== "transfer" && !resolvedCategoryId && !needsVerification) {
+  if (type !== "transfer" && !resolvedCategoryId && !needsVerification) {
     throw new Error("Invalid or unknown category");
   }
 
@@ -177,7 +177,7 @@ export async function createTransactionIfUnique({
   time,
   categoryName,
   categoryId: providedCategoryId,
-  accountId,
+  sourceAccountId: accountId,
   accountName,
   targetAccountId,
   targetAccountName,
@@ -204,7 +204,7 @@ export async function createTransactionIfUnique({
         eq(transactions.userId, userId),
         eq(transactions.date, normalizedDate),
         eq(transactions.amount, amountAsString),
-        eq(transactions.type, type),
+        eq(transactions.type, type)
       )
     )
     .limit(1);
@@ -274,8 +274,6 @@ export async function createTransactionIfUnique({
 
   return inserted[0];
 }
-
-
 
 export async function getUnverifiedTransactions(userId: string) {
   const sourceAccounts = alias(accounts, "sourceAccounts");

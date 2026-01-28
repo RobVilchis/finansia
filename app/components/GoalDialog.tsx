@@ -6,17 +6,13 @@ import { useForm, Controller, ControllerRenderProps } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useBreakpoint } from "../hooks/useBreakpoint";
-import { updateGoal } from "@/lib/services/goals";
+import { updateGoalAction, deleteGoalAction } from "@/app/actions/goals";
+import { Goal } from "@/lib/services/goals";
 
 interface GoalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  goal: {
-    id: string;
-    name: string;
-    targetAmount: string;
-    targetDate?: string;
-  };
+  goal: Goal;
   onDelete: (id: string) => void;
   onGoalUpdated: () => void;
 }
@@ -57,18 +53,27 @@ export default function GoalDialog({
   const bp = useBreakpoint();
   const size = bp === "lg" ? "2" : bp === "md" ? "2" : "3";
 
-  const onSubmit = async (data: GoalFormData) => {
+  const action: () => void = handleSubmit(async (formData) => {
     try {
-      await updateGoal({
-        id: goal.id,
-        name: data.name,
-        targetAmount: data.targetAmount,
-        targetDate: data.targetDate || undefined,
+      await updateGoalAction(goal.id, {
+        name: formData.name,
+        targetAmount: formData.targetAmount,
+        targetDate: formData.targetDate || undefined,
       });
       onGoalUpdated();
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to update goal:", error);
+    }
+  });
+
+  const handleDelete = async () => {
+    try {
+      await deleteGoalAction(goal.id);
+      onDelete(goal.id);
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Failed to delete goal:", error);
     }
   };
 
@@ -77,30 +82,6 @@ export default function GoalDialog({
       <Dialog.Content maxWidth="400px">
         <div className="flex justify-between items-center mb-2">
           <Dialog.Title>Editar meta</Dialog.Title>
-          {!showDeleteConfirm && (
-            <Button
-              variant="ghost"
-              color="red"
-              onClick={() => setShowDeleteConfirm(true)}
-              title="Eliminar meta"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 6h18" />
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-              </svg>
-            </Button>
-          )}
         </div>
         {showDeleteConfirm ? (
           <div className="space-y-4">
@@ -116,13 +97,13 @@ export default function GoalDialog({
               >
                 Cancelar
               </Button>
-              <Button color="red" onClick={() => onDelete(goal.id)}>
+              <Button color="red" onClick={handleDelete}>
                 Eliminar
               </Button>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form action={action} className="space-y-4">
             <div className="flex flex-col gap-5">
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
@@ -188,16 +169,40 @@ export default function GoalDialog({
                 />
               </div>
             </div>
-
-            <div className="flex justify-end gap-3 mt-6">
-              <Dialog.Close>
-                <Button variant="soft" color="gray">
-                  Cancelar
-                </Button>
-              </Dialog.Close>
-              <Button type="submit" color="blue">
-                Actualizar
+            <div className="flex justify-between items-center  mt-6">
+              <Button
+                variant="ghost"
+                color="gray"
+                onClick={() => setShowDeleteConfirm(true)}
+                title="Eliminar meta"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                </svg>
               </Button>
+
+              <div className="flex justify-end gap-3">
+                <Dialog.Close>
+                  <Button variant="soft" color="gray">
+                    Cancelar
+                  </Button>
+                </Dialog.Close>
+                <Button type="submit" color="blue">
+                  Actualizar
+                </Button>
+              </div>
             </div>
           </form>
         )}

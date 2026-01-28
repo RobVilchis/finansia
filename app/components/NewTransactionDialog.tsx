@@ -10,8 +10,10 @@ import {
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
-import * as z from "zod";
+import { createTransactionAction } from "../actions/transactions";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import { useToast } from "./GenericToast";
+import { TransactionFormData, transactionSchema } from "./TransactionDialog";
 // If you are using date-fns v3.x or v4.x, please import `AdapterDateFns`
 
 interface Category {
@@ -29,54 +31,8 @@ interface Account {
 interface NewTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddExpense: (expense: {
-    concept: string;
-    date: string;
-    amount: number;
-    category: string;
-    accountId: string;
-    type: string;
-    targetAccountId?: string;
-  }) => void;
+  onAddTransaction: () => void;
 }
-
-const transactionSchema = z
-  .object({
-    concept: z.string().min(1, "La descripción es requerida"),
-    date: z.string().min(10, "La fecha es requerida"),
-    time: z.string().min(4, "La hora es requerida"),
-    amount: z.string().min(1, "El monto es requerido"),
-    category: z.string().optional(),
-    type: z.enum(["expense", "income", "transfer"]),
-    accountId: z.string().min(1, "La cuenta es requerida"),
-    targetAccountId: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.type === "transfer") {
-        return !!data.targetAccountId;
-      }
-      return true;
-    },
-    {
-      message: "La cuenta destino es requerida para transferencias",
-      path: ["targetAccountId"],
-    }
-  )
-  .refine(
-    (data) => {
-      if (data.type !== "transfer") {
-        return !!data.category;
-      }
-      return true;
-    },
-    {
-      message: "La categoría es requerida para gastos e ingresos",
-      path: ["category"],
-    }
-  );
-
-type TransactionFormData = z.infer<typeof transactionSchema>;
 
 export type FieldProps<T extends keyof TransactionFormData> = {
   field: ControllerRenderProps<TransactionFormData, T>;
@@ -85,32 +41,35 @@ export type FieldProps<T extends keyof TransactionFormData> = {
 export default function NewTransactionDialog({
   open,
   onOpenChange,
-  onAddExpense: onAddTransaction,
+  onAddTransaction: onActionFinished,
 }: NewTransactionDialogProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const { showToast } = useToast();
 
   const currentDate = new Date();
-  const dateString = currentDate.toISOString().split("T")[0];
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+  const day = String(currentDate.getDate()).padStart(2, "0");
+  const dateString = `${year}-${month}-${day}`;
   const timeString = currentDate.toTimeString().slice(0, 5);
 
   const {
     control,
     handleSubmit,
     watch,
-    reset,
     formState: { errors },
     register,
   } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      concept: "",
+      description: "",
       date: dateString,
       time: timeString,
       amount: "",
       category: "",
       type: "expense",
-      accountId: "",
+      sourceAccountId: "",
       targetAccountId: "",
     },
   });
@@ -147,18 +106,28 @@ export default function NewTransactionDialog({
     fetchAccounts();
   }, []);
 
-  const onSubmit = (data: TransactionFormData) => {
-    onAddTransaction({
-      concept: data.concept,
-      date: `${data.date}T${data.time}`,
-      amount: Number(data.amount),
-      category: data.category || "",
-      accountId: data.accountId,
-      type: data.type,
-      targetAccountId: data.targetAccountId,
+  const action: () => void = handleSubmit(async (formData) => {
+    const result = await createTransactionAction({
+      ...formData,
+      date: `${formData.date}T${formData.time}`,
     });
-    reset();
-  };
+
+    if (result.success) {
+      showToast({
+        title: "Transacción creada con éxito",
+        message: "",
+        variant: "success",
+      });
+    } else {
+      showToast({
+        title: "Ocurrió un error",
+        message: result.message,
+        variant: "error",
+      });
+    }
+    // setServerResponse(response);
+    onActionFinished();
+  });
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -171,7 +140,10 @@ export default function NewTransactionDialog({
           <Dialog.Title>Agregar nueva transacción</Dialog.Title>
         </div>
         <div className=" relative overflow-visible z-10">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            action={action}
+            /* onSubmit={handleSubmit(onSubmit)} */ className="space-y-4"
+          >
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                 Tipo de transacción
@@ -203,19 +175,19 @@ export default function NewTransactionDialog({
                 Descripción
               </label>
               <Controller
-                name="concept"
+                name="description"
                 control={control}
-                render={({ field }: FieldProps<"concept">) => (
+                render={({ field }: FieldProps<"description">) => (
                   <TextField.Root
                     size={size}
-                    value={field.value}
+                    value={field.value || ""}
                     onChange={field.onChange}
                   />
                 )}
               />
-              {errors.concept && (
+              {errors.description && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors.concept.message}
+                  {errors.description.message}
                 </p>
               )}
             </div>
@@ -291,13 +263,13 @@ export default function NewTransactionDialog({
                 {transactionType === "expense"
                   ? "Cuenta origen"
                   : transactionType === "income"
-                  ? "Cuenta destino"
-                  : "Cuenta origen"}
+                    ? "Cuenta destino"
+                    : "Cuenta origen"}
               </label>
               <Controller
-                name="accountId"
+                name="sourceAccountId"
                 control={control}
-                render={({ field }: FieldProps<"accountId">) => (
+                render={({ field }: FieldProps<"sourceAccountId">) => (
                   <Select.Root
                     value={field.value}
                     onValueChange={field.onChange}
@@ -314,9 +286,9 @@ export default function NewTransactionDialog({
                   </Select.Root>
                 )}
               />
-              {errors.accountId && (
+              {errors.sourceAccountId && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors.accountId.message}
+                  {errors.sourceAccountId.message}
                 </p>
               )}
             </div>
@@ -339,7 +311,8 @@ export default function NewTransactionDialog({
                       <Select.Content>
                         {accounts
                           .filter(
-                            (account) => account.id !== watch("accountId")
+                            (account) =>
+                              account.id !== watch("sourceAccountId"),
                           )
                           .map((account, i) => (
                             <Select.Item key={i} value={account.id}>
@@ -376,7 +349,7 @@ export default function NewTransactionDialog({
                       <Select.Content>
                         {categories
                           .filter(
-                            (category) => category.type === transactionType
+                            (category) => category.type === transactionType,
                           )
                           .map((category, i) => (
                             <Select.Item key={i} value={category.name}>

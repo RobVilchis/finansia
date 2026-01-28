@@ -55,7 +55,7 @@ export default function DashboardPage() {
       <NewTransactionDialog
         open={transactionDialogOpen}
         onOpenChange={setTransactionDialogOpen}
-        onAddExpense={handleAddTransaction}
+        onAddTransaction={handleAddTransaction}
       />
     </div>
   );

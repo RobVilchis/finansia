@@ -3,90 +3,52 @@
 import { useEffect, useState } from "react";
 import AccountCard from "./AccountCard";
 import AccountDialog from "./AccountDialog";
-
-interface Account {
-  id: string;
-  name: string;
-  type: string;
-  createdAt: string;
-  balance: number;
-}
+import { Account } from "../data/DataDashboard";
+import { useToast } from "./GenericToast";
 
 interface AccountsListProps {
-  onAccountAdded: () => void;
+  accounts: Account[];
+  onAccountUpdated: () => void;
 }
 
-export default function AccountsList({ onAccountAdded }: AccountsListProps) {
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function AccountsList({
+  accounts,
+  onAccountUpdated,
+}: AccountsListProps) {
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
-
-  const fetchAccounts = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/accounts");
-      if (!response.ok) throw new Error("Failed to fetch accounts");
-      const data = await response.json();
-      setAccounts(data);
-      setError(null);
-    } catch (err) {
-      setError("Failed to fetch accounts");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { showToast } = useToast();
 
   useEffect(() => {
-    fetchAccounts();
-  }, []);
+    // TODO: Refetch accounts
+  }, [onAccountUpdated]);
 
-  const handleDelete = async (id: string) => {
-    try {
-      const response = await fetch(`/api/accounts`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      });
-
-      if (!response.ok) throw new Error("Failed to delete account");
-      await fetchAccounts();
-    } catch (err) {
-      console.error("Failed to delete account:", err);
-    }
+  const handleUpdateFailure = ({
+    title,
+    message,
+  }: {
+    title: string;
+    message: string;
+  }) => {
+    showToast({ title, message, variant: "error" });
   };
 
-  useEffect(() => {
-    fetchAccounts();
-  }, [onAccountAdded]);
+  const handleUpdateSuccess = () => {
+    onAccountUpdated();
+    showToast({
+      title: "Cuenta actualizada con éxito",
+      message: "",
+      variant: "info",
+    });
+  };
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700"
-            >
-              <div className="space-y-3">
-                <div className="w-24 h-4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-                <div className="w-32 h-6 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-                <div className="w-20 h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
-  }
+  const handleDeleteSuccess = () => {
+    onAccountUpdated();
+    showToast({
+      title: "Cuenta eliminada con éxito",
+      message: "",
+      variant: "info",
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -104,8 +66,9 @@ export default function AccountsList({ onAccountAdded }: AccountsListProps) {
           open={!!editingAccount}
           onOpenChange={(open) => !open && setEditingAccount(null)}
           account={editingAccount}
-          onDelete={handleDelete}
-          onAccountUpdated={fetchAccounts}
+          onDeleteSuccess={handleDeleteSuccess}
+          onFailed={handleUpdateFailure}
+          onAccountUpdated={handleUpdateSuccess} // TODO: Refetch accounts
         />
       )}
     </div>

@@ -1,61 +1,36 @@
 "use client";
 
-import { Goal, deleteGoal, getGoals } from "@/lib/services/goals";
-import { useEffect, useState } from "react";
+import { deleteGoal, Goal } from "@/lib/services/goals";
+import { useState } from "react";
 import { AddButton } from "./AddButton";
+import { useToast } from "./GenericToast";
 import GoalCard from "./GoalCard";
 import GoalDialog from "./GoalDialog";
-import { Skeleton } from "./LoadingSkeleton";
 import NewGoalDialog from "./NewGoalDialog";
 
-export default function GoalsList() {
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function GoalsList({ goals }: { goals: Goal[] }) {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [goalDialogOpen, setGoalDialogOpen] = useState(false);
-
-  const fetchGoals = async () => {
-    try {
-      setLoading(true);
-      const data = await getGoals();
-      setGoals(data);
-      setError(null);
-    } catch (err) {
-      setError("Failed to fetch goals");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchGoals();
-  }, []);
+  const { showToast } = useToast();
 
   const handleDelete = async (id: string) => {
     try {
       await deleteGoal(id);
-      await fetchGoals();
+      showToast({
+        title: "Meta eliminada con éxito",
+        message: "",
+        variant: "success",
+      });
     } catch (err) {
       console.error("Failed to delete goal:", err);
       // You might want to show an error message to the user here
+      showToast({
+        title: "Ocurrió un error",
+        message: "",
+        variant: "error",
+      });
     }
   };
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton key={i} height="h-28" />
-        ))}
-      </div>
-    );
-  }
-
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
-  }
 
   return (
     <div>
@@ -71,8 +46,8 @@ export default function GoalsList() {
       </div>
       <div className="space-y-4">
         <div className="grid gap-4">
-          {goals.map((goal) => (
-            <GoalCard key={goal.id} goal={goal} onEdit={setEditingGoal} />
+          {goals.map((goal, i) => (
+            <GoalCard key={i} goal={goal} onEdit={setEditingGoal} />
           ))}
         </div>
         {editingGoal && (
@@ -81,7 +56,13 @@ export default function GoalsList() {
             onOpenChange={(open) => !open && setEditingGoal(null)}
             goal={editingGoal}
             onDelete={handleDelete}
-            onGoalUpdated={fetchGoals}
+            onGoalUpdated={() =>
+              showToast({
+                title: "Meta actualizada con éxito",
+                message: "",
+                variant: "info",
+              })
+            } // TODO: refech
           />
         )}
       </div>
@@ -89,9 +70,13 @@ export default function GoalsList() {
       <NewGoalDialog
         open={goalDialogOpen}
         onOpenChange={setGoalDialogOpen}
-        onGoalAdded={() => {
-          fetchGoals();
-        }}
+        onGoalAdded={() =>
+          showToast({
+            title: "Meta agregada con éxito",
+            message: "",
+            variant: "success",
+          })
+        } // TODO: refetch
       />
     </div>
   );

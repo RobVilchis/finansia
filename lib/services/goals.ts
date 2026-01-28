@@ -4,8 +4,6 @@ export interface Goal {
   targetAmount: string;
   currentAmount: string;
   targetDate?: string;
-  userId: string;
-  createdAt: string;
 }
 
 export interface CreateGoalData {

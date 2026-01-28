@@ -3,14 +3,8 @@
 import { useEffect, useState } from "react";
 import AccountCard from "./AccountCard";
 import AccountDialog from "./AccountDialog";
-
-interface Account {
-  id: string;
-  name: string;
-  type: string;
-  createdAt: string;
-  balance: number;
-}
+import { Account } from "../data/DataDashboard";
+import { useToast } from "./GenericToast";
 
 interface AccountsListProps {
   onAccountAdded: () => void;
@@ -21,6 +15,7 @@ export default function AccountsList({ onAccountAdded }: AccountsListProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+  const { showToast } = useToast();
 
   const fetchAccounts = async () => {
     try {
@@ -42,21 +37,35 @@ export default function AccountsList({ onAccountAdded }: AccountsListProps) {
     fetchAccounts();
   }, []);
 
-  const handleDelete = async (id: string) => {
-    try {
-      const response = await fetch(`/api/accounts`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      });
+  const handleUpdateFailure = ({
+    title,
+    message,
+  }: {
+    title: string;
+    message: string;
+  }) => {
+    showToast({ title, message, variant: "error" });
+    setEditingAccount(null);
+  };
 
-      if (!response.ok) throw new Error("Failed to delete account");
-      await fetchAccounts();
-    } catch (err) {
-      console.error("Ocurrió un error al eliminar la cuenta:", err);
-    }
+  const handleUpdateSuccess = () => {
+    //onAccountUpdated();
+    showToast({
+      title: "Cuenta actualizada con éxito",
+      message: "",
+      variant: "info",
+    });
+    setEditingAccount(null);
+  };
+
+  const handleDeleteSuccess = () => {
+    //onAccountUpdated();
+    showToast({
+      title: "Cuenta eliminada con éxito",
+      message: "",
+      variant: "info",
+    });
+    setEditingAccount(null);
   };
 
   useEffect(() => {
@@ -104,8 +113,9 @@ export default function AccountsList({ onAccountAdded }: AccountsListProps) {
           open={!!editingAccount}
           onOpenChange={(open) => !open && setEditingAccount(null)}
           account={editingAccount}
-          onDelete={handleDelete}
-          onAccountUpdated={fetchAccounts}
+          onDeleteSuccess={handleDeleteSuccess}
+          onFailed={handleUpdateFailure}
+          onAccountUpdated={handleUpdateSuccess} // TODO: Refetch accounts
         />
       )}
     </div>

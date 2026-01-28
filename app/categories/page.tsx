@@ -143,7 +143,7 @@ export default function CategoriesPage() {
                 )}
               </section>
               <section>
-                <h2 className="text-xl font-semibold mb-4 text-gray-400">
+                <h2 className="text-xl font-semibold mb-4 text-gray-600 dark:text-gray-400">
                   Ingresos
                 </h2>
                 {incomeCategories.length === 0 ? (

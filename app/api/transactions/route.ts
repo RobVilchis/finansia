@@ -74,7 +74,7 @@ export async function POST(request: Request) {
       type: body.type,
       date: body.date,
       categoryName: body.category, // provided as name in existing API
-      accountId: body.accountId,
+      sourceAccountId: body.accountId,
       accountName: body.accountName,
       targetAccountId: body.targetAccountId,
       targetAccountName: body.targetAccountName,

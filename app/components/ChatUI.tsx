@@ -28,7 +28,7 @@ export default function ChatUI({ messages, sendMessage }: ChatUIProps) {
   }, [messages]);
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden">
+    <div className="Z-20   w-full max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden">
       <h1 className="m-4 text-2xl  text-gray-900 dark:text-white mb-8">
         Haz una pregunta
       </h1>
@@ -52,7 +52,7 @@ export default function ChatUI({ messages, sendMessage }: ChatUIProps) {
                   <span key={index}>
                     <Markdown>{part.text}</Markdown>
                   </span>
-                ) : null
+                ) : null,
               )}
               {/* {message.parts.map((part: any, index: number) =>
                 part.type === "text" ? (

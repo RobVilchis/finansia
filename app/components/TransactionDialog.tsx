@@ -12,6 +12,12 @@ import { useForm, Controller, ControllerRenderProps } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import { Transaction } from "../data/DataDashboard";
+import {
+  deleteTransactionAction,
+  updateTransactionAction,
+} from "../actions/transactions";
+import { useToast } from "./GenericToast";
 
 interface Category {
   name: string;
@@ -28,44 +34,26 @@ interface Account {
 interface TransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  transaction: {
-    id: string;
-    concept: string;
-    date: string;
-    type: "income" | "expense" | "transfer" | undefined;
-    amount: number;
-    category?: string;
-    accountId?: string;
-    targetAccountId?: string;
-  };
-  onUpdate: (transaction: {
-    id: string;
-    concept: string;
-    date: string;
-    type: string;
-    amount: number;
-    category?: string;
-    accountId?: string;
-    targetAccountId?: string;
-  }) => void;
-  onDelete: (id: string) => void;
+  transaction: Omit<Transaction, "sourceAccountName" | "targetAccountName">;
+  onUpdate: () => void;
+  onDelete: () => void;
 }
 
-const transactionSchema = z
+export const transactionSchema = z
   .object({
-    concept: z.string().min(1, "La descripción es requerida"),
+    description: z.string().min(1, "La descripción es requerida").nullable(),
     date: z.string().min(10, "La fecha es requerida"),
     time: z.string().min(4, "La hora es requerida"),
     amount: z.string().min(1, "El monto es requerido"),
     category: z.string().optional(),
-    type: z.enum(["expense", "income", "transfer"]),
-    accountId: z.string().optional(),
+    type: z.string(),
+    sourceAccountId: z.string().optional(),
     targetAccountId: z.string().optional(),
   })
   .refine(
     (data) => {
       if (data.type === "expense") {
-        return !!data.accountId;
+        return !!data.sourceAccountId;
       }
       return true;
     },
@@ -89,7 +77,7 @@ const transactionSchema = z
   .refine(
     (data) => {
       if (data.type === "transfer") {
-        return !!data.accountId && !!data.targetAccountId;
+        return !!data.sourceAccountId && !!data.targetAccountId;
       }
       return true;
     },
@@ -112,7 +100,7 @@ const transactionSchema = z
     }
   );
 
-type TransactionFormData = z.infer<typeof transactionSchema>;
+export type TransactionFormData = z.infer<typeof transactionSchema>;
 
 type FieldProps<T extends keyof TransactionFormData> = {
   field: ControllerRenderProps<TransactionFormData, T>;
@@ -123,21 +111,19 @@ export default function TransactionDialog({
   onOpenChange,
   transaction,
   onUpdate,
-  onDelete,
+  onDelete: onActionFinished,
 }: TransactionDialogProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const { showToast } = useToast();
 
   const transactionDate = new Date(transaction.date);
-  const dateArray = transactionDate.toLocaleDateString().split("/");
-  const dateString =
-    dateArray[2] +
-    "-" +
-    dateArray[0].padStart(2, "0") +
-    "-" +
-    dateArray[1].padStart(2, "0");
+  const year = transactionDate.getFullYear();
+  const month = String(transactionDate.getMonth() + 1).padStart(2, "0");
+  const day = String(transactionDate.getDate()).padStart(2, "0");
+  const dateString = `${year}-${month}-${day}`;
   const timeString = transactionDate.toTimeString().slice(0, 5);
 
   const {
@@ -150,25 +136,25 @@ export default function TransactionDialog({
   } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      concept: transaction.concept,
+      description: transaction.description,
       date: dateString,
       time: timeString,
       type: transaction.type,
       amount: transaction.amount.toString(),
-      category: transaction.category || "",
-      accountId: transaction.accountId || "",
+      category: transaction.categoryName || "",
+      sourceAccountId: transaction.sourceAccountId || "",
       targetAccountId: transaction.targetAccountId || "",
     },
   });
   useEffect(() => {
     reset({
-      concept: transaction.concept,
+      description: transaction.description,
       date: dateString,
       time: timeString,
       type: transaction.type,
       amount: transaction.amount.toString(),
-      category: transaction.category || "",
-      accountId: transaction.accountId || "",
+      category: transaction.categoryName || "",
+      sourceAccountId: transaction.sourceAccountId || "",
       targetAccountId: transaction.targetAccountId || "",
     });
   }, [transaction, dateString, timeString, reset]);
@@ -205,34 +191,60 @@ export default function TransactionDialog({
     fetchAccounts();
   }, []);
 
-  const onSubmit = async (data: TransactionFormData) => {
-    onUpdate({
-      id: transaction.id,
-      concept: data.concept,
-      date: `${data.date}T${data.time}`,
-      type: data.type,
-      amount: Number(data.amount),
-      category: data.type === "transfer" ? undefined : data.category || "",
-      accountId: data.accountId,
-      targetAccountId: data.targetAccountId,
+  const action: () => void = handleSubmit(async (formData) => {
+    const result = await updateTransactionAction(transaction.id, {
+      ...formData,
+      date: `${formData.date}T${formData.time}`,
+      isUnverified: false,
     });
+
+    if (result.success) {
+      showToast({
+        title: "Transacción actualizada con éxito",
+        message: "",
+        variant: "info",
+      });
+    } else {
+      showToast({
+        title: "Ocurrió un error",
+        message: result.message,
+        variant: "error",
+      });
+    }
+
+    // setServerResponse(response);
+    onUpdate();
+  });
+
+  const handleDeleteTransaction = async () => {
+    setShowDeleteConfirm(false);
+
+    const result = await deleteTransactionAction(transaction.id);
+    onActionFinished();
+
+    if (result.success) {
+      showToast({
+        title: "Transacción eliminada con éxito",
+        message: "",
+        variant: "info",
+      });
+    } else {
+      showToast({
+        title: "Ocurrió un error",
+        message: result.message,
+        variant: "error",
+      });
+    }
   };
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="400px">
-        <div className="flex justify-between items-center mb-2">
+        <div className="mb-2">
           <Dialog.Title>Editar transacción</Dialog.Title>
-          <Button
-            variant="soft"
-            color="red"
-            onClick={() => setShowDeleteConfirm(true)}
-          >
-            Eliminar
-          </Button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form action={action} className="space-y-4">
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
               Tipo de transacción
@@ -264,19 +276,19 @@ export default function TransactionDialog({
               Descripción
             </label>
             <Controller
-              name="concept"
+              name="description"
               control={control}
-              render={({ field }: FieldProps<"concept">) => (
+              render={({ field }: FieldProps<"description">) => (
                 <TextField.Root
                   size={size}
-                  value={field.value}
+                  value={field.value ? field.value : ""}
                   onChange={field.onChange}
                 />
               )}
             />
-            {errors.concept && (
+            {errors.description && (
               <p className="text-red-500 text-xs mt-1">
-                {errors.concept.message}
+                {errors.description.message}
               </p>
             )}
           </div>
@@ -353,9 +365,9 @@ export default function TransactionDialog({
                 Cuenta origen
               </label>
               <Controller
-                name="accountId"
+                name="sourceAccountId"
                 control={control}
-                render={({ field }: FieldProps<"accountId">) => (
+                render={({ field }: FieldProps<"sourceAccountId">) => (
                   <Select.Root
                     value={field.value}
                     onValueChange={field.onChange}
@@ -372,9 +384,9 @@ export default function TransactionDialog({
                   </Select.Root>
                 )}
               />
-              {errors.accountId && (
+              {errors.sourceAccountId && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors.accountId.message}
+                  {errors.sourceAccountId.message}
                 </p>
               )}
             </div>
@@ -420,9 +432,9 @@ export default function TransactionDialog({
                   Cuenta origen
                 </label>
                 <Controller
-                  name="accountId"
+                  name="sourceAccountId"
                   control={control}
-                  render={({ field }: FieldProps<"accountId">) => (
+                  render={({ field }: FieldProps<"sourceAccountId">) => (
                     <Select.Root
                       value={field.value}
                       onValueChange={field.onChange}
@@ -439,9 +451,9 @@ export default function TransactionDialog({
                     </Select.Root>
                   )}
                 />
-                {errors.accountId && (
+                {errors.sourceAccountId && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.accountId.message}
+                    {errors.sourceAccountId.message}
                   </p>
                 )}
               </div>
@@ -463,7 +475,7 @@ export default function TransactionDialog({
                       <Select.Content>
                         {accounts
                           .filter(
-                            (account) => account.id !== watch("accountId")
+                            (account) => account.id !== watch("sourceAccountId")
                           )
                           .map((account, i) => (
                             <Select.Item key={i} value={account.id}>
@@ -518,15 +530,40 @@ export default function TransactionDialog({
             </div>
           )}
 
-          <div className="flex justify-end gap-3 mt-6">
-            <Dialog.Close>
-              <Button variant="soft" color="gray">
-                Cancelar
-              </Button>
-            </Dialog.Close>
-            <Button type="submit" color="blue">
-              Actualizar
+          <div className="flex justify-between items-center mt-6">
+            <Button
+              variant="ghost"
+              color="gray"
+              onClick={() => setShowDeleteConfirm(true)}
+              title="Eliminar transacción"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              </svg>
             </Button>
+
+            <div className="flex justify-end gap-3">
+              <Dialog.Close>
+                <Button variant="soft" color="gray">
+                  Cancelar
+                </Button>
+              </Dialog.Close>
+              <Button type="submit" color="blue">
+                Actualizar
+              </Button>
+            </div>
           </div>
         </form>
       </Dialog.Content>
@@ -547,13 +584,7 @@ export default function TransactionDialog({
               >
                 Cancelar
               </Button>
-              <Button
-                color="red"
-                onClick={() => {
-                  setShowDeleteConfirm(false);
-                  onDelete(transaction.id);
-                }}
-              >
+              <Button color="red" onClick={handleDeleteTransaction}>
                 Eliminar transacción
               </Button>
             </div>

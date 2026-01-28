@@ -1,7 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Dialog, SegmentedControl, Select, TextField } from "@radix-ui/themes";
+import {
+  Button,
+  Dialog,
+  SegmentedControl,
+  Select,
+  TextField,
+} from "@radix-ui/themes";
 import { Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
@@ -11,6 +17,7 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 interface UploadStatementDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onStatementUpload: () => void;
 }
 
 interface Account {
@@ -35,6 +42,7 @@ export type FieldProps<T extends keyof UploadFormData> = {
 export default function UploadStatementDialog({
   open,
   onOpenChange,
+  onStatementUpload,
 }: UploadStatementDialogProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -79,6 +87,7 @@ export default function UploadStatementDialog({
 
       setSelectedFile(null);
       onOpenChange(false);
+      onStatementUpload();
     } catch (error) {
       console.error("Error uploading statement:", error);
     } finally {
