@@ -95,7 +95,7 @@ export default function TipsList() {
 
       {tips.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-500 dark:text-gray-400 mb-4 px-10">
+          <p className="text-gray-500 dark:text-gray-500 mb-4 px-10">
             Aún no se han generado tips.
           </p>
         </div>

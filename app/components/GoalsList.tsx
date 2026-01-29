@@ -45,11 +45,11 @@ export default function GoalsList({ goals }: { goals: Goal[] }) {
         />
       </div>
       <div className="space-y-4">
-        <div className="grid gap-4">
+        {goals.length > 0 ? <div className="grid gap-4">
           {goals.map((goal, i) => (
             <GoalCard key={i} goal={goal} onEdit={setEditingGoal} />
           ))}
-        </div>
+        </div> : <div className="text-gray-500 dark:text-gray-400 mb-4 px-10"> Registra tus metas financieras que tengas a corto, mediano y largo plazo. Cada Meta tiene una Cuenta asociada a ella.</div>}
         {editingGoal && (
           <GoalDialog
             open={!!editingGoal}

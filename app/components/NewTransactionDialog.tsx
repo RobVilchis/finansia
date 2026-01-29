@@ -107,6 +107,7 @@ export default function NewTransactionDialog({
   }, []);
 
   const action: () => void = handleSubmit(async (formData) => {
+    console.log(formData);
     const result = await createTransactionAction({
       ...formData,
       date: `${formData.date}T${formData.time}`,
@@ -141,8 +142,8 @@ export default function NewTransactionDialog({
         </div>
         <div className=" relative overflow-visible z-10">
           <form
-            action={action}
-            /* onSubmit={handleSubmit(onSubmit)} */ className="space-y-4"
+            onSubmit={action}
+            className="space-y-4"
           >
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
@@ -258,42 +259,40 @@ export default function NewTransactionDialog({
               </div>
             </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                {transactionType === "expense"
-                  ? "Cuenta origen"
-                  : transactionType === "income"
-                    ? "Cuenta destino"
-                    : "Cuenta origen"}
-              </label>
-              <Controller
-                name="sourceAccountId"
-                control={control}
-                render={({ field }: FieldProps<"sourceAccountId">) => (
-                  <Select.Root
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    size={size}
-                  >
-                    <Select.Trigger placeholder="Elige una" />
-                    <Select.Content>
-                      {accounts.map((account, i) => (
-                        <Select.Item key={i} value={account.id}>
-                          {account.name} (${account.balance})
-                        </Select.Item>
-                      ))}
-                    </Select.Content>
-                  </Select.Root>
+            {transactionType === "expense" && (
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                  Cuenta origen
+                </label>
+                <Controller
+                  name="sourceAccountId"
+                  control={control}
+                  render={({ field }: FieldProps<"sourceAccountId">) => (
+                    <Select.Root
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      size={size}
+                    >
+                      <Select.Trigger placeholder="Elige una" />
+                      <Select.Content>
+                        {accounts.map((account, i) => (
+                          <Select.Item key={i} value={account.id}>
+                            {account.name} (${account.balance})
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Root>
+                  )}
+                />
+                {errors.sourceAccountId && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.sourceAccountId.message}
+                  </p>
                 )}
-              />
-              {errors.sourceAccountId && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.sourceAccountId.message}
-                </p>
-              )}
-            </div>
+              </div>
+            )}
 
-            {transactionType === "transfer" && (
+            {transactionType === "income" && (
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                   Cuenta destino
@@ -309,16 +308,11 @@ export default function NewTransactionDialog({
                     >
                       <Select.Trigger placeholder="Elige una" />
                       <Select.Content>
-                        {accounts
-                          .filter(
-                            (account) =>
-                              account.id !== watch("sourceAccountId"),
-                          )
-                          .map((account, i) => (
-                            <Select.Item key={i} value={account.id}>
-                              {account.name} (${account.balance})
-                            </Select.Item>
-                          ))}
+                        {accounts.map((account, i) => (
+                          <Select.Item key={i} value={account.id}>
+                            {account.name} (${account.balance})
+                          </Select.Item>
+                        ))}
                       </Select.Content>
                     </Select.Root>
                   )}
@@ -329,6 +323,76 @@ export default function NewTransactionDialog({
                   </p>
                 )}
               </div>
+            )}
+
+            {transactionType === "transfer" && (
+              <>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                    Cuenta origen
+                  </label>
+                  <Controller
+                    name="sourceAccountId"
+                    control={control}
+                    render={({ field }: FieldProps<"sourceAccountId">) => (
+                      <Select.Root
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        size={size}
+                      >
+                        <Select.Trigger placeholder="Elige una" />
+                        <Select.Content>
+                          {accounts.map((account, i) => (
+                            <Select.Item key={i} value={account.id}>
+                              {account.name} (${account.balance})
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select.Root>
+                    )}
+                  />
+                  {errors.sourceAccountId && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.sourceAccountId.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                    Cuenta destino
+                  </label>
+                  <Controller
+                    name="targetAccountId"
+                    control={control}
+                    render={({ field }: FieldProps<"targetAccountId">) => (
+                      <Select.Root
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        size={size}
+                      >
+                        <Select.Trigger placeholder="Elige una" />
+                        <Select.Content>
+                          {accounts
+                            .filter(
+                              (account) =>
+                                account.id !== watch("sourceAccountId"),
+                            )
+                            .map((account, i) => (
+                              <Select.Item key={i} value={account.id}>
+                                {account.name} (${account.balance})
+                              </Select.Item>
+                            ))}
+                        </Select.Content>
+                      </Select.Root>
+                    )}
+                  />
+                  {errors.targetAccountId && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.targetAccountId.message}
+                    </p>
+                  )}
+                </div>
+              </>
             )}
 
             {transactionType !== "transfer" && (

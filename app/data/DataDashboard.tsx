@@ -231,9 +231,8 @@ export default function DataDashboard({
             </Tabs.Content>
             <Tabs.Content value="transactions">
               <div
-                className={`flex gap-3 items-center justify-between ${
-                  unverifiedTransactions.length > 0 ? "mb-4" : "mb-8"
-                }`}
+                className={`flex gap-3 items-center justify-between ${unverifiedTransactions.length > 0 ? "mb-4" : "mb-8"
+                  }`}
               >
                 <h1 className="text-2xl font-bold ">Transacciones recientes</h1>
                 <div className="flex items-center gap-2">
@@ -272,7 +271,7 @@ export default function DataDashboard({
               <div className="grid gap-4 mx-auto">
                 {transactions.length === 0 ? (
                   <div className="text-center text-gray-500 dark:text-gray-400">
-                    No se encontraron transacciones
+                    Aún no se han registrado transacciones.
                   </div>
                 ) : (
                   Object.entries(groupTransactionsByDay(transactions)).map(

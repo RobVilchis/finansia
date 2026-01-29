@@ -59,7 +59,7 @@ export const transactionSchema = z
     },
     {
       message: "La cuenta origen es requerida para gastos",
-      path: ["accountId"],
+      path: ["sourceAccountId"],
     }
   )
   .refine(
@@ -84,7 +84,7 @@ export const transactionSchema = z
     {
       message:
         "Ambas cuentas origen y destino son requeridas para transferencias",
-      path: ["accountId"],
+      path: ["sourceAccountId"],
     }
   )
   .refine(
