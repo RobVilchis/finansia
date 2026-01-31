@@ -11,6 +11,7 @@ import {
 } from "@/lib/services/transactions";
 import { currentUser } from "@clerk/nextjs/server";
 import { convertToModelMessages, streamText, tool, UIMessage } from "ai";
+import { revalidatePath } from "next/cache";
 import z from "zod";
 
 // Allow streaming responses up to 30 seconds
@@ -396,6 +397,8 @@ export async function POST(req: Request) {
     system: systemContext,
     messages: convertToModelMessages(messages),
   });
+
+  revalidatePath("/data");
 
   return result.toUIMessageStreamResponse();
 }
