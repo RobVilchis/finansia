@@ -85,10 +85,6 @@ export async function getTransactionsAction() {
       )
       .orderBy(desc(transactions.date));
 
-    allTransactions.forEach((transaction) => {
-      console.log(transaction.description, transaction.amount, transaction.date);
-    });
-
     return { success: true, message: "", data: allTransactions };
   } catch (error) {
     if (error instanceof DrizzleQueryError) {

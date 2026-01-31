@@ -58,6 +58,7 @@ export default function NewTransactionDialog({
     control,
     handleSubmit,
     watch,
+    reset,
     formState: { errors },
     register,
   } = useForm<TransactionFormData>({
@@ -107,7 +108,6 @@ export default function NewTransactionDialog({
   }, []);
 
   const action: () => void = handleSubmit(async (formData) => {
-    console.log(formData);
     const result = await createTransactionAction({
       ...formData,
       date: new Date(`${formData.date}T${formData.time}`).toISOString(),
@@ -119,6 +119,7 @@ export default function NewTransactionDialog({
         message: "",
         variant: "success",
       });
+      reset();
     } else {
       showToast({
         title: "Ocurrió un error",
