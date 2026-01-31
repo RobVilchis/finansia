@@ -22,5 +22,5 @@ export const financialGoals = pgTable("financial_goals", {
   accountId: varchar("account_id")
     .references(() => accounts.id)
     .unique(), // ← one-to-one
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });

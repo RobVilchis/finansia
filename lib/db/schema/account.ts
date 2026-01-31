@@ -10,10 +10,10 @@ export const accounts = pgTable("accounts", {
   userId: varchar("user_id", { length: 191 }).references(() => users.id),
   name: text("name").notNull(),
   type: text("type"),
-  createdAt: timestamp("created_at")
+  createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .default(sql`now()`),
-  updatedAt: timestamp("updated_at")
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .default(sql`now()`),
 });

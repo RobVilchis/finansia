@@ -194,9 +194,10 @@ export default function TransactionDialog({
   const action: () => void = handleSubmit(async (formData) => {
     const result = await updateTransactionAction(transaction.id, {
       ...formData,
-      date: `${formData.date}T${formData.time}`,
+      date: new Date(`${formData.date}T${formData.time}`).toISOString(),
       isUnverified: false,
     });
+    console.log(new Date(`${formData.date}T${formData.time}`).toISOString());
 
     if (result.success) {
       showToast({

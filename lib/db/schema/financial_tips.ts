@@ -13,6 +13,6 @@ export const financialTips = pgTable("financial_tips", {
   category: text("category"), // optional: "spending", "goals", etc.
   title: text("title").notNull(), // optional short label
   fullText: text("full_text").notNull(),
-  generatedAt: timestamp("generated_at").defaultNow(),
+  generatedAt: timestamp("generated_at", { withTimezone: true }).defaultNow(),
   source: text("source").default("openai"),
 });

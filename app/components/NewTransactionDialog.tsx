@@ -110,7 +110,7 @@ export default function NewTransactionDialog({
     console.log(formData);
     const result = await createTransactionAction({
       ...formData,
-      date: `${formData.date}T${formData.time}`,
+      date: new Date(`${formData.date}T${formData.time}`).toISOString(),
     });
 
     if (result.success) {

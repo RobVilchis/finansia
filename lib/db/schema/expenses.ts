@@ -19,11 +19,11 @@ export const expenses = pgTable("expenses", {
   categoryId: varchar("category_id", { length: 191 })
     .notNull()
     .references(() => categories.id),
-  date: timestamp("date").notNull(),
-  createdAt: timestamp("created_at")
+  date: timestamp("date", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .default(sql`now()`),
-  updatedAt: timestamp("updated_at")
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .default(sql`now()`),
 });

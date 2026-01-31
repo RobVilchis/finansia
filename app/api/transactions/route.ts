@@ -110,10 +110,7 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const transactionId = body.id;
 
-    const utcDate = new Date(body.date);
-    body.date = new Date(
-      utcDate.getTime() + utcDate.getTimezoneOffset() * 60000
-    );
+    body.date = new Date(body.date);
 
     // First check if the transaction belongs to the user
     const existingTransaction = await db
@@ -174,14 +171,14 @@ export async function PATCH(request: Request) {
         body.type === "transfer"
           ? body.accountId
           : body.type === "expense"
-          ? body.accountId
-          : null,
+            ? body.accountId
+            : null,
       targetAccountId:
         body.type === "transfer"
           ? body.targetAccountId
           : body.type === "income"
-          ? body.targetAccountId
-          : null,
+            ? body.targetAccountId
+            : null,
     };
 
     if (body.isUnverified !== undefined) {

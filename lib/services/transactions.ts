@@ -40,18 +40,13 @@ export type GetTransactionsInput = {
 
 function normalizeDate(date: string | Date, time?: string): Date {
   const base = typeof date === "string" ? new Date(date) : date;
-  if (time) {
+  if (time && typeof date === "string" && !date.includes("T")) {
     const [h, m = "0", s = "0"] = time.split(":");
     const dateWithTime = new Date(base);
     dateWithTime.setHours(Number(h), Number(m), Number(s), 0);
-    // Convert to UTC equivalent by removing timezone offset
-    const utc = new Date(
-      dateWithTime.getTime() + dateWithTime.getTimezoneOffset() * 60000
-    );
-    return utc;
+    return dateWithTime;
   }
-  // Keep parity with existing POST handler which normalizes to UTC
-  return new Date(base.getTime() + base.getTimezoneOffset() * 60000);
+  return base;
 }
 
 async function resolveAccountId(
@@ -134,14 +129,14 @@ export async function createTransaction({
     type === "transfer"
       ? resolvedSourceAccountId
       : type === "expense"
-      ? resolvedSourceAccountId
-      : null;
+        ? resolvedSourceAccountId
+        : null;
   const finalTargetAccountId =
     type === "transfer"
       ? resolvedTargetAccountId
       : type === "income"
-      ? resolvedTargetAccountId ?? resolvedSourceAccountId ?? null
-      : null;
+        ? resolvedTargetAccountId ?? resolvedSourceAccountId ?? null
+        : null;
 
   const base = insertTransactionSchema.parse({
     userId,
@@ -240,15 +235,15 @@ export async function createTransactionIfUnique({
     type === "transfer"
       ? resolvedSourceAccountId
       : type === "expense"
-      ? resolvedSourceAccountId
-      : null;
+        ? resolvedSourceAccountId
+        : null;
 
   const finalTargetAccountId =
     type === "transfer"
       ? resolvedTargetAccountId
       : type === "income"
-      ? resolvedTargetAccountId ?? resolvedSourceAccountId ?? null
-      : null;
+        ? resolvedTargetAccountId ?? resolvedSourceAccountId ?? null
+        : null;
 
   const base = insertTransactionSchema.parse({
     userId,
@@ -343,29 +338,29 @@ export async function getTransactions(filters: GetTransactionsInput) {
 
   const query = conditions.length
     ? db
-        .select({
-          id: transactions.id,
-          description: transactions.description,
-          amount: transactions.amount,
-          date: transactions.date,
-          type: transactions.type,
-          categoryName: categories.name,
-          sourceAccountId: transactions.sourceAccountId,
-          targetAccountId: transactions.targetAccountId,
-          sourceAccountName: sourceAccounts.name,
-          targetAccountName: targetAccounts.name,
-        })
-        .from(transactions)
-        .leftJoin(categories, eq(transactions.category, categories.id))
-        .leftJoin(
-          sourceAccounts,
-          eq(transactions.sourceAccountId, sourceAccounts.id)
-        )
-        .leftJoin(
-          targetAccounts,
-          eq(transactions.targetAccountId, targetAccounts.id)
-        )
-        .where(and(eq(transactions.isUnverified, false), ...conditions))
+      .select({
+        id: transactions.id,
+        description: transactions.description,
+        amount: transactions.amount,
+        date: transactions.date,
+        type: transactions.type,
+        categoryName: categories.name,
+        sourceAccountId: transactions.sourceAccountId,
+        targetAccountId: transactions.targetAccountId,
+        sourceAccountName: sourceAccounts.name,
+        targetAccountName: targetAccounts.name,
+      })
+      .from(transactions)
+      .leftJoin(categories, eq(transactions.category, categories.id))
+      .leftJoin(
+        sourceAccounts,
+        eq(transactions.sourceAccountId, sourceAccounts.id)
+      )
+      .leftJoin(
+        targetAccounts,
+        eq(transactions.targetAccountId, targetAccounts.id)
+      )
+      .where(and(eq(transactions.isUnverified, false), ...conditions))
     : db.select().from(transactions);
   return await query;
 }

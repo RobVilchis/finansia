@@ -17,14 +17,14 @@ export const transactions = pgTable("transactions", {
     .primaryKey()
     .$defaultFn(() => nanoid()),
   userId: varchar("user_id", { length: 191 }).references(() => users.id),
-  date: timestamp("date").notNull().defaultNow(),
+  date: timestamp("date", { withTimezone: true }).notNull().defaultNow(),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(), // + = income, - = expense
   type: text("type").notNull(), // "income", "expense", "transfer"
   category: varchar("category_id").references(() => categories.id),
   description: text("description"),
   sourceAccountId: varchar("source_account_id").references(() => accounts.id),
   targetAccountId: varchar("target_account_id").references(() => accounts.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   isUnverified: boolean("is_unverified").default(false),
 });
 

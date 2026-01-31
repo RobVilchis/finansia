@@ -13,10 +13,10 @@ export const categories = pgTable("categories", {
   description: text("description"),
   type: text("type").default("expense").notNull(),
   budget: numeric("budget"),
-  createdAt: timestamp("created_at")
+  createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .default(sql`now()`),
-  updatedAt: timestamp("updated_at")
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .default(sql`now()`),
 });

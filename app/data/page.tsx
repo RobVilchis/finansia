@@ -49,6 +49,11 @@ const getTransactions = unstable_cache(
       )
       .orderBy(desc(transactions.date));
 
+
+    allTransactions.slice(0, 5).forEach((transaction) => {
+      console.log(transaction.description, transaction.amount, transaction.date);
+      console.log(new Date(transaction.date));
+    });
     return allTransactions;
   },
   ["transactions", process.env.DATABASE_URL || ""],

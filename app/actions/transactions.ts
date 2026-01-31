@@ -85,6 +85,10 @@ export async function getTransactionsAction() {
       )
       .orderBy(desc(transactions.date));
 
+    allTransactions.forEach((transaction) => {
+      console.log(transaction.description, transaction.amount, transaction.date);
+    });
+
     return { success: true, message: "", data: allTransactions };
   } catch (error) {
     if (error instanceof DrizzleQueryError) {
@@ -263,11 +267,9 @@ export async function updateTransactionAction(
     if (updates.type === "transfer") {
       categoryId = null;
     }
-
-    const utcDate = new Date(updates.date);
-    const correctedDate = new Date(
-      utcDate.getTime() + utcDate.getTimezoneOffset() * 60000,
-    );
+    console.log("Updates Date:", updates.date);
+    const correctedDate = new Date(updates.date);
+    console.log("Corrected Date:", correctedDate);
 
     const updateData = {
       description: updates.description,
