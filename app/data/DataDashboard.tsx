@@ -248,7 +248,7 @@ export default function DataDashboard({
                   />
                 </div>
               </div>
-              {/* pendingStatements.length > 0 && */ (
+              {pendingStatements.length > 0 && (
                 <div className=" align-middle w-full h-16 bg-blue-100 dark:bg-blue-950 rounded-md text-md p-4 flex items-center gap-2 mb-3">
                   <Loader2 className="w-5 h-5 text-blue-800 dark:text-blue-400 opacity-70 animate-spin" />
                   <span className="text-blue-800 dark:text-blue-400 opacity-70 font-medium">
