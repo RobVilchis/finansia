@@ -64,48 +64,48 @@ export async function GET() {
     await fetchAllFinancialData(user.id);
 
   const systemContext = `
-  You are an expert financial advisor specializing in providing personalized financial tips. Your task is to generate exactly 3 actionable financial tips based on the user's financial data.
+  Eres un asesor financiero experto especializado en brindar consejos financieros personalizados. Tu tarea es generar exactamente 3 consejos financieros prácticos basados en los datos financieros del usuario.
 
-  RESPONSE REQUIREMENTS:
-  - Generate EXACTLY 3 tips, no more, no less
-  - Each tip should be specific and actionable
-  - Each tip should have a title, description and a category (income, expenses, goals)
-  - Base tips on the user's actual financial situation
-  - Make tips relevant to their spending patterns, goals, and account balances
-  - Keep each tip concise but informative
-  - Focus on practical, implementable advice
+  REQUISITOS DE LA RESPUESTA:
+  - Genera EXACTAMENTE 3 consejos, ni más ni menos
+  - Cada consejo debe ser específico y accionable
+  - Cada consejo debe tener un título (title), descripción (description) y una categoría (category: income, expenses o goals)
+  - Basa los consejos en la situación financiera real del usuario
+  - Haz que los consejos sean relevantes para sus patrones de gasto, metas y saldos de cuentas
+  - Mantén cada consejo conciso pero informativo
+  - Enfócate en consejos prácticos y fáciles de implementar
 
-  CURRENT DATE: ${new Date().toLocaleDateString()}
+  FECHA ACTUAL: ${new Date().toLocaleDateString()}
 
-  USER'S FINANCIAL DATA:
+  DATOS FINANCIEROS DEL USUARIO:
 
-  LOCATION:
-  Mexico
+  UBICACIÓN:
+  México
 
-  CURRENCY:
-  Mexican Pesos
+  MONEDA:
+  Pesos Mexicanos
 
-  RECENT TRANSACTIONS (last 20):
+  TRANSACCIONES RECIENTES (últimas 20):
   ${JSON.stringify(getFirst50(transactions), null, 2)}
 
-  SPENDING BY CATEGORY (last 30 days):
+  GASTOS POR CATEGORÍA (últimos 30 días):
   ${JSON.stringify(categorySum, null, 2)}
 
-  FINANCIAL GOALS:
+  METAS FINANCIERAS:
   ${JSON.stringify(goals, null, 2)}
 
-  ACCOUNTS & BALANCES:
+  CUENTAS Y SALDOS:
   ${JSON.stringify(accounts, null, 2)}
 
-  ANALYSIS FOCUS:
-  - Identify the biggest spending categories and suggest optimization
-  - Assess goal progress and suggest adjustments if needed
-  - Evaluate account balance distribution and suggest improvements
-  - Look for savings opportunities based on spending patterns
-  - Consider emergency fund adequacy
-  - Suggest budgeting improvements based on actual data
+  ENFOQUE DEL ANÁLISIS:
+  - Identificar las categorías de mayor gasto y sugerir optimización
+  - Evaluar el progreso de las metas y sugerir ajustes si es necesario
+  - Evaluar la distribución del saldo de las cuentas y sugerir mejoras
+  - Buscar oportunidades de ahorro basadas en patrones de gasto
+  - Considerar la suficiencia del fondo de emergencia
+  - Sugerir mejoras en el presupuesto basadas en datos reales
 
-  Remember: Provide exactly 3 tips that are personalized to this user's financial situation.
+  Recuerda: Proporciona exactamente 3 consejos que estén personalizados para la situación financiera de este usuario.
   `;
 
   try {
@@ -116,7 +116,7 @@ export async function GET() {
         {
           role: "user",
           content:
-            "Generate 3 personalized financial tips for me based on my financial data.",
+            "Genera 3 consejos financieros personalizados para mí basándote en mis datos financieros.",
         },
       ],
       schema: tipsResponseSchema,

@@ -98,21 +98,19 @@ export default function ExpensesPieChart({
 
     return (
       <ul
-        className={`recharts-legend-item-list flex flex-col flex-wrap ${
-          isMediumOrLarge ? "h-fit w-30" : "h-36 w-80"
-        }`}
+        className={`recharts-legend-item-list flex flex-col flex-wrap ${isMediumOrLarge ? "h-fit w-30" : "h-36 w-80"
+          }`}
         style={{ listStyle: "none", padding: 0, margin: 0 }}
       >
         {payload.toReversed().map((category, index) => (
           <li
             key={`legend-item-${index}`}
-            className="recharts-legend-item w-fit"
+            className="recharts-legend-item w-fit text-black dark:text-white"
             style={{
               display: "flex",
               alignItems: "center",
               marginBottom: "4px",
               fontSize: "12px",
-              color: "#ffffff",
             }}
           >
             <svg width="12" height="12" style={{ marginRight: "8px" }}>
@@ -155,7 +153,7 @@ export default function ExpensesPieChart({
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number) => [`$${value.toFixed(2)}`, "Amount"]}
+            formatter={(value: number) => [`$${value.toFixed(2)}`, "Total"]}
             labelStyle={{ color: "#000" }}
             contentStyle={{
               backgroundColor: "#fff",
@@ -164,6 +162,7 @@ export default function ExpensesPieChart({
             }}
           />
           <Legend
+
             layout="vertical"
             verticalAlign={isMediumOrLarge ? "middle" : "bottom"}
             align={isMediumOrLarge ? "right" : "center"}
