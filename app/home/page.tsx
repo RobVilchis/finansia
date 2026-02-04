@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardGoalsList from "../components/DashboardGoalsList";
 import ExpensesPieChart from "../components/ExpensesPieChart";
 import HomeAccountsList from "../components/HomeAccountsList";
@@ -10,6 +10,10 @@ import TipsList from "../components/TipsList";
 export default function DashboardPage() {
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  useEffect(() => {
+    fetch("api/create-user");
+  }, []);
 
   // For ExpensesPieChart, show last 30 days
   const now = new Date();
@@ -46,7 +50,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Saldos actuales</h2>
         </div>
-        <HomeAccountsList onAccountAdded={() => {}} />
+        <HomeAccountsList onAccountAdded={() => { }} />
       </section>
       <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800 mb-6">
         <h2 className="text-xl font-semibold mb-4">Progreso de metas</h2>

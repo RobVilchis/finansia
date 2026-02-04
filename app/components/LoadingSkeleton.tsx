@@ -33,7 +33,7 @@ export const ChartSkeleton: React.FC = () => {
 export const EmptyStateSkeleton: React.FC = () => {
   return (
     <div className=" rounded-lg  text-gray-500 dark:text-gray-500 my-4 pt-6 px-10">
-      Registra algunos de tus gastos para ver la gráfica.
+      Registra algunos de tus gastos para ver la gráfica
     </div>
   );
 };

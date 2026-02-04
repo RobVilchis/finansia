@@ -45,6 +45,10 @@ export default function CategoryPage(props: {
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  useEffect(() => {
+    fetch("api/create-user");
+  }, []);
+
   const {
     control,
     handleSubmit,
@@ -379,12 +383,12 @@ export default function CategoryPage(props: {
                 <p className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
                   {categoryData.summary.lastTransactionDate
                     ? new Date(
-                        categoryData.summary.lastTransactionDate,
-                      ).toLocaleDateString("es-MX", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })
+                      categoryData.summary.lastTransactionDate,
+                    ).toLocaleDateString("es-MX", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })
                     : "N/A"}
                 </p>
               </div>
@@ -424,10 +428,10 @@ export default function CategoryPage(props: {
                     {monthTransactions.map((transaction) => (
                       <div
                         key={transaction.id}
-                        /* onClick={() => {
-                        setSelectedTransaction(transaction);
-                        setTransactionDialogOpen(true);
-                      }} */
+                      /* onClick={() => {
+                      setSelectedTransaction(transaction);
+                      setTransactionDialogOpen(true);
+                    }} */
                       >
                         <TransactionCard
                           description={transaction.description}

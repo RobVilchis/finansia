@@ -22,6 +22,10 @@ export default function CategoriesPage() {
   const [toastOpen, setToastOpen] = useState(false);
   const timerRef = useRef(0);
 
+  useEffect(() => {
+    fetch("api/create-user");
+  }, []);
+
   const fetchCategories = useCallback(async () => {
     try {
       const response = await fetch("/api/categories");
