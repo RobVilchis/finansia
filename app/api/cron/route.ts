@@ -10,7 +10,7 @@ import { generateObject } from "ai";
 import { z } from "zod";
 
 // Allow responses up to 30 seconds
-export const maxDuration = 30;
+export const maxDuration = 300;
 
 // Define the schema for tips
 const tipSchema = z.object({
