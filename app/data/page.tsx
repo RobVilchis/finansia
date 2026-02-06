@@ -76,10 +76,10 @@ const getAccounts = unstable_cache(
       .leftJoin(
         transactions,
         sql`
-    ${transactions.targetAccountId} = ${accounts.id}
-    OR
-    ${transactions.sourceAccountId} = ${accounts.id}
-  `,
+          ${transactions.targetAccountId} = ${accounts.id}
+          OR
+          ${transactions.sourceAccountId} = ${accounts.id}
+        `,
       )
       .where(eq(accounts.userId, userId))
       .groupBy(accounts.id, accounts.name);

@@ -2,41 +2,24 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Button,
   Dialog,
-  SegmentedControl,
-  Select,
-  TextField,
+  Flex,
+  Text,
+  VisuallyHidden,
 } from "@radix-ui/themes";
+import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { createTransactionAction } from "../actions/transactions";
-import { useBreakpoint } from "../hooks/useBreakpoint";
 import { useToast } from "./GenericToast";
 import { TransactionFormData, transactionSchema } from "./TransactionDialog";
-// If you are using date-fns v3.x or v4.x, please import `AdapterDateFns`
-
-interface Category {
-  name: string;
-  type: string;
-}
-
-interface Account {
-  id: string;
-  name: string;
-  type: string;
-  balance: number;
-}
+import TransactionForm, { Account, Category } from "./TransactionForm";
 
 interface NewTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddTransaction: () => void;
 }
-
-export type FieldProps<T extends keyof TransactionFormData> = {
-  field: ControllerRenderProps<TransactionFormData, T>;
-};
 
 export default function NewTransactionDialog({
   open,
@@ -54,14 +37,7 @@ export default function NewTransactionDialog({
   const dateString = `${year}-${month}-${day}`;
   const timeString = currentDate.toTimeString().slice(0, 5);
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    reset,
-    formState: { errors },
-    register,
-  } = useForm<TransactionFormData>({
+  const form = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       description: "",
@@ -75,10 +51,7 @@ export default function NewTransactionDialog({
     },
   });
 
-  const transactionType = watch("type");
-
-  const bp = useBreakpoint();
-  const size = bp === "lg" ? "2" : bp === "md" ? "2" : "3";
+  const { handleSubmit, reset, formState: { isSubmitting } } = form;
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -107,7 +80,7 @@ export default function NewTransactionDialog({
     fetchAccounts();
   }, []);
 
-  const action: () => void = handleSubmit(async (formData) => {
+  const action = handleSubmit(async (formData) => {
     const result = await createTransactionAction({
       ...formData,
       date: new Date(`${formData.date}T${formData.time}`).toISOString(),
@@ -115,335 +88,57 @@ export default function NewTransactionDialog({
 
     if (result.success) {
       showToast({
-        title: "Transacción creada con éxito",
-        message: "",
+        title: "Transacción exitosa",
+        message: "La transacción se ha registrado correctamente.",
         variant: "success",
       });
       reset();
     } else {
       showToast({
-        title: "Ocurrió un error",
+        title: "Error",
         message: result.message,
         variant: "error",
       });
     }
-    // setServerResponse(response);
     onActionFinished();
   });
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content
-        maxWidth="400px"
-        style={{ overflow: "visible" }}
-        className="z-40"
+        // style={{ maxWidth: 520, overflow: "visible" }}
+        minWidth="10px"
+        className="z-40 p-0! rounded-2xl! bg-white! dark:bg-zinc-900! shadow-xl"
       >
-        <div className="flex justify-between items-center mb-2">
-          <Dialog.Title>Agregar nueva transacción</Dialog.Title>
+        <VisuallyHidden>
+          <Dialog.Title>Nueva transacción</Dialog.Title>
+        </VisuallyHidden>
+        {/* Header */}
+        <div className="bg-linear-to-r bg-slate-600 px-6 py-4 rounded-t-2xl text-white">
+          <Flex align="center" gap="3" className="mb-2">
+            <div className={`p-1 rounded-full bg-white/20 backdrop-blur-sm`}>
+              <Plus size={24} className="text-white" />
+            </div>
+
+            <div className="text-xl font-bold m-0 text-white">
+              Nueva transacción
+            </div>
+          </Flex>
+          <Text size="2" className="text-blue-100 opacity-90">
+            Registra un nuevo movimiento en tus cuentas.
+          </Text>
         </div>
-        <div className=" relative overflow-visible z-10">
-          <form
+
+        <div className="p-6">
+          <TransactionForm
+            form={form}
+            categories={categories}
+            accounts={accounts}
             onSubmit={action}
-            className="space-y-4"
-          >
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Tipo de transacción
-              </label>
-              <Controller
-                name="type"
-                control={control}
-                render={({ field }: FieldProps<"type">) => (
-                  <SegmentedControl.Root
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SegmentedControl.Item value="expense">
-                      Gasto
-                    </SegmentedControl.Item>
-                    <SegmentedControl.Item value="income">
-                      Ingreso
-                    </SegmentedControl.Item>
-                    <SegmentedControl.Item value="transfer">
-                      Transferencia
-                    </SegmentedControl.Item>
-                  </SegmentedControl.Root>
-                )}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Descripción
-              </label>
-              <Controller
-                name="description"
-                control={control}
-                render={({ field }: FieldProps<"description">) => (
-                  <TextField.Root
-                    size={size}
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-              {errors.description && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.description.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Monto
-              </label>
-              <Controller
-                name="amount"
-                control={control}
-                render={({ field }: FieldProps<"amount">) => (
-                  <TextField.Root
-                    size={size}
-                    type="number"
-                    step="0.01"
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-              {errors.amount && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.amount.message}
-                </p>
-              )}
-            </div>
-
-            <div className="flex justify-start gap-2">
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Fecha
-                </label>
-
-                <input
-                  className="h-10 px-2 w-full rounded-md bg-dark-50 border 
-                  border-neutral-600 focus:outline-2 focus:outline-blue-600"
-                  type="date"
-                  id="date"
-                  {...register("date")}
-                />
-
-                {errors.date && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.date.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Hora
-                </label>
-
-                <input
-                  className="h-10 px-2 w-full rounded-md bg-dark-50 border 
-                  border-neutral-600 focus:outline-2 focus:outline-blue-600"
-                  type="time"
-                  id="time"
-                  {...register("time")}
-                />
-
-                {errors.time && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.time.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {transactionType === "expense" && (
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Cuenta origen
-                </label>
-                <Controller
-                  name="sourceAccountId"
-                  control={control}
-                  render={({ field }: FieldProps<"sourceAccountId">) => (
-                    <Select.Root
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      size={size}
-                    >
-                      <Select.Trigger placeholder="Elige una" />
-                      <Select.Content>
-                        {accounts.map((account, i) => (
-                          <Select.Item key={i} value={account.id}>
-                            {account.name} (${account.balance})
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select.Root>
-                  )}
-                />
-                {errors.sourceAccountId && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.sourceAccountId.message}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {transactionType === "income" && (
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Cuenta destino
-                </label>
-                <Controller
-                  name="targetAccountId"
-                  control={control}
-                  render={({ field }: FieldProps<"targetAccountId">) => (
-                    <Select.Root
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      size={size}
-                    >
-                      <Select.Trigger placeholder="Elige una" />
-                      <Select.Content>
-                        {accounts.map((account, i) => (
-                          <Select.Item key={i} value={account.id}>
-                            {account.name} (${account.balance})
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select.Root>
-                  )}
-                />
-                {errors.targetAccountId && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.targetAccountId.message}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {transactionType === "transfer" && (
-              <>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                    Cuenta origen
-                  </label>
-                  <Controller
-                    name="sourceAccountId"
-                    control={control}
-                    render={({ field }: FieldProps<"sourceAccountId">) => (
-                      <Select.Root
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        size={size}
-                      >
-                        <Select.Trigger placeholder="Elige una" />
-                        <Select.Content>
-                          {accounts.map((account, i) => (
-                            <Select.Item key={i} value={account.id}>
-                              {account.name} (${account.balance})
-                            </Select.Item>
-                          ))}
-                        </Select.Content>
-                      </Select.Root>
-                    )}
-                  />
-                  {errors.sourceAccountId && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.sourceAccountId.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                    Cuenta destino
-                  </label>
-                  <Controller
-                    name="targetAccountId"
-                    control={control}
-                    render={({ field }: FieldProps<"targetAccountId">) => (
-                      <Select.Root
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        size={size}
-                      >
-                        <Select.Trigger placeholder="Elige una" />
-                        <Select.Content>
-                          {accounts
-                            .filter(
-                              (account) =>
-                                account.id !== watch("sourceAccountId"),
-                            )
-                            .map((account, i) => (
-                              <Select.Item key={i} value={account.id}>
-                                {account.name} (${account.balance})
-                              </Select.Item>
-                            ))}
-                        </Select.Content>
-                      </Select.Root>
-                    )}
-                  />
-                  {errors.targetAccountId && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.targetAccountId.message}
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
-
-            {transactionType !== "transfer" && (
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Categoría
-                </label>
-                <Controller
-                  name="category"
-                  control={control}
-                  render={({ field }: FieldProps<"category">) => (
-                    <Select.Root
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      size={size}
-                    >
-                      <Select.Trigger placeholder="Elige una" />
-                      <Select.Content>
-                        {categories
-                          .filter(
-                            (category) => category.type === transactionType,
-                          )
-                          .map((category, i) => (
-                            <Select.Item key={i} value={category.name}>
-                              {category.name}
-                            </Select.Item>
-                          ))}
-                      </Select.Content>
-                    </Select.Root>
-                  )}
-                />
-                {errors.category && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.category.message}
-                  </p>
-                )}
-              </div>
-            )}
-
-            <div className="flex justify-end gap-3 mt-6">
-              <Dialog.Close>
-                <Button variant="soft" color="gray">
-                  Cancelar
-                </Button>
-              </Dialog.Close>
-              <Button type="submit" color="blue">
-                Agregar transacción
-              </Button>
-            </div>
-          </form>
+            onCancel={() => onOpenChange(false)}
+            isSubmitting={isSubmitting}
+            submitLabel="Guardar transacción"
+          />
         </div>
       </Dialog.Content>
     </Dialog.Root>
