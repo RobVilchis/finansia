@@ -3,6 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { TextArea } from "@radix-ui/themes";
 import { UIMessage } from "ai";
+import { ArrowUp } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Markdown from "react-markdown";
 
@@ -26,26 +27,25 @@ export default function ChatUI({ messages, sendMessage }: ChatUIProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+  console.log(messages[0])
 
   return (
-    <div className="Z-20   w-full max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden">
-      <h1 className="m-4 text-2xl  text-gray-900 dark:text-white mb-8">
+    <div className="Z-20 w-full h-full sm:py-4 bg-none dark:bg-none rounded-lg shadow-lg flex  flex-col">
+      {/* <h1 className="m-4 text-2xl  text-gray-900 dark:text-white mb-8">
         Haz una pregunta
-      </h1>
-      <div className="h-[370px]  md:h-[350px] overflow-y-auto p-4 space-y-4">
+      </h1> */}
+      <div className="space-y-4 grow overflow-y-auto">
         {messages?.map((message: UIMessage) => (
           <div
             key={message.id}
-            className={`flex ${
-              message.role === "user" ? "justify-end" : "justify-start"
-            }`}
+            className={`flex ${message.role === "user" ? "justify-end" : "justify-start"
+              }`}
           >
             <div
-              className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                message.role === "user"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-              }`}
+              className={`max-w-[80%] rounded-lg px-4 py-2 ${message.role === "user"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
+                }`}
             >
               {message.parts.map((part: MessagePart, index: number) =>
                 part.type === "text" ? (
@@ -73,30 +73,36 @@ export default function ChatUI({ messages, sendMessage }: ChatUIProps) {
             setInput("");
           }
         }}
-        className=" p-4"
+        className="pb-4"
       >
-        <div className="flex gap-2">
-          <TextArea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                if (input.trim()) {
-                  sendMessage({ text: input });
-                  setInput("");
+        <div className="flex items-center gap-2">
+          <div className="relative w-full h-full flex items-end bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all overflow-hidden">
+            <TextArea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (input.trim()) {
+                    sendMessage({ text: input });
+                    setInput("");
+                  }
                 }
-              }
-            }}
-            placeholder="Pregunta sobre tus gastos..."
-            className="flex-1 min-h-[44px] max-h-32 rounded-lg border dark:border-gray-700 bg-transparent px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={1}
-          />
+              }}
+              resize="vertical"
+              placeholder="Pregunta sobre tus gastos..."
+              className="min-h-[60px]! max-h-[200px]! w-full border-0 bg-transparent px-4! py-3!  text-gray-900! dark:text-white! placeholder:text-gray-400! focus:outline-none focus:ring-0 resize-none"
+              style={{ boxShadow: 'none', background: 'transparent' }}
+              rows={1}
+            />
+          </div>
           <button
             type="submit"
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            disabled={!input.trim()}
+            className=" p-2 bg-gray-900 dark:bg-blue-600 text-white rounded-xl hover:bg-gray-800 dark:hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
           >
-            Enviar
+            <ArrowUp className="w-5 h-5" />
+            <span className="sr-only">Enviar</span>
           </button>
         </div>
       </form>

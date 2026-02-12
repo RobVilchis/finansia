@@ -23,6 +23,7 @@ import {
     TrendingDown,
 } from "lucide-react";
 import { TransactionFormData } from "./TransactionDialog";
+import { useBreakpoint } from "../hooks/useBreakpoint";
 
 export interface Category {
     name: string;
@@ -65,6 +66,7 @@ export default function TransactionForm({
     } = form;
 
     const transactionType = watch("type");
+    const bp = useBreakpoint();
 
     return (
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
@@ -180,9 +182,9 @@ export default function TransactionForm({
                 )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
                 {/* Date */}
-                <div>
+                <div className="">
                     {/* <Text
                         as="label"
                         size="2"
@@ -209,7 +211,7 @@ export default function TransactionForm({
                 </div>
 
                 {/* Time */}
-                <div>
+                <div className="">
                     {/* <Text
                         as="label"
                         size="2"
@@ -261,7 +263,7 @@ export default function TransactionForm({
                                     size="3"
                                 >
                                     <Select.Trigger
-                                        placeholder="Cuenta origen"
+                                        placeholder={bp === "lg" || bp === "md" ? "Cuenta origen" : "Origen"}
                                         className="w-full!"
                                         variant="surface"
                                     >
@@ -314,7 +316,7 @@ export default function TransactionForm({
                                     size="3"
                                 >
                                     <Select.Trigger
-                                        placeholder="Cuenta destino"
+                                        placeholder={bp === "lg" || bp === "md" ? "Cuenta destino" : "Destino"}
                                         className="w-full!"
                                         variant="surface"
                                     >

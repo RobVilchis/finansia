@@ -1,68 +1,72 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
-import { useState } from "react";
+import { useChatContext } from "../contexts/ChatContext";
 import ChatUI from "./ChatUI";
-import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
-import { useTransactions } from "../contexts/TransactionsContext";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+  Sparkles
+} from "lucide-react";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { useEffect, useState } from "react";
 
 export default function ChatButton() {
-  const { refreshTransactions } = useTransactions();
-  const { messages, sendMessage } = useChat({
-    // Automatically submit when all tool results are available
-    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+  const { messages, sendMessage, isSheetOpen, setIsSheetOpen } = useChatContext();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const [mounted, setMounted] = useState(false);
 
-    onToolCall: ({ toolCall }) => {
-      if (toolCall.dynamic) {
-        return;
-      }
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-      if (
-        toolCall.toolName === "createTransaction" ||
-        toolCall.toolName === "deleteTransactions"
-      ) {
-        refreshTransactions();
-      }
-    },
-  });
-  const [chatOpen, setChatOpen] = useState<boolean>(false);
+  if (!mounted) return null;
+
+  const TriggerButton = (
+    <div
+      onClick={() => setIsSheetOpen(true)}
+      className="hidden md:flex fixed right-10 bottom-10 h-14 w-14 bg-gray-200 dark:bg-gray-600 
+      rounded-lg p-3 items-center justify-center hover:bg-gray-300 
+      dark:hover:bg-gray-500 transition-colors cursor-pointer z-50"
+    >
+      <Sparkles />
+    </div>
+  );
+
+  if (isDesktop) {
+    return (
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetTrigger asChild>
+          {TriggerButton}
+        </SheetTrigger>
+        <SheetContent className="w-[50vw]! sm:max-w-[1200px]!">
+          <SheetHeader>
+            <SheetTitle>Chat</SheetTitle>
+          </SheetHeader>
+          <ChatUI messages={messages} sendMessage={sendMessage} />
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
-    <>
-      <button
-        onClick={() => setChatOpen(!chatOpen)}
-        className="fixed right-10 bottom-10 bg-gray-200  dark:bg-gray-600 
-        rounded-lg p-3 flex items-center justify-center hover:bg-gray-300 
-        dark:hover:bg-gray-500 transition-colors"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="w-10 h-10"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 
-            12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 
-            4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 
-            3.445-1.087.81.22 1.668.337 2.555.337Z"
-          />
-        </svg>
-      </button>
-      <div
-        className={`z-50 w-[350px] fixed bottom-30 right-8 ml-8 md:bottom-10 md:right-35
-          md:w-md transition-all duration-200 ${
-            chatOpen
-              ? "opacity-100 pointer-events-auto"
-              : "opacity-0 pointer-events-none"
-          }`}
-      >
-        <ChatUI messages={messages} sendMessage={sendMessage} />
-      </div>
-    </>
+    <Drawer open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+      <DrawerTrigger asChild>
+        {TriggerButton}
+      </DrawerTrigger>
+      <DrawerContent className="h-[85vh] flex flex-col">
+        <DrawerHeader>
+          <DrawerTitle>Chat</DrawerTitle>
+        </DrawerHeader>
+        <div className="px-4 flex-1 min-h-0">
+          <ChatUI messages={messages} sendMessage={sendMessage} />
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
