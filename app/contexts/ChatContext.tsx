@@ -11,6 +11,7 @@ import {
     SetStateAction,
 } from "react";
 import { useTransactions } from "./TransactionsContext";
+import { useRouter } from "next/navigation";
 
 import { UIMessage } from "ai";
 
@@ -34,6 +35,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export function ChatProvider({ children }: { children: ReactNode }) {
     const { refreshTransactions } = useTransactions();
+    const router = useRouter();
     const [isSheetOpen, setIsSheetOpen] = useState(false);
 
     const chat = useChat({
@@ -45,11 +47,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 return;
             }
 
-            if (
-                toolCall.toolName === "createTransaction" ||
-                toolCall.toolName === "deleteTransactions"
-            ) {
+            const mutationTools = [
+                "createTransaction",
+                "deleteTransactions",
+                "updateTransaction",
+                "createAccount",
+                "updateAccount",
+                "deleteAccount",
+                "createGoal",
+                "updateGoal",
+                "deleteGoal",
+                "createCategory",
+                "updateCategory",
+                "deleteCategory",
+            ];
+
+            if (mutationTools.includes(toolCall.toolName)) {
                 refreshTransactions();
+                router.refresh();
             }
         },
     });

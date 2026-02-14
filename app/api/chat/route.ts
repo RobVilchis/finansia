@@ -1,7 +1,13 @@
+import { db } from "@/lib/db";
+import { accounts as accountsTable } from "@/lib/db/schema/account";
+import { categories as categoriesTable } from "@/lib/db/schema/categories";
+import { financialGoals } from "@/lib/db/schema/financial_goals";
+import { transactions as transactionsTable } from "@/lib/db/schema/transactions";
 import {
   fetchAllFinancialData,
   fetchUserAccounts,
   fetchUserCategories,
+  fetchUserGoals,
   getFirst50,
 } from "@/lib/financial-data";
 import {
@@ -10,6 +16,7 @@ import {
   getTransactions,
 } from "@/lib/services/transactions";
 import { currentUser } from "@clerk/nextjs/server";
+import { and, eq } from "drizzle-orm";
 import { convertToModelMessages, streamText, tool, UIMessage } from "ai";
 import { revalidatePath } from "next/cache";
 import z from "zod";
@@ -36,26 +43,38 @@ export async function POST(req: Request) {
   );
 
   const systemContext = `
-  You are an expert financial advisor with deep knowledge of personal finance, budgeting, investment strategies, and financial planning. Your role is to provide personalized, actionable financial advice based on the user's financial data.
+  You are a personal finance assistant. You ONLY answer questions and perform actions related to personal finance, budgeting, and the user's financial data. If the user asks about anything unrelated to finance, politely decline and redirect to financial topics.
 
   RESPONSE GUIDELINES:
-  - Be concise, professional, and empathetic
-  - Provide specific, actionable recommendations when possible
-  - Use the financial data provided to give personalized insights
+  - Be concise and professional
+  - Provide specific, actionable recommendations based on the user's actual data
   - Ask clarifying questions when you need more information
-  - Focus on practical advice rather than generic statements
-  - Consider the user's goals and current financial situation
-  - Suggest specific next steps when appropriate
+  - Respond in the same language the user writes in
+
+  CAPABILITIES — you can ONLY do the following:
+  - Create, retrieve, update, and delete transactions (one at a time, not recurring)
+  - Create, list, update, and delete accounts
+  - Create, list, update, and delete financial goals (each goal has a linked savings account)
+  - Create, update, and delete categories (expense or income)
+  - Analyze spending patterns, goal progress, and account balances
+
+  LIMITATIONS — do NOT promise or suggest you can:
+  - Set up recurring/automatic transactions or scheduled payments
+  - Connect to banks or import statements (the user uploads PDFs separately)
+  - Make actual transfers or payments
+  - Access data beyond what is provided below
+
+  When a tool returns { status: "created" }, that means you just created something new — do not say it "already existed."
+  When a tool returns { error: "..." }, relay the error to the user.
+  For delete operations, always confirm with the user before executing.
+  To update a transaction, first use retrieveTransactions to find its ID.
 
   CURRENT DATE: ${new Date().toLocaleDateString()}
 
   USER'S FINANCIAL DATA:
 
-  LOCATION:
-  Mexico
-
-  CURRENCY:
-  Mexican Pesos
+  LOCATION: Mexico
+  CURRENCY: Mexican Pesos (MXN)
 
   RECENT TRANSACTIONS (last 20):
   ${JSON.stringify(getFirst50(transactions), null, 2)}
@@ -69,21 +88,8 @@ export async function POST(req: Request) {
   ACCOUNTS & BALANCES:
   ${JSON.stringify(accounts, null, 2)}
 
-  ANALYSIS CONTEXT:
-  - Review spending patterns and identify areas for improvement
-  - Assess progress toward financial goals
-  - Evaluate account balances and cash flow
-  - Suggest budgeting strategies based on spending data
-  - Recommend adjustments to goal timelines or amounts if needed
-  - Identify potential savings opportunities
-
-  When analyzing the data, consider:
-  - Spending trends and unusual patterns
-  - Goal progress relative to target dates
-  - Account balance distribution and liquidity
-  - Category-wise spending optimization opportunities
-  - Income vs expense ratios
-  - Emergency fund adequacy
+  USER CATEGORIES:
+  ${JSON.stringify(userCategories.map((c) => ({ name: c.name, type: c.type })), null, 2)}
   `;
 
   const result = streamText({
@@ -173,14 +179,17 @@ export async function POST(req: Request) {
           });
 
           return {
-            id: created.id,
-            description: created.description,
-            amount: created.amount,
-            date: created.date,
-            type: created.type,
-            sourceAccountId: created.sourceAccountId,
-            targetAccountId: created.targetAccountId,
-            category: created.category,
+            status: "created",
+            transaction: {
+              id: created.id,
+              description: created.description,
+              amount: created.amount,
+              date: created.date,
+              type: created.type,
+              sourceAccountId: created.sourceAccountId,
+              targetAccountId: created.targetAccountId,
+              category: created.category,
+            },
           };
         },
       }),
@@ -271,7 +280,6 @@ export async function POST(req: Request) {
             }
           }),
         execute: async (criteria) => {
-          console.log("criteria", criteria);
           const transactions = await getTransactions({
             userId: user!.id,
             description: criteria.description,
@@ -393,12 +401,567 @@ export async function POST(req: Request) {
           });
         },
       }),
+
+      // --- Update Transaction ---
+      updateTransaction: tool({
+        description:
+          "Update an existing transaction. First use retrieveTransactions to find the transaction ID, then update it.",
+        inputSchema: z.object({
+          id: z.string().describe("ID of the transaction to update"),
+          name: z
+            .string()
+            .describe("New description/name of the transaction")
+            .optional(),
+          date: z.string().date().describe("New date").optional(),
+          time: z.string().time().describe("New time").optional(),
+          amount: z.number().describe("New amount").optional(),
+          category: z
+            .enum(
+              (userCategories.length > 0
+                ? userCategories.map((c) => c.name)
+                : [""]) as [string, ...string[]]
+            )
+            .describe("New category name")
+            .optional(),
+          type: z
+            .enum(["expense", "income", "transfer"])
+            .describe("New transaction type")
+            .optional(),
+          accountName: z
+            .enum(
+              (userAccounts.length > 0
+                ? userAccounts.map((a) => a.name)
+                : [""]) as [string, ...string[]]
+            )
+            .describe("New source account name")
+            .optional(),
+          targetAccountName: z
+            .enum(
+              (userAccounts.length > 0
+                ? userAccounts.map((a) => a.name)
+                : [""]) as [string, ...string[]]
+            )
+            .describe("New target account name")
+            .optional(),
+        }),
+        execute: async ({
+          id,
+          name,
+          date,
+          time,
+          amount,
+          category,
+          type,
+          accountName,
+          targetAccountName,
+        }) => {
+          // Fetch existing transaction
+          const existing = await db
+            .select()
+            .from(transactionsTable)
+            .where(
+              and(
+                eq(transactionsTable.id, id),
+                eq(transactionsTable.userId, user!.id)
+              )
+            )
+            .limit(1);
+
+          if (!existing.length) return { error: "Transaction not found" };
+
+          const current = existing[0];
+          const newType = type ?? current.type;
+
+          // Resolve category
+          let categoryId = current.category;
+          if (category && newType !== "transfer") {
+            const cat = await db
+              .select({ id: categoriesTable.id })
+              .from(categoriesTable)
+              .where(
+                and(
+                  eq(categoriesTable.name, category),
+                  eq(categoriesTable.userId, user!.id)
+                )
+              )
+              .limit(1);
+            if (cat.length) categoryId = cat[0].id;
+          }
+          if (newType === "transfer") categoryId = null;
+
+          // Resolve accounts
+          let sourceAccountId = current.sourceAccountId;
+          let targetAccountId = current.targetAccountId;
+
+          if (accountName) {
+            const acc = await db
+              .select({ id: accountsTable.id })
+              .from(accountsTable)
+              .where(
+                and(
+                  eq(accountsTable.name, accountName),
+                  eq(accountsTable.userId, user!.id)
+                )
+              )
+              .limit(1);
+            if (acc.length) sourceAccountId = acc[0].id;
+          }
+          if (targetAccountName) {
+            const acc = await db
+              .select({ id: accountsTable.id })
+              .from(accountsTable)
+              .where(
+                and(
+                  eq(accountsTable.name, targetAccountName),
+                  eq(accountsTable.userId, user!.id)
+                )
+              )
+              .limit(1);
+            if (acc.length) targetAccountId = acc[0].id;
+          }
+
+          // Build date
+          let newDate = current.date;
+          if (date) {
+            const base = new Date(date);
+            if (time) {
+              const [h, m = "0", s = "0"] = time.split(":");
+              base.setHours(Number(h), Number(m), Number(s), 0);
+            }
+            newDate = base;
+          }
+
+          const updated = await db
+            .update(transactionsTable)
+            .set({
+              description: name ?? current.description,
+              date: newDate,
+              amount: amount !== undefined ? amount.toString() : current.amount,
+              type: newType,
+              category: categoryId,
+              sourceAccountId:
+                newType === "income" ? null : sourceAccountId,
+              targetAccountId:
+                newType === "expense" ? null : targetAccountId,
+            })
+            .where(
+              and(
+                eq(transactionsTable.id, id),
+                eq(transactionsTable.userId, user!.id)
+              )
+            )
+            .returning();
+
+          return { status: "updated", transaction: updated[0] };
+        },
+      }),
+
+      // --- Accounts CRUD ---
+      createAccount: tool({
+        description: "Create a new financial account for the user",
+        inputSchema: z.object({
+          name: z.string().describe("Name of the account"),
+          type: z
+            .string()
+            .describe("Type of account (e.g. checking, savings, credit)")
+            .optional(),
+        }),
+        execute: async ({ name, type }) => {
+          const existing = await db
+            .select()
+            .from(accountsTable)
+            .where(
+              and(eq(accountsTable.name, name), eq(accountsTable.userId, user!.id))
+            )
+            .limit(1);
+
+          if (existing.length) return { error: "Account with this name already exists" };
+
+          const created = await db
+            .insert(accountsTable)
+            .values({ name, type: type ?? null, userId: user!.id })
+            .returning();
+
+          return { status: "created", account: created[0] };
+        },
+      }),
+
+      getAccounts: tool({
+        description:
+          "Get all user accounts with their current balances",
+        inputSchema: z.object({}),
+        execute: async () => {
+          return await fetchUserAccounts(user!.id);
+        },
+      }),
+
+      updateAccount: tool({
+        description: "Update an existing account (rename or change type)",
+        inputSchema: z.object({
+          name: z
+            .enum(
+              (userAccounts.length > 0
+                ? userAccounts.map((a) => a.name)
+                : [""]) as [string, ...string[]]
+            )
+            .describe("Current name of the account to update"),
+          newName: z.string().describe("New name for the account").optional(),
+          newType: z
+            .string()
+            .describe("New type for the account")
+            .optional(),
+        }),
+        execute: async ({ name, newName, newType }) => {
+          const acc = await db
+            .select()
+            .from(accountsTable)
+            .where(
+              and(eq(accountsTable.name, name), eq(accountsTable.userId, user!.id))
+            )
+            .limit(1);
+
+          if (!acc.length) return { error: "Account not found" };
+
+          const updated = await db
+            .update(accountsTable)
+            .set({
+              ...(newName !== undefined && { name: newName }),
+              ...(newType !== undefined && { type: newType }),
+            })
+            .where(
+              and(eq(accountsTable.id, acc[0].id), eq(accountsTable.userId, user!.id))
+            )
+            .returning();
+
+          return { status: "updated", account: updated[0] };
+        },
+      }),
+
+      deleteAccount: tool({
+        description:
+          "Delete an account. Ask user for confirmation first.",
+        inputSchema: z.object({
+          name: z
+            .enum(
+              (userAccounts.length > 0
+                ? userAccounts.map((a) => a.name)
+                : [""]) as [string, ...string[]]
+            )
+            .describe("Name of the account to delete"),
+        }),
+        execute: async ({ name }) => {
+          const acc = await db
+            .select()
+            .from(accountsTable)
+            .where(
+              and(eq(accountsTable.name, name), eq(accountsTable.userId, user!.id))
+            )
+            .limit(1);
+
+          if (!acc.length) return { error: "Account not found" };
+
+          await db
+            .delete(accountsTable)
+            .where(
+              and(eq(accountsTable.id, acc[0].id), eq(accountsTable.userId, user!.id))
+            );
+
+          return { success: true, deletedAccount: name };
+        },
+      }),
+
+      // --- Goals CRUD ---
+      createGoal: tool({
+        description:
+          "Create a new financial goal. This also creates a linked account to track savings toward the goal.",
+        inputSchema: z.object({
+          name: z.string().describe("Name of the goal"),
+          targetAmount: z
+            .number()
+            .describe("Target amount in Mexican Pesos"),
+          targetDate: z
+            .string()
+            .date()
+            .describe("Target date to reach the goal (YYYY-MM-DD)")
+            .optional(),
+        }),
+        execute: async ({ name, targetAmount, targetDate }) => {
+          // Check if account with this name exists
+          const existingAcc = await db
+            .select()
+            .from(accountsTable)
+            .where(
+              and(eq(accountsTable.name, name), eq(accountsTable.userId, user!.id))
+            )
+            .limit(1);
+
+          if (existingAcc.length)
+            return { error: "An account with this name already exists" };
+
+          // Create linked account
+          const account = await db
+            .insert(accountsTable)
+            .values({ name, userId: user!.id })
+            .returning();
+
+          // Create goal
+          const goal = await db
+            .insert(financialGoals)
+            .values({
+              name,
+              targetAmount: targetAmount.toString(),
+              targetDate: targetDate ?? null,
+              accountId: account[0].id,
+              userId: user!.id,
+            })
+            .returning();
+
+          return { status: "created", goal: goal[0] };
+        },
+      }),
+
+      getGoals: tool({
+        description:
+          "Get all financial goals with their current progress (amount saved vs target)",
+        inputSchema: z.object({}),
+        execute: async () => {
+          return await fetchUserGoals(user!.id);
+        },
+      }),
+
+      updateGoal: tool({
+        description: "Update a financial goal's name, target amount, or target date",
+        inputSchema: z.object({
+          name: z.string().describe("Current name of the goal to update"),
+          newName: z.string().describe("New name for the goal").optional(),
+          newTargetAmount: z
+            .number()
+            .describe("New target amount")
+            .optional(),
+          newTargetDate: z
+            .string()
+            .date()
+            .describe("New target date (YYYY-MM-DD)")
+            .optional(),
+        }),
+        execute: async ({ name, newName, newTargetAmount, newTargetDate }) => {
+          const goal = await db
+            .select()
+            .from(financialGoals)
+            .where(
+              and(
+                eq(financialGoals.name, name),
+                eq(financialGoals.userId, user!.id)
+              )
+            )
+            .limit(1);
+
+          if (!goal.length) return { error: "Goal not found" };
+
+          const updated = await db
+            .update(financialGoals)
+            .set({
+              ...(newName !== undefined && { name: newName }),
+              ...(newTargetAmount !== undefined && {
+                targetAmount: newTargetAmount.toString(),
+              }),
+              ...(newTargetDate !== undefined && { targetDate: newTargetDate }),
+            })
+            .where(
+              and(
+                eq(financialGoals.id, goal[0].id),
+                eq(financialGoals.userId, user!.id)
+              )
+            )
+            .returning();
+
+          return { status: "updated", goal: updated[0] };
+        },
+      }),
+
+      deleteGoal: tool({
+        description:
+          "Delete a financial goal. Ask user for confirmation first.",
+        inputSchema: z.object({
+          name: z.string().describe("Name of the goal to delete"),
+        }),
+        execute: async ({ name }) => {
+          const goal = await db
+            .select()
+            .from(financialGoals)
+            .where(
+              and(
+                eq(financialGoals.name, name),
+                eq(financialGoals.userId, user!.id)
+              )
+            )
+            .limit(1);
+
+          if (!goal.length) return { error: "Goal not found" };
+
+          await db
+            .delete(financialGoals)
+            .where(
+              and(
+                eq(financialGoals.id, goal[0].id),
+                eq(financialGoals.userId, user!.id)
+              )
+            );
+
+          return { success: true, deletedGoal: name };
+        },
+      }),
+
+      // --- Categories CRUD ---
+      createCategory: tool({
+        description: "Create a new spending or income category",
+        inputSchema: z.object({
+          name: z.string().describe("Name of the category"),
+          type: z
+            .enum(["expense", "income"])
+            .describe("Whether this is an expense or income category"),
+          budget: z
+            .number()
+            .describe("Monthly budget for this category (expense only)")
+            .optional(),
+        }),
+        execute: async ({ name, type, budget }) => {
+          const created = await db
+            .insert(categoriesTable)
+            .values({
+              name,
+              type,
+              budget: type === "expense" && budget ? budget.toString() : null,
+              userId: user!.id,
+            })
+            .returning();
+
+          return { status: "created", category: created[0] };
+        },
+      }),
+
+      updateCategory: tool({
+        description: "Update an existing category's name or type",
+        inputSchema: z.object({
+          name: z
+            .enum(
+              (userCategories.length > 0
+                ? userCategories.map((c) => c.name)
+                : [""]) as [string, ...string[]]
+            )
+            .describe("Current name of the category to update"),
+          newName: z
+            .string()
+            .describe("New name for the category")
+            .optional(),
+          newType: z
+            .enum(["expense", "income"])
+            .describe("New type for the category")
+            .optional(),
+          newBudget: z
+            .number()
+            .describe("New monthly budget (expense only)")
+            .optional(),
+        }),
+        execute: async ({ name, newName, newType, newBudget }) => {
+          const cat = await db
+            .select()
+            .from(categoriesTable)
+            .where(
+              and(
+                eq(categoriesTable.name, name),
+                eq(categoriesTable.userId, user!.id)
+              )
+            )
+            .limit(1);
+
+          if (!cat.length) return { error: "Category not found" };
+
+          const updated = await db
+            .update(categoriesTable)
+            .set({
+              ...(newName !== undefined && { name: newName }),
+              ...(newType !== undefined && { type: newType }),
+              ...(newBudget !== undefined && {
+                budget: newBudget.toString(),
+              }),
+            })
+            .where(
+              and(
+                eq(categoriesTable.id, cat[0].id),
+                eq(categoriesTable.userId, user!.id)
+              )
+            )
+            .returning();
+
+          return { status: "updated", category: updated[0] };
+        },
+      }),
+
+      deleteCategory: tool({
+        description:
+          "Delete a category. Will fail if transactions are using it. Ask user for confirmation first.",
+        inputSchema: z.object({
+          name: z
+            .enum(
+              (userCategories.length > 0
+                ? userCategories.map((c) => c.name)
+                : [""]) as [string, ...string[]]
+            )
+            .describe("Name of the category to delete"),
+        }),
+        execute: async ({ name }) => {
+          const cat = await db
+            .select()
+            .from(categoriesTable)
+            .where(
+              and(
+                eq(categoriesTable.name, name),
+                eq(categoriesTable.userId, user!.id)
+              )
+            )
+            .limit(1);
+
+          if (!cat.length) return { error: "Category not found" };
+
+          // Check for transactions using this category
+          const txns = await db
+            .select({ id: transactionsTable.id })
+            .from(transactionsTable)
+            .where(
+              and(
+                eq(transactionsTable.category, cat[0].id),
+                eq(transactionsTable.userId, user!.id)
+              )
+            )
+            .limit(1);
+
+          if (txns.length)
+            return {
+              error:
+                "Cannot delete category — it has existing transactions. Reassign them first.",
+            };
+
+          await db
+            .delete(categoriesTable)
+            .where(
+              and(
+                eq(categoriesTable.id, cat[0].id),
+                eq(categoriesTable.userId, user!.id)
+              )
+            );
+
+          return { success: true, deletedCategory: name };
+        },
+      }),
     },
     system: systemContext,
     messages: convertToModelMessages(messages),
   });
 
   revalidatePath("/data");
+  revalidatePath("/home");
+  revalidatePath("/categories");
 
   return result.toUIMessageStreamResponse();
 }
