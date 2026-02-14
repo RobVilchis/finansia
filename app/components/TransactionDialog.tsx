@@ -225,8 +225,8 @@ export default function TransactionDialog({
         {/* Header */}
         <div className="bg-linear-to-r bg-slate-600 px-6 py-4 rounded-t-2xl text-white">
           <Flex align="center" gap="3" className="mb-2">
-            <div className={`p-1 rounded-full bg-white/20 backdrop-blur-sm`}>
-              <Edit2 size={24} className="text-white" />
+            <div className={`p-2 rounded-full bg-white/20 backdrop-blur-sm`}>
+              <Edit2 size={16} className="text-white" />
             </div>
 
             <div className="text-xl font-bold m-0 text-white">

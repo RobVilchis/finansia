@@ -29,16 +29,16 @@ interface Props {
 }
 
 const COLORS = [
-  "#8884d8",
-  "#82ca9d",
-  "#ffc658",
-  "#ff7300",
-  "#ff0000",
-  "#00ff00",
-  "#0000ff",
-  "#ffff00",
-  "#ff00ff",
-  "#00ffff",
+  "#6366f1", // indigo
+  "#22d3ee", // cyan
+  "#f59e0b", // amber
+  "#10b981", // emerald
+  "#f43f5e", // rose
+  "#a78bfa", // violet
+  "#fb923c", // orange
+  "#2dd4bf", // teal
+  "#e879f9", // fuchsia
+  "#38bdf8", // sky
 ];
 
 export default function ExpensesPieChart({
@@ -146,7 +146,7 @@ export default function ExpensesPieChart({
             outerRadius={isMediumOrLarge ? 120 : 90}
             fill="#8884d8"
             dataKey="value"
-            strokeWidth={0.5}
+            stroke="none"
           >
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
@@ -168,6 +168,7 @@ export default function ExpensesPieChart({
             align={isMediumOrLarge ? "right" : "center"}
             wrapperStyle={{
               paddingRight: isMediumOrLarge ? "40px" : "",
+              paddingLeft: !isMediumOrLarge ? "50px" : "",
               paddingTop: isMediumOrLarge ? "" : "15px",
             }}
             content={renderCustomLegend}

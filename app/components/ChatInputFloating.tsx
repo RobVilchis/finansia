@@ -2,11 +2,29 @@
 
 import { useChatContext } from "../contexts/ChatContext";
 import { ArrowUp } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function ChatInputFloating() {
     const { sendMessage, setIsSheetOpen, isSheetOpen } = useChatContext();
     const [input, setInput] = useState("");
+    const [bottomOffset, setBottomOffset] = useState(24); // 24px = bottom-6
+
+    useEffect(() => {
+        const vv = window.visualViewport;
+        if (!vv) return;
+
+        const onResize = () => {
+            const keyboardHeight = window.innerHeight - vv.height;
+            setBottomOffset(keyboardHeight > 0 ? keyboardHeight + 8 : 24);
+        };
+
+        vv.addEventListener("resize", onResize);
+        vv.addEventListener("scroll", onResize);
+        return () => {
+            vv.removeEventListener("resize", onResize);
+            vv.removeEventListener("scroll", onResize);
+        };
+    }, []);
 
     if (isSheetOpen) return null;
 
@@ -20,7 +38,10 @@ export default function ChatInputFloating() {
     };
 
     return (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-lg px-4">
+        <div
+            className="fixed left-1/2 -translate-x-1/2 z-40 w-full max-w-lg px-4 transition-[bottom] duration-150"
+            style={{ bottom: `${bottomOffset}px` }}
+        >
             <form
                 onSubmit={handleSubmit}
                 className="relative h-16 flex items-center bg-white dark:bg-slate-900 
