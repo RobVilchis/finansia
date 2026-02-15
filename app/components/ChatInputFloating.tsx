@@ -14,7 +14,7 @@ export default function ChatInputFloating() {
         if (!vv) return;
 
         const onResize = () => {
-            const keyboardHeight = window.innerHeight - vv.height;
+            const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
             setBottomOffset(keyboardHeight > 0 ? keyboardHeight + 8 : 24);
         };
 
