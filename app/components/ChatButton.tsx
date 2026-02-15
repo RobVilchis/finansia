@@ -59,7 +59,7 @@ export default function ChatButton() {
       <DrawerTrigger asChild>
         {TriggerButton}
       </DrawerTrigger>
-      <DrawerContent className="h-[85vh] flex flex-col">
+      <DrawerContent className="h-[85dvh] flex flex-col">
         <DrawerHeader>
           <DrawerTitle>Chat</DrawerTitle>
         </DrawerHeader>
