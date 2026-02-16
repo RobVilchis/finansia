@@ -26,7 +26,7 @@ GUIDELINES:
 - Statements can be either credit card statements or checking account statements.
 - When it is a credit statement, consider only the expenses. DO NOT GENERATE CREDIT CARD PAYMENT TRANSACTIONS, IGNORE THEM.
 - When it is a checking statement, classify all transactions into income/expense.
-- The name of the account is provided by the user. Pass it into the accountName field for income, and into the targetAccountName for expenses.
+- The name of the account is provided by the user. Pass it into the accountName field for expenses, and into the targetAccountName for income.
 - For each transaction, generate a short description in spanish, based on the available information.
 - If there is no time value, set it to 12:00 PM by default.
 - If you can't accurately classify the transaction with the available information, leave the category as null and set needsVerification to true, for the user to classify later 
@@ -125,7 +125,6 @@ async function processStatement(
         createTransactionIfUnique({
           userId: userId,
           ...transaction,
-          sourceAccountId: transaction.accountName,
         })
       )
     );
