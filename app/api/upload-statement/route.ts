@@ -9,7 +9,7 @@ import { createTransactionIfUnique } from "@/lib/services/transactions";
 import { currentUser } from "@clerk/nextjs/server";
 import { generateObject } from "ai";
 import { promises as fs } from "fs";
-import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import PDFParser from "pdf2json";
 import { v4 as uuidv4 } from "uuid";
@@ -132,8 +132,8 @@ async function processStatement(
 
     await updateStatementUploadStatus(statementId, "ready");
 
-    revalidateTag("unverified");
-    revalidateTag("pending-statements");
+    revalidatePath("/data");
+    revalidatePath("/home");
     console.log(`Background processing complete for statement ${statementId}`);
   } catch (error) {
     console.error(
