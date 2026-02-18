@@ -91,12 +91,12 @@ async function processStatement(
         type: z
           .enum(["expense", "income", "transfer"])
           .describe("Type of the transaction"),
-        accountName: z
+        sourceAccountId: z
           .string()
           .describe(
             "User-provided acccount for expenses. Leave empty if it is income."
           ),
-        targetAccountName: z
+        targetAccountId: z
           .string()
           .describe(
             "User-provided account for income. Leave empty if it is an expense."

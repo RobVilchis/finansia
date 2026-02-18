@@ -173,9 +173,7 @@ export async function createTransactionIfUnique({
   categoryName,
   categoryId: providedCategoryId,
   sourceAccountId: accountId,
-  accountName,
   targetAccountId,
-  targetAccountName,
   needsVerification,
 }: CreateTransactionInput) {
   const normalizedDate = normalizeDate(date, time);
@@ -190,6 +188,8 @@ export async function createTransactionIfUnique({
     date,
     time,
     categoryName,
+    accountId,
+    targetAccountId,
   });
   const existingTransaction = await db
     .select()
@@ -222,12 +222,10 @@ export async function createTransactionIfUnique({
 
   const resolvedSourceAccountId = await resolveAccountId(userId, {
     accountId,
-    accountName,
   });
 
   const resolvedTargetAccountId = await resolveAccountId(userId, {
     accountId: targetAccountId,
-    accountName: targetAccountName,
   });
 
   // Build DB values depending on type
