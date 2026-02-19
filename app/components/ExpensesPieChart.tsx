@@ -80,15 +80,20 @@ export default function ExpensesPieChart({
     return <EmptyStateSkeleton />;
   }
 
-  const chartData = data.map((item, index) => ({
-    name: item.categoryName,
-    value: parseFloat(item.totalAmount),
-    color: COLORS[index % COLORS.length],
-  }));
+  const chartData = data
+    .map((item) => ({
+      name: item.categoryName,
+      value: parseFloat(item.totalAmount),
+    }))
+    .sort((a, b) => b.value - a.value)
+    .map((item, index) => ({
+      ...item,
+      color: COLORS[index % COLORS.length],
+    }));
 
   const totalExpenses = chartData.reduce((sum, item) => sum + item.value, 0);
 
-  // Custom legend renderer to preserve original order
+  // Custom legend renderer sorted by amount descending
   const renderCustomLegend = (props: Props) => {
     const { payload } = props;
 
@@ -96,13 +101,19 @@ export default function ExpensesPieChart({
       return null;
     }
 
+    const sorted = [...payload].sort((a, b) => {
+      const aVal = (a.payload as { value?: number })?.value ?? 0;
+      const bVal = (b.payload as { value?: number })?.value ?? 0;
+      return bVal - aVal;
+    });
+
     return (
       <ul
         className={`recharts-legend-item-list flex flex-col flex-wrap ${isMediumOrLarge ? "h-fit w-30" : "h-36 w-80"
           }`}
         style={{ listStyle: "none", padding: 0, margin: 0 }}
       >
-        {payload.toReversed().map((category, index) => (
+        {sorted.map((category, index) => (
           <li
             key={`legend-item-${index}`}
             className="recharts-legend-item w-fit text-black dark:text-white"
@@ -153,7 +164,7 @@ export default function ExpensesPieChart({
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number) => [`$${value.toFixed(2)}`, "Total"]}
+            formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name]}
             labelStyle={{ color: "#000" }}
             contentStyle={{
               backgroundColor: "#fff",
