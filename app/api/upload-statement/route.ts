@@ -1,4 +1,5 @@
 export const runtime = "nodejs";
+export const maxDuration = 300;
 import { fetchUserCategories } from "@/lib/financial-data";
 import {
   createStatementUpload,
@@ -6,6 +7,7 @@ import {
   updateStatementUploadStatus,
 } from "@/lib/services/statements";
 import { createTransactionIfUnique } from "@/lib/services/transactions";
+import { waitUntil } from "@vercel/functions";
 import { currentUser } from "@clerk/nextjs/server";
 import { generateObject } from "ai";
 import { promises as fs } from "fs";
@@ -108,19 +110,9 @@ async function processStatement(
       prompt: prompt,
     });
 
-    const transactionsToVerify = response.object.filter(
-      (t) => t.needsVerification
-    );
-    const completeTransactions = response.object.filter(
-      (t) => !t.needsVerification
-    );
+    console.log(`Generated ${response.object.length} transactions from AI`);
 
-    console.log(`Generated ${completeTransactions.length} transactions`);
-    console.log(
-      `Generated ${transactionsToVerify.length} transactions to verify`
-    );
-
-    await Promise.all(
+    const results = await Promise.allSettled(
       response.object.map((transaction) =>
         createTransactionIfUnique({
           userId: userId,
@@ -129,11 +121,29 @@ async function processStatement(
       )
     );
 
-    await updateStatementUploadStatus(statementId, "ready");
+    const successful = results.filter((r) => r.status === "fulfilled");
+    const failed = results.filter((r) => r.status === "rejected");
 
-    revalidatePath("/data");
-    revalidatePath("/home");
-    console.log(`Background processing complete for statement ${statementId}`);
+    if (failed.length > 0) {
+      console.error(
+        `Statement ${statementId}: ${failed.length} transactions failed:`,
+        failed.map((f) => (f as PromiseRejectedResult).reason)
+      );
+    }
+
+    if (successful.length === 0) {
+      await updateStatementUploadStatus(statementId, "error");
+      console.error(
+        `Statement ${statementId}: All ${failed.length} transactions failed, marking as error`
+      );
+    } else {
+      await updateStatementUploadStatus(statementId, "ready");
+      revalidatePath("/data");
+      revalidatePath("/home");
+      console.log(
+        `Statement ${statementId}: ${successful.length}/${results.length} transactions created successfully`
+      );
+    }
   } catch (error) {
     console.error(
       `Background processing failed for statement ${statementId}`,
@@ -177,16 +187,18 @@ export async function POST(request: Request) {
       status: "processing",
     });
 
-    // Start background processing WITHOUT awaiting
-    processStatement(
-      statement.id,
-      tempFilePath,
-      user.id,
-      userCategories,
-      accountType,
-      accountId,
-      comments
-    ).catch((err) => console.error("Detached process error:", err));
+    // Keep serverless function alive until processing completes
+    waitUntil(
+      processStatement(
+        statement.id,
+        tempFilePath,
+        user.id,
+        userCategories,
+        accountType,
+        accountId,
+        comments
+      )
+    );
 
     return NextResponse.json(
       {

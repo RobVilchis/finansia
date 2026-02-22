@@ -103,6 +103,7 @@ export default function DataDashboard({
         });
 
         setProcessingStatement(false);
+        router.refresh();
       }
       setPendingStatements(data);
     } catch (error) {
