@@ -13,6 +13,9 @@ import NewAccountDialog from "../components/NewAccountDialog";
 import NewTransactionDialog from "../components/NewTransactionDialog";
 import TransactionCard from "../components/TransactionCard";
 import TransactionDialog from "../components/TransactionDialog";
+import TransactionFilters, {
+  type ActiveFilters,
+} from "../components/TransactionFilters";
 import UploadStatementDialog from "../components/UploadStatementDialog";
 import { Goal } from "@/lib/services/goals";
 
@@ -47,18 +50,34 @@ interface Statement {
   updatedAt: Date | null;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  type: string;
+}
+
 export default function DataDashboard({
   transactions,
   accounts,
   goals,
   unverifiedTransactions,
   pendingStatements: pending,
+  categories,
+  currentPage,
+  totalPages,
+  totalCount,
+  activeFilters,
 }: {
   transactions: Transaction[];
   accounts: Account[];
   goals: Goal[];
   unverifiedTransactions: Transaction[];
   pendingStatements: Statement[];
+  categories: Category[];
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  activeFilters: ActiveFilters;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -231,14 +250,11 @@ export default function DataDashboard({
               />
             </Tabs.Content>
             <Tabs.Content value="transactions">
-              <div
-                className={`flex gap-3 items-center justify-between ${unverifiedTransactions.length > 0 ? "mb-4" : "mb-8"
-                  }`}
-              >
-                <h1 className="text-2xl font-bold ">Transacciones recientes</h1>
+              <div className="flex gap-3 items-center justify-between mb-4">
+                <h1 className="text-2xl font-bold ">Transacciones</h1>
                 <div className="flex items-center gap-2">
                   <button
-                    className="bg-none  text-slate-500  
+                    className="bg-none  text-slate-500
                     px-2 py-2 text-sm font-medium"
                     onClick={() => setStatementDialogOpen(true)}
                   >
@@ -249,6 +265,11 @@ export default function DataDashboard({
                   />
                 </div>
               </div>
+              <TransactionFilters
+                categories={categories}
+                accounts={accounts}
+                activeFilters={activeFilters}
+              />
               {pendingStatements.length > 0 && (
                 <div className=" align-middle w-full h-16 bg-blue-100 dark:bg-blue-950 rounded-md text-md p-4 flex items-center gap-2 mb-3">
                   <Loader2 className="w-5 h-5 text-blue-800 dark:text-blue-400 opacity-70 animate-spin" />
@@ -271,8 +292,15 @@ export default function DataDashboard({
               )}
               <div className="grid gap-4 mx-auto">
                 {transactions.length === 0 ? (
-                  <div className="text-center text-gray-500 dark:text-gray-400">
-                    Aún no se han registrado transacciones.
+                  <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+                    {activeFilters.type ||
+                    activeFilters.category ||
+                    activeFilters.account ||
+                    activeFilters.startDate ||
+                    activeFilters.endDate ||
+                    activeFilters.description
+                      ? "No se encontraron transacciones con los filtros seleccionados."
+                      : "Aun no se han registrado transacciones."}
                   </div>
                 ) : (
                   Object.entries(groupTransactionsByDay(transactions)).map(
@@ -311,6 +339,49 @@ export default function DataDashboard({
                   )
                 )}
               </div>
+              {/* Pagination */}
+              {totalCount > 0 && (
+                <div className="mt-6 flex flex-col items-center gap-2 pb-4">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Mostrando {transactions.length} de {totalCount} transacciones
+                  </p>
+                  {totalPages > 1 && (
+                    <div className="flex gap-2 items-center">
+                      {currentPage > 1 && (
+                        <button
+                          onClick={() => {
+                            const params = new URLSearchParams(
+                              searchParams.toString()
+                            );
+                            params.set("page", String(currentPage - 1));
+                            router.push(`?${params.toString()}`);
+                          }}
+                          className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                        >
+                          Anterior
+                        </button>
+                      )}
+                      <span className="text-sm text-slate-500 dark:text-slate-400 px-2">
+                        {currentPage} / {totalPages}
+                      </span>
+                      {currentPage < totalPages && (
+                        <button
+                          onClick={() => {
+                            const params = new URLSearchParams(
+                              searchParams.toString()
+                            );
+                            params.set("page", String(currentPage + 1));
+                            router.push(`?${params.toString()}`);
+                          }}
+                          className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                        >
+                          Siguiente
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </Tabs.Content>
           </Tabs.Root>
         </div>

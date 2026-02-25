@@ -5,7 +5,7 @@ import {
   insertTransactionSchema,
   transactions,
 } from "@/lib/db/schema/transactions";
-import { and, between, eq, like, inArray } from "drizzle-orm";
+import { and, asc, between, count, desc, eq, like, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 type TransactionType = "income" | "expense" | "transfer";
@@ -26,6 +26,8 @@ export type CreateTransactionInput = {
   needsVerification?: boolean;
 };
 
+export type SortBy = "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
+
 export type GetTransactionsInput = {
   userId: string;
   description?: string;
@@ -36,6 +38,9 @@ export type GetTransactionsInput = {
   categoryName?: string; // category by name (non-transfer)
   accountName?: string; // alternative to accountId
   targetAccountName?: string; // alternative to targetAccountId
+  sortBy?: SortBy;
+  limit?: number;
+  offset?: number;
 };
 
 function normalizeDate(date: string | Date, time?: string): Date {
@@ -304,11 +309,11 @@ export async function getUnverifiedTransactions(userId: string) {
   return results;
 }
 
-export async function getTransactions(filters: GetTransactionsInput) {
-  const sourceAccounts = alias(accounts, "sourceAccounts");
-  const targetAccounts = alias(accounts, "targetAccounts");
-  console.log("retrieve filters", filters);
-
+function buildFilterConditions(
+  filters: GetTransactionsInput,
+  sourceAccounts: ReturnType<typeof alias>,
+  targetAccounts: ReturnType<typeof alias>
+) {
   const conditions = [];
   if (filters.userId) {
     conditions.push(eq(transactions.userId, filters.userId));
@@ -333,34 +338,87 @@ export async function getTransactions(filters: GetTransactionsInput) {
   if (filters.accountName) {
     conditions.push(like(sourceAccounts.name, filters.accountName));
   }
+  return conditions;
+}
 
-  const query = conditions.length
-    ? db
-      .select({
-        id: transactions.id,
-        description: transactions.description,
-        amount: transactions.amount,
-        date: transactions.date,
-        type: transactions.type,
-        categoryName: categories.name,
-        sourceAccountId: transactions.sourceAccountId,
-        targetAccountId: transactions.targetAccountId,
-        sourceAccountName: sourceAccounts.name,
-        targetAccountName: targetAccounts.name,
-      })
-      .from(transactions)
-      .leftJoin(categories, eq(transactions.category, categories.id))
-      .leftJoin(
-        sourceAccounts,
-        eq(transactions.sourceAccountId, sourceAccounts.id)
-      )
-      .leftJoin(
-        targetAccounts,
-        eq(transactions.targetAccountId, targetAccounts.id)
-      )
-      .where(and(eq(transactions.isUnverified, false), ...conditions))
-    : db.select().from(transactions);
+function getSortOrder(sortBy?: SortBy) {
+  switch (sortBy) {
+    case "date_asc":
+      return asc(transactions.date);
+    case "amount_desc":
+      return desc(transactions.amount);
+    case "amount_asc":
+      return asc(transactions.amount);
+    case "date_desc":
+    default:
+      return desc(transactions.date);
+  }
+}
+
+export async function getTransactions(filters: GetTransactionsInput) {
+  const sourceAccounts = alias(accounts, "sourceAccounts");
+  const targetAccounts = alias(accounts, "targetAccounts");
+
+  const conditions = buildFilterConditions(filters, sourceAccounts, targetAccounts);
+
+  let query = db
+    .select({
+      id: transactions.id,
+      description: transactions.description,
+      amount: transactions.amount,
+      date: transactions.date,
+      type: transactions.type,
+      categoryName: categories.name,
+      sourceAccountId: transactions.sourceAccountId,
+      targetAccountId: transactions.targetAccountId,
+      sourceAccountName: sourceAccounts.name,
+      targetAccountName: targetAccounts.name,
+    })
+    .from(transactions)
+    .leftJoin(categories, eq(transactions.category, categories.id))
+    .leftJoin(
+      sourceAccounts,
+      eq(transactions.sourceAccountId, sourceAccounts.id)
+    )
+    .leftJoin(
+      targetAccounts,
+      eq(transactions.targetAccountId, targetAccounts.id)
+    )
+    .where(and(eq(transactions.isUnverified, false), ...conditions))
+    .orderBy(getSortOrder(filters.sortBy))
+    .$dynamic();
+
+  if (filters.limit) {
+    query = query.limit(filters.limit);
+  }
+  if (filters.offset) {
+    query = query.offset(filters.offset);
+  }
+
   return await query;
+}
+
+export async function countTransactions(filters: GetTransactionsInput): Promise<number> {
+  const sourceAccounts = alias(accounts, "sourceAccounts");
+  const targetAccounts = alias(accounts, "targetAccounts");
+
+  const conditions = buildFilterConditions(filters, sourceAccounts, targetAccounts);
+
+  const result = await db
+    .select({ value: count() })
+    .from(transactions)
+    .leftJoin(categories, eq(transactions.category, categories.id))
+    .leftJoin(
+      sourceAccounts,
+      eq(transactions.sourceAccountId, sourceAccounts.id)
+    )
+    .leftJoin(
+      targetAccounts,
+      eq(transactions.targetAccountId, targetAccounts.id)
+    )
+    .where(and(eq(transactions.isUnverified, false), ...conditions));
+
+  return result[0]?.value ?? 0;
 }
 
 export async function deleteTransactions(filters: GetTransactionsInput) {
