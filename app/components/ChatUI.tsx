@@ -1,10 +1,9 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { TextArea } from "@radix-ui/themes";
 import { UIMessage } from "ai";
 import { ArrowUp } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Markdown from "react-markdown";
 
 type UseChatReturn = ReturnType<typeof useChat>;
@@ -19,6 +18,15 @@ interface ChatUIProps {
 export default function ChatUI({ messages, sendMessage }: ChatUIProps) {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const autoResize = useCallback(() => {
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 200) + "px";
+    }
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -77,22 +85,27 @@ export default function ChatUI({ messages, sendMessage }: ChatUIProps) {
       >
         <div className="flex items-center gap-2">
           <div className="relative w-full h-full flex items-end bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all overflow-hidden">
-            <TextArea
+            <textarea
+              ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value);
+                autoResize();
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   if (input.trim()) {
                     sendMessage({ text: input });
                     setInput("");
+                    if (textareaRef.current) {
+                      textareaRef.current.style.height = "auto";
+                    }
                   }
                 }
               }}
-              resize="vertical"
               placeholder="Pregunta sobre tus gastos..."
-              className="min-h-[60px]! max-h-[200px]! w-full border-0 bg-transparent px-4! py-3!  text-gray-900! dark:text-white! placeholder:text-gray-400! focus:outline-none focus:ring-0 resize-none"
-              style={{ boxShadow: 'none', background: 'transparent' }}
+              className="min-h-[44px] max-h-[200px] w-full border-0 bg-transparent px-4 py-3 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-0 resize-none"
               rows={1}
             />
           </div>

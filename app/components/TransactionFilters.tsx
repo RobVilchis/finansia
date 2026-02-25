@@ -129,7 +129,7 @@ export default function TransactionFilters({
 
         >
           <Select.Trigger variant="soft"
-            className="text-slate-600! bg-slate-150! font-normal!"
+            className="text-slate-600! dark:text-slate-300! bg-slate-150! dark:bg-slate-800! font-normal!"
           />
           <Select.Content
           >
@@ -156,7 +156,7 @@ export default function TransactionFilters({
             variant="soft"
             size="2"
             onClick={() => setShowFilters(!showFilters)}
-            className="cursor-pointer! text-slate-600! bg-slate-150! font-normal!"
+            className="cursor-pointer! text-slate-600! dark:text-slate-300! bg-slate-150! dark:bg-slate-800! font-normal!"
           >
             <SlidersHorizontal size={14} />
             Filtros
