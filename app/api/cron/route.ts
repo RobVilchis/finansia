@@ -5,6 +5,7 @@ import {
   fetchAllFinancialData,
   getFirst50,
 } from "@/lib/financial-data";
+import { materializeRecurringTransactions } from "@/lib/services/recurringTransactions";
 import { currentUser } from "@clerk/nextjs/server";
 import { generateObject } from "ai";
 import { z } from "zod";
@@ -55,10 +56,22 @@ async function saveTipsToDatabase(
   }
 }
 
-export async function GET() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: Request) {
+
   const user = await currentUser();
 
   if (!user) return new Response("Unauthorized", { status: 401 });
+
+  // Materialize any due recurring transactions
+  try {
+    const result = await materializeRecurringTransactions();
+    console.log(
+      `Recurring transactions: created ${result.createdCount} from ${result.processedRecurrings} rules`
+    );
+  } catch (error) {
+    console.error("Error materializing recurring transactions:", error);
+  }
 
   const { transactions, goals, accounts, categorySum } =
     await fetchAllFinancialData(user.id);

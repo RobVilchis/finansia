@@ -1,3 +1,4 @@
 export * from './categories';
 export * from './expenses';
-export * from './resources'; 
+export * from './recurringTransactions';
+export * from './resources';

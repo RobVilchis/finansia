@@ -11,6 +11,11 @@ import {
   getFirst50,
 } from "@/lib/financial-data";
 import {
+  createRecurringTransaction,
+  deleteRecurringTransaction,
+  getRecurringTransactions,
+} from "@/lib/services/recurringTransactions";
+import {
   createTransaction,
   deleteTransactions,
   getTransactions,
@@ -52,14 +57,14 @@ export async function POST(req: Request) {
   - Respond in the same language the user writes in
 
   CAPABILITIES — you can ONLY do the following:
-  - Create, retrieve, update, and delete transactions (one at a time, not recurring)
+  - Create, retrieve, update, and delete transactions (one at a time)
+  - Create, list, and delete recurring/automatic transactions (e.g. monthly subscriptions, biweekly salary)
   - Create, list, update, and delete accounts
   - Create, list, update, and delete financial goals (each goal has a linked savings account)
   - Create, update, and delete categories (expense or income)
   - Analyze spending patterns, goal progress, and account balances
 
   LIMITATIONS — do NOT promise or suggest you can:
-  - Set up recurring/automatic transactions or scheduled payments
   - Connect to banks or import statements (the user uploads PDFs separately)
   - Make actual transfers or payments
   - Access data beyond what is provided below
@@ -385,7 +390,7 @@ export async function POST(req: Request) {
             }
           }),
         execute: async (criteria) => {
-          deleteTransactions({
+          await deleteTransactions({
             userId: user!.id,
             description: criteria.description,
             categoryName: criteria.category,
@@ -399,6 +404,8 @@ export async function POST(req: Request) {
               ? new Date(criteria.endDatetime)
               : undefined,
           });
+
+          return { status: "deleted" }
         },
       }),
 
@@ -954,6 +961,147 @@ export async function POST(req: Request) {
           return { success: true, deletedCategory: name };
         },
       }),
+
+      // --- Recurring Transactions ---
+      createRecurringTransaction: tool({
+        description:
+          "Create a recurring transaction that automatically creates transactions at the specified frequency (e.g. monthly Netflix subscription, biweekly salary).",
+        inputSchema: z
+          .object({
+            name: z.string().describe("Description of the recurring transaction"),
+            amount: z.number().describe("Amount of each occurrence"),
+            type: z
+              .enum(["expense", "income", "transfer"])
+              .describe("Type of the transaction"),
+            category: z
+              .enum(
+                (userCategories.length > 0
+                  ? userCategories.map((c) => c.name)
+                  : [""]) as [string, ...string[]]
+              )
+              .describe("Category name (required for expense/income)")
+              .optional(),
+            frequency: z
+              .enum([
+                "daily",
+                "weekly",
+                "biweekly",
+                "monthly",
+                "quarterly",
+                "semi-annually",
+                "yearly",
+              ])
+              .describe("How often the transaction repeats"),
+            startDate: z
+              .string()
+              .date()
+              .describe("Start date (YYYY-MM-DD). Defaults to today if not specified."),
+            endDate: z
+              .string()
+              .date()
+              .describe("Optional end date (YYYY-MM-DD). Omit for indefinite.")
+              .optional(),
+            accountName: z
+              .enum(
+                (userAccounts.length > 0
+                  ? userAccounts.map((a) => a.name)
+                  : [""]) as [string, ...string[]]
+              )
+              .describe("Source account (for expense/transfer)")
+              .optional(),
+            targetAccountName: z
+              .enum(
+                (userAccounts.length > 0
+                  ? userAccounts.map((a) => a.name)
+                  : [""]) as [string, ...string[]]
+              )
+              .describe("Target account (for income/transfer)")
+              .optional(),
+          })
+          .superRefine((val, ctx) => {
+            if (val.type === "transfer") return;
+            if (!val.category) {
+              ctx.addIssue({
+                code: "custom",
+                message: "Category is required for non-transfer transactions",
+                path: ["category"],
+              });
+              return;
+            }
+            const cat = categoryByName.get(val.category);
+            if (cat && cat.type !== val.type) {
+              ctx.addIssue({
+                code: "custom",
+                message: `Category "${val.category}" is type "${cat.type}" but transaction is "${val.type}"`,
+                path: ["category"],
+              });
+            }
+          }),
+        execute: async ({
+          name,
+          amount,
+          type,
+          category,
+          frequency,
+          startDate,
+          endDate,
+          accountName,
+          targetAccountName,
+        }) => {
+          const created = await createRecurringTransaction({
+            userId: user!.id,
+            description: name,
+            amount,
+            type,
+            frequency,
+            startDate,
+            endDate: endDate ?? null,
+            categoryName: category,
+            accountName,
+            targetAccountName,
+          });
+
+          return {
+            status: "created",
+            recurringTransaction: {
+              id: created.id,
+              description: created.description,
+              amount: created.amount,
+              type: created.type,
+              frequency: created.frequency,
+              startDate: created.startDate,
+              endDate: created.endDate,
+              nextRunDate: created.nextRunDate,
+            },
+          };
+        },
+      }),
+
+      getRecurringTransactions: tool({
+        description:
+          "List all recurring transactions for the user (active and paused).",
+        inputSchema: z.object({}),
+        execute: async () => {
+          return await getRecurringTransactions(user!.id);
+        },
+      }),
+
+      deleteRecurringTransaction: tool({
+        description:
+          "Delete a recurring transaction by its ID. Ask user for confirmation first. Previously created transactions are NOT affected.",
+        inputSchema: z.object({
+          id: z
+            .string()
+            .describe(
+              "ID of the recurring transaction to delete. Use getRecurringTransactions to find the ID first."
+            ),
+        }),
+        execute: async ({ id }) => {
+          const deleted = await deleteRecurringTransaction(user!.id, id);
+          if (!deleted) return { error: "Recurring transaction not found" };
+          return { status: "deleted" };
+        },
+      }),
     },
     system: systemContext,
     messages: convertToModelMessages(messages),
@@ -962,6 +1110,7 @@ export async function POST(req: Request) {
   revalidatePath("/data");
   revalidatePath("/home");
   revalidatePath("/categories");
+  revalidatePath("/recurring");
 
   return result.toUIMessageStreamResponse();
 }
