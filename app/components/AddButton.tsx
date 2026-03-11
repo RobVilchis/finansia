@@ -4,7 +4,7 @@ export const AddButton = ({ onClick }: { onClick: () => void }) => {
   return (
     <button
       onClick={onClick}
-      className="py-3 px-3 rounded-md opacity-70 bg-slate-300  dark:bg-slate-700 hover:opacity-80 transition-opacity"
+      className="hover:cursor-pointer py-3 px-3 rounded-md opacity-70 bg-slate-300  dark:bg-slate-700 hover:opacity-80 transition-opacity"
     >
       <svg
         className="w-4 h-4 text-slate-700 dark:text-slate-200 "

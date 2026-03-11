@@ -26,10 +26,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Finansia",
-  description: "Generado por create next app",
+  description: "Analiza tus finanzas personales con inteligencia artificial.",
 };
 
-export const dynamic = "force-dynamic";
+// export const dynamic = "force-dynamic";
 
 export default function RootLayout({
   children,

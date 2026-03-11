@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { statementeUplods } from "@/lib/db/schema/statementUploads";
+import { statementUploads } from "@/lib/db/schema/statementUploads";
 import { and, eq, desc } from "drizzle-orm";
 
 export type StatementStatus = "uploaded" | "processing" | "ready" | "error";
@@ -15,7 +15,7 @@ export async function createStatementUpload(input: CreateStatementInput) {
   const { userId, originalFileName, extractedText, status } = input;
 
   const [inserted] = await db
-    .insert(statementeUplods)
+    .insert(statementUploads)
     .values({
       userId,
       originalFileName,
@@ -32,9 +32,9 @@ export async function updateStatementText(
   extractedText: string
 ) {
   const [updated] = await db
-    .update(statementeUplods)
+    .update(statementUploads)
     .set({ extractedText })
-    .where(eq(statementeUplods.id, statementId))
+    .where(eq(statementUploads.id, statementId))
     .returning();
 
   return updated;
@@ -45,9 +45,9 @@ export async function updateStatementUploadStatus(
   status: StatementStatus
 ) {
   const [updated] = await db
-    .update(statementeUplods)
+    .update(statementUploads)
     .set({ status })
-    .where(eq(statementeUplods.id, statementId))
+    .where(eq(statementUploads.id, statementId))
     .returning();
 
   return updated;
@@ -56,14 +56,14 @@ export async function updateStatementUploadStatus(
 export async function getProcessingStatements(userId: string) {
   const pendingStatements = await db
     .select()
-    .from(statementeUplods)
+    .from(statementUploads)
     .where(
       and(
-        eq(statementeUplods.userId, userId),
-        eq(statementeUplods.status, "processing")
+        eq(statementUploads.userId, userId),
+        eq(statementUploads.status, "processing")
       )
     )
-    .orderBy(desc(statementeUplods.createdAt));
+    .orderBy(desc(statementUploads.createdAt));
 
   return pendingStatements;
 }

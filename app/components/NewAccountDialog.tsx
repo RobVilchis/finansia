@@ -6,6 +6,7 @@ import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
 import * as z from "zod";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { createAccountAction } from "@/app/actions/accounts";
+import { useToast } from "./GenericToast";
 
 interface NewAccountDialogProps {
   open: boolean;
@@ -42,6 +43,7 @@ export default function NewAccountDialog({
     },
   });
 
+  const { showToast } = useToast();
   const bp = useBreakpoint();
   const size = bp === "lg" ? "2" : bp === "md" ? "2" : "3";
 
@@ -56,6 +58,11 @@ export default function NewAccountDialog({
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to create account:", error);
+      showToast({
+        title: "Error al crear cuenta",
+        message: "No se pudo crear la cuenta. Intenta de nuevo.",
+        variant: "error",
+      });
     }
   });
 

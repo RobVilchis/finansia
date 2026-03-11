@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
 import z from "zod";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import { useToast } from "./GenericToast";
 
 interface UploadStatementDialogProps {
   open: boolean;
@@ -47,6 +48,7 @@ export default function UploadStatementDialog({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const { showToast } = useToast();
 
   const { control, handleSubmit, register } = useForm<UploadFormData>({
     resolver: zodResolver(uploadSchema),
@@ -90,6 +92,11 @@ export default function UploadStatementDialog({
       onStatementUpload();
     } catch (error) {
       console.error("Error uploading statement:", error);
+      showToast({
+        title: "Error al subir estado de cuenta",
+        message: "No se pudo subir el archivo. Intenta de nuevo.",
+        variant: "error",
+      });
     } finally {
       setIsUploading(false);
     }
@@ -109,6 +116,11 @@ export default function UploadStatementDialog({
         setAccounts(data);
       } catch (error) {
         console.error("Error fetching accounts:", error);
+        showToast({
+          title: "Error al cargar cuentas",
+          message: "No se pudieron obtener las cuentas.",
+          variant: "error",
+        });
       }
     };
 

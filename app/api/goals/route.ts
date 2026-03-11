@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     const existingAccount = await db
       .select()
       .from(accounts)
-      .where(eq(accounts.name, validatedData.name));
+      .where(and(eq(accounts.userId, user.id), eq(accounts.name, validatedData.name)));
 
     if (existingAccount.length == 0) {
       const account = await db

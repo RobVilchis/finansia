@@ -93,6 +93,7 @@ export default function TransactionFilters({
     <div className="mb-4 space-y-3">
       {/* Type Filter */}
       <SegmentedControl.Root
+        className="hover:cursor-pointer!"
         value={activeFilters.type || "all"}
         onValueChange={(value) => {
           // Clear category when type changes since categories are type-specific

@@ -344,7 +344,6 @@ export async function updateTransactionAction(
         }
       }
     }
-    throw error;
     // Unknown error
     return {
       success: false,

@@ -1,6 +1,6 @@
 import { nanoid } from "@/lib/utils";
 import { sql } from "drizzle-orm";
-import { pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { index, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { users } from "./user";
 
 export const accounts = pgTable("accounts", {
@@ -16,4 +16,6 @@ export const accounts = pgTable("accounts", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .default(sql`now()`),
-});
+}, (table) => ([
+  index("idx_accounts_user_id").on(table.userId),
+]));

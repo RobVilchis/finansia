@@ -3,6 +3,7 @@
 import { Button } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import TipDialog from "./TipDialog";
+import { useToast } from "./GenericToast";
 
 interface Tip {
   id: string;
@@ -19,6 +20,7 @@ export default function TipsList() {
   const [generating, setGenerating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTip, setSelectedTip] = useState<Tip | null>(null);
+  const { showToast } = useToast();
 
   const fetchTips = async () => {
     try {
@@ -29,6 +31,11 @@ export default function TipsList() {
       }
     } catch (error) {
       console.error("Failed to fetch tips:", error);
+      showToast({
+        title: "Error al cargar tips",
+        message: "No se pudieron obtener los tips financieros.",
+        variant: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -46,9 +53,19 @@ export default function TipsList() {
         }
       } else {
         console.error("Failed to generate tips");
+        showToast({
+          title: "Error al generar tips",
+          message: "No se pudieron generar los tips. Intenta de nuevo.",
+          variant: "error",
+        });
       }
     } catch (error) {
       console.error("Failed to generate tips:", error);
+      showToast({
+        title: "Error al generar tips",
+        message: "No se pudieron generar los tips. Intenta de nuevo.",
+        variant: "error",
+      });
     } finally {
       setGenerating(false);
     }

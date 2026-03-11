@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { numeric, text, varchar, timestamp, pgTable } from "drizzle-orm/pg-core";
+import { index, numeric, text, varchar, timestamp, pgTable } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { nanoid } from "@/lib/utils";
 import { users } from "./user";
@@ -19,7 +19,9 @@ export const categories = pgTable("categories", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .default(sql`now()`),
-});
+}, (table) => ([
+  index("idx_categories_user_id").on(table.userId),
+]));
 
 export const insertCategorySchema = z.object({
   name: z.string(),

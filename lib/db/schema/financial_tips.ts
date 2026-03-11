@@ -1,5 +1,5 @@
 import { nanoid } from "@/lib/utils";
-import { pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { index, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { users } from "./user";
 
 export const financialTips = pgTable("financial_tips", {
@@ -15,4 +15,7 @@ export const financialTips = pgTable("financial_tips", {
   fullText: text("full_text").notNull(),
   generatedAt: timestamp("generated_at", { withTimezone: true }).defaultNow(),
   source: text("source").default("openai"),
-});
+}, (table) => ([
+  index("idx_tips_user_id").on(table.userId),
+  index("idx_tips_user_month").on(table.userId, table.month),
+]));

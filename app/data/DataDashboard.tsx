@@ -255,7 +255,7 @@ export default function DataDashboard({
                 <div className="flex items-center gap-2">
                   <button
                     className="bg-none  text-slate-500
-                    px-2 py-2 text-sm font-medium"
+                    px-2 py-2 text-sm font-medium hover:cursor-pointer"
                     onClick={() => setStatementDialogOpen(true)}
                   >
                     <Upload className="w-6 h-6 text-slate-500 font-bold" />
@@ -294,11 +294,11 @@ export default function DataDashboard({
                 {transactions.length === 0 ? (
                   <div className="text-center text-gray-500 dark:text-gray-400 py-8">
                     {activeFilters.type ||
-                    activeFilters.category ||
-                    activeFilters.account ||
-                    activeFilters.startDate ||
-                    activeFilters.endDate ||
-                    activeFilters.description
+                      activeFilters.category ||
+                      activeFilters.account ||
+                      activeFilters.startDate ||
+                      activeFilters.endDate ||
+                      activeFilters.description
                       ? "No se encontraron transacciones con los filtros seleccionados."
                       : "Aun no se han registrado transacciones."}
                   </div>

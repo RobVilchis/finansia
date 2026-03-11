@@ -35,10 +35,9 @@ export default function ChatUI({ messages, sendMessage }: ChatUIProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  console.log(messages[0])
 
   return (
-    <div className="Z-20 w-full h-full sm:py-4 bg-none dark:bg-none rounded-lg shadow-lg flex  flex-col">
+    <div className="Z-20 w-full h-full sm:py-4  rounded-lg  flex  flex-col">
       {/* <h1 className="m-4 text-2xl  text-gray-900 dark:text-white mb-8">
         Haz una pregunta
       </h1> */}

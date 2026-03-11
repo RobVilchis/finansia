@@ -149,6 +149,11 @@ export default function TransactionDialog({
         setCategories(data);
       } catch (error) {
         console.error("Error fetching categories:", error);
+        showToast({
+          title: "Error al cargar categorías",
+          message: "No se pudieron obtener las categorías.",
+          variant: "error",
+        });
       }
     };
 
@@ -160,6 +165,11 @@ export default function TransactionDialog({
         setAccounts(data);
       } catch (error) {
         console.error("Error fetching accounts:", error);
+        showToast({
+          title: "Error al cargar cuentas",
+          message: "No se pudieron obtener las cuentas.",
+          variant: "error",
+        });
       }
     };
 

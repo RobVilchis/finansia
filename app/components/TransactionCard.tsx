@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@radix-ui/themes";
 import { Transaction } from "../data/DataDashboard";
 
 export default function TransactionCard({
@@ -36,9 +37,9 @@ export default function TransactionCard({
             </p>
           </div>
           {type != "transfer" && showCategory && (
-            <span className="text-xs font-semibold  px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 rounded-full">
+            <Badge variant="soft" color="gray" size="1">
               {categoryName}
-            </span>
+            </Badge>
           )}
         </div>
         <span className={`text-lg font-bold ${amountColor}`}>

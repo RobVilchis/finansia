@@ -2,6 +2,7 @@ import { nanoid } from "@/lib/utils";
 import {
   boolean,
   decimal,
+  index,
   pgTable,
   text,
   timestamp,
@@ -26,7 +27,14 @@ export const transactions = pgTable("transactions", {
   targetAccountId: varchar("target_account_id").references(() => accounts.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   isUnverified: boolean("is_unverified").default(false),
-});
+}, (table) => ([
+  index("idx_transactions_user_id").on(table.userId),
+  index("idx_transactions_date").on(table.date),
+  index("idx_transactions_category").on(table.category),
+  index("idx_transactions_source_account").on(table.sourceAccountId),
+  index("idx_transactions_target_account").on(table.targetAccountId),
+  index("idx_transactions_user_date").on(table.userId, table.date),
+]));
 
 export const insertTransactionSchema = z.object({
   userId: z.string(),

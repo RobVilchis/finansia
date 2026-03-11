@@ -2,6 +2,7 @@ import { nanoid } from "@/lib/utils";
 import {
   date,
   decimal,
+  index,
   pgTable,
   text,
   timestamp,
@@ -23,4 +24,6 @@ export const financialGoals = pgTable("financial_goals", {
     .references(() => accounts.id)
     .unique(), // ← one-to-one
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-});
+}, (table) => ([
+  index("idx_goals_user_id").on(table.userId),
+]));
