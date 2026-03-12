@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Framework**: Next.js 15 (App Router, React 19)
 - **Auth**: Clerk (`@clerk/nextjs`)
 - **Database**: PostgreSQL via Neon (`@neondatabase/serverless`), ORM is Drizzle
-- **AI**: Vercel AI SDK v5 (`ai` package) with OpenAI (GPT-5 for chat) and Anthropic (Claude Sonnet for statement parsing)
+- **AI**: Vercel AI SDK v5 (`ai` package) with OpenAI (GPT-5 for chat) and Anthropic (Claude Sonnet for sta tement parsing)
 - **UI**: Tailwind CSS v4, Radix UI Themes, MUI (date pickers), Recharts, Vaul (drawers), Lucide icons
 - **Forms**: react-hook-form + zod + @hookform/resolvers
 - **Styling**: `clsx` + `tailwind-merge` via `lib/utils.ts`

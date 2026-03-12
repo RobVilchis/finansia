@@ -15,11 +15,10 @@ export default function DashboardPage() {
     fetch("api/create-user");
   }, []);
 
-  // For ExpensesPieChart, show last 30 days
+  // For ExpensesPieChart, show current month
   const now = new Date();
-  const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startDate = new Date(endDate);
-  startDate.setDate(endDate.getDate() - 29); // 30 days including today
+  const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0); // last day of current month
 
   // When a new transaction is added, refresh the pie chart
   const handleAddTransaction = () => {
@@ -33,7 +32,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800">
           <h2 className="text-xl font-semibold mb-4">
-            Gastos por categoría (últimos 30 días)
+            Gastos por categoría (mes actual)
           </h2>
           <ExpensesPieChart
             refreshTrigger={refreshTrigger}

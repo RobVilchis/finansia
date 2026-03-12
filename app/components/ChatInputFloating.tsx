@@ -55,7 +55,7 @@ export default function ChatInputFloating() {
                     placeholder="Haz una pregunta…"
                     className="focus:outline-none flex-1 bg-transparent py-3 pl-6 pr-12 
                      text-sm md:text-base 
-                     text-gray-900 dark:text-gray-100 placeholder:text-gray-400"
+                     text-gray-900 dark:text-gray-100 placeholder:text-gray-6500"
                 />
                 <button
                     type="submit"

@@ -117,19 +117,21 @@ export default function TipsList() {
           </p>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="flex gap-3">
           {tips.slice(0, 3).map((tip) => (
-            <li key={tip.id}>
-              <button
-                className="w-full text-left px-3 py-2 rounded dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 transition font-medium text-blue-700 dark:text-blue-200 border border-transparent hover:border-blue-300 dark:hover:border-blue-700"
+            <div key={tip.id}>
+              <div
+                className="w-44 h-36  px-3 py-3 rounded-md line-clamp-5  bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 
+                dark:hover:bg-blue-950 transition font-medium text-slate-900 dark:text-blue-200
+                 border border-transparent hover:border-blue-300 dark:hover:border-blue-700 "
                 onClick={() => {
                   setSelectedTip(tip);
                   setDialogOpen(true);
                 }}
               >
                 {tip.title}
-              </button>
-            </li>
+              </div>
+            </div>
           ))}
         </ul>
       )}

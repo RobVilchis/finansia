@@ -20,12 +20,7 @@ export const navLinks = [
     icon: CircleDollarSign,
     className: "text-gray-300",
   },
-  {
-    href: "/analysis",
-    label: "Análisis",
-    icon: BarChart3,
-    className: "text-gray-300",
-  },
+
   {
     href: "/recurring",
     label: "Recurrentes",
@@ -36,6 +31,12 @@ export const navLinks = [
     href: "/categories",
     label: "Categorías",
     icon: AppWindow,
+    className: "text-gray-300",
+  },
+  {
+    href: "/analysis",
+    label: "Análisis",
+    icon: BarChart3,
     className: "text-gray-300",
   },
   /*     {

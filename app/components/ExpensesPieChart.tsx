@@ -109,7 +109,7 @@ export default function ExpensesPieChart({
 
     return (
       <ul
-        className={`recharts-legend-item-list flex flex-col flex-wrap ${isMediumOrLarge ? "h-fit w-30" : "h-36 w-80"
+        className={`recharts-legend-item-list flex flex-col flex-wrap ${isMediumOrLarge ? "h-fit w-44" : "h-36 w-80"
           }`}
         style={{ listStyle: "none", padding: 0, margin: 0 }}
       >
@@ -121,7 +121,7 @@ export default function ExpensesPieChart({
               display: "flex",
               alignItems: "center",
               marginBottom: "4px",
-              fontSize: "12px",
+              // fontSize: "12px",
             }}
           >
             <svg width="12" height="12" style={{ marginRight: "8px" }}>
@@ -132,7 +132,12 @@ export default function ExpensesPieChart({
                 stroke="none"
               />
             </svg>
-            <span>{category.value}</span>
+            <span className="font-medium text-sm">
+              {category.value}{" "}
+              <span className="text-gray-500 dark:text-gray-400">
+                ${((category.payload as { value?: number })?.value ?? 0).toFixed(2)}
+              </span>
+            </span>
           </li>
         ))}
       </ul>

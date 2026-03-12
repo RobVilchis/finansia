@@ -56,7 +56,7 @@ export async function POST(req: Request) {
   - Ask clarifying questions when you need more information
   - Respond in the same language the user writes in
 
-  CAPABILITIES — you can ONLY do the following:
+  CAPABILITIES — you can ONLY do thes following:
   - Create, retrieve, update, and delete transactions (one at a time)
   - Create, list, and delete recurring/automatic transactions (e.g. monthly subscriptions, biweekly salary)
   - Create, list, update, and delete accounts
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
 
   LIMITATIONS — do NOT promise or suggest you can:
   - Connect to banks or import statements (the user uploads PDFs separately)
-  - Make actual transfers or payments
+  - Make actual transfers or paymentsp
   - Access data beyond what is provided below
 
   When a tool returns { status: "created" }, that means you just created something new — do not say it "already existed."
