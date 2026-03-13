@@ -13,6 +13,8 @@ import { z } from "zod";
 // Allow responses up to 30 seconds
 export const maxDuration = 300;
 
+export const dynamic = "force-dynamic";
+
 // Define the schema for tips
 const tipSchema = z.object({
   title: z.string(),

@@ -2,6 +2,7 @@
 
 import { Button } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import TipDialog from "./TipDialog";
 import { useToast } from "./GenericToast";
 
@@ -117,19 +118,21 @@ export default function TipsList() {
           </p>
         </div>
       ) : (
-        <ul className="flex gap-3">
+        <ul className="flex flex-col gap-3">
           {tips.slice(0, 3).map((tip) => (
             <div key={tip.id}>
               <div
-                className="w-44 h-36  px-3 py-3 rounded-md line-clamp-5  bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 
+                className="w-full h-18 px-3 py-3 rounded-md line-clamp-5 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50
                 dark:hover:bg-blue-950 transition font-medium text-slate-900 dark:text-blue-200
-                 border border-transparent hover:border-blue-300 dark:hover:border-blue-700 "
+                border border-transparent hover:border-blue-300 dark:hover:border-blue-700
+                cursor-pointer active:scale-[0.98] flex items-center justify-between gap-2"
                 onClick={() => {
                   setSelectedTip(tip);
                   setDialogOpen(true);
                 }}
               >
-                {tip.title}
+                <span className="line-clamp-2">{tip.title}</span>
+                <ChevronRight className="w-4 h-4 shrink-0 text-slate-400 dark:text-slate-500" />
               </div>
             </div>
           ))}
