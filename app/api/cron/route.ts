@@ -145,13 +145,19 @@ export async function GET(_request: Request) {
 
     // Return the generated tips as JSON
     return new Response(JSON.stringify({ tips: result.object.tips }), {
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
     });
   } catch (error) {
     console.error("Error generating tips:", error);
     return new Response(JSON.stringify({ error: errorHandler(error) }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
     });
   }
 }
