@@ -14,6 +14,7 @@ import { z } from "zod";
 export const maxDuration = 300;
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 // Define the schema for tips
 const tipSchema = z.object({
