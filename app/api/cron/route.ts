@@ -1,17 +1,16 @@
 import { db } from "@/lib/db";
 import { financialTips } from "@/lib/db/schema/financial_tips";
+import { users } from "@/lib/db/schema/user";
 import {
-  errorHandler,
   fetchAllFinancialData,
   getFirst50,
 } from "@/lib/financial-data";
 import { materializeRecurringTransactions } from "@/lib/services/recurringTransactions";
-import { currentUser } from "@clerk/nextjs/server";
 import { generateObject } from "ai";
 import { z } from "zod";
 
 // Allow responses up to 30 seconds
-export const maxDuration = 300;
+export const maxDuration = 600;
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -59,12 +58,12 @@ async function saveTipsToDatabase(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function GET(_request: Request) {
-
-  const user = await currentUser();
-
-  if (!user) return new Response("Unauthorized", { status: 401 });
+export async function GET(request: Request) {
+  // Verify cron secret (Vercel Cron Jobs send this header automatically)
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new Response("Unauthorized", { status: 401 });
+  }
 
   // Materialize any due recurring transactions
   try {
@@ -76,88 +75,89 @@ export async function GET(_request: Request) {
     console.error("Error materializing recurring transactions:", error);
   }
 
-  const { transactions, goals, accounts, categorySum } =
-    await fetchAllFinancialData(user.id);
+  // Process all users
+  const allUsers = await db
+    .select({ id: users.id })
+    .from(users);
 
-  const systemContext = `
-  Eres un asesor financiero experto especializado en brindar consejos financieros personalizados. Tu tarea es generar exactamente 3 consejos financieros prácticos basados en los datos financieros del usuario.
+  const allTips = [];
 
-  REQUISITOS DE LA RESPUESTA:
-  - Genera EXACTAMENTE 3 consejos, ni más ni menos
-  - Cada consejo debe ser específico y accionable
-  - Cada consejo debe tener un título (title), descripción (description) y una categoría (category: income, expenses o goals)
-  - Basa los consejos en la situación financiera real del usuario
-  - Haz que los consejos sean relevantes para sus patrones de gasto, metas y saldos de cuentas
-  - Mantén cada consejo conciso pero informativo
-  - Enfócate en consejos prácticos y fáciles de implementar
+  for (const user of allUsers) {
+    const { transactions, goals, accounts, categorySum } =
+      await fetchAllFinancialData(user.id);
 
-  FECHA ACTUAL: ${new Date().toLocaleDateString()}
+    const systemContext = `
+    Eres un asesor financiero experto especializado en brindar consejos financieros personalizados. Tu tarea es generar exactamente 3 consejos financieros prácticos basados en los datos financieros del usuario.
 
-  DATOS FINANCIEROS DEL USUARIO:
+    REQUISITOS DE LA RESPUESTA:
+    - Genera EXACTAMENTE 3 consejos, ni más ni menos
+    - Cada consejo debe ser específico y accionable
+    - Cada consejo debe tener un título (title), descripción (description) y una categoría (category: income, expenses o goals)
+    - Basa los consejos en la situación financiera real del usuario
+    - Haz que los consejos sean relevantes para sus patrones de gasto, metas y saldos de cuentas
+    - Mantén cada consejo conciso pero informativo
+    - Enfócate en consejos prácticos y fáciles de implementar
 
-  UBICACIÓN:
-  México
+    FECHA ACTUAL: ${new Date().toLocaleDateString()}
 
-  MONEDA:
-  Pesos Mexicanos
+    DATOS FINANCIEROS DEL USUARIO:
 
-  TRANSACCIONES RECIENTES (últimas 20):
-  ${JSON.stringify(getFirst50(transactions), null, 2)}
+    UBICACIÓN:
+    México
 
-  GASTOS POR CATEGORÍA (últimos 30 días):
-  ${JSON.stringify(categorySum, null, 2)}
+    MONEDA:
+    Pesos Mexicanos
 
-  METAS FINANCIERAS:
-  ${JSON.stringify(goals, null, 2)}
+    TRANSACCIONES RECIENTES (últimas 20):
+    ${JSON.stringify(getFirst50(transactions), null, 2)}
 
-  CUENTAS Y SALDOS:
-  ${JSON.stringify(accounts, null, 2)}
+    GASTOS POR CATEGORÍA (últimos 30 días):
+    ${JSON.stringify(categorySum, null, 2)}
 
-  ENFOQUE DEL ANÁLISIS:
-  - Identificar las categorías de mayor gasto y sugerir optimización
-  - Evaluar el progreso de las metas y sugerir ajustes si es necesario
-  - Evaluar la distribución del saldo de las cuentas y sugerir mejoras
-  - Buscar oportunidades de ahorro basadas en patrones de gasto
-  - Considerar la suficiencia del fondo de emergencia
-  - Sugerir mejoras en el presupuesto basadas en datos reales
+    METAS FINANCIERAS:
+    ${JSON.stringify(goals, null, 2)}
 
-  Recuerda: Proporciona exactamente 3 consejos que estén personalizados para la situación financiera de este usuario.
-  `;
+    CUENTAS Y SALDOS:
+    ${JSON.stringify(accounts, null, 2)}
 
-  try {
-    const result = await generateObject({
-      model: "openai/gpt-5",
-      system: systemContext,
-      messages: [
-        {
-          role: "user",
-          content:
-            "Genera 3 consejos financieros personalizados para mí basándote en mis datos financieros.",
-        },
-      ],
-      schema: tipsResponseSchema,
-    });
+    ENFOQUE DEL ANÁLISIS:
+    - Identificar las categorías de mayor gasto y sugerir optimización
+    - Evaluar el progreso de las metas y sugerir ajustes si es necesario
+    - Evaluar la distribución del saldo de las cuentas y sugerir mejoras
+    - Buscar oportunidades de ahorro basadas en patrones de gasto
+    - Considerar la suficiencia del fondo de emergencia
+    - Sugerir mejoras en el presupuesto basadas en datos reales
 
-    // Save tips to database
-    if (result.object.tips.length > 0) {
-      await saveTipsToDatabase(user.id, result.object.tips);
+    Recuerda: Proporciona exactamente 3 consejos que estén personalizados para la situación financiera de este usuario.
+    `;
+
+    try {
+      const result = await generateObject({
+        model: "openai/gpt-5",
+        system: systemContext,
+        messages: [
+          {
+            role: "user",
+            content:
+              "Genera 3 consejos financieros personalizados para mí basándote en mis datos financieros.",
+          },
+        ],
+        schema: tipsResponseSchema,
+      });
+
+      if (result.object.tips.length > 0) {
+        await saveTipsToDatabase(user.id, result.object.tips);
+        allTips.push(...result.object.tips);
+      }
+    } catch (error) {
+      console.error(`Error generating tips for user ${user.id}:`, error);
     }
-
-    // Return the generated tips as JSON
-    return new Response(JSON.stringify({ tips: result.object.tips }), {
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store",
-      },
-    });
-  } catch (error) {
-    console.error("Error generating tips:", error);
-    return new Response(JSON.stringify({ error: errorHandler(error) }), {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store",
-      },
-    });
   }
+
+  return new Response(JSON.stringify({ tips: allTips }), {
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+    },
+  });
 }
