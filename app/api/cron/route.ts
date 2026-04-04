@@ -10,7 +10,7 @@ import { generateObject } from "ai";
 import { z } from "zod";
 
 // Allow responses up to 30 seconds
-export const maxDuration = 600;
+export const maxDuration = 300;
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
