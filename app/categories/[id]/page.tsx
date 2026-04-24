@@ -15,6 +15,7 @@ interface Category {
   id: string;
   name: string;
   type: string;
+  budget: string | null;
 }
 
 interface CategoryData {
@@ -28,8 +29,9 @@ interface CategoryData {
   };
 }
 
-const renameSchema = z.object({
+const editSchema = z.object({
   name: z.string().min(1, "El nombre de la categoría es requerido"),
+  budget: z.number({ invalid_type_error: "Ingresa un número válido" }).positive("El presupuesto debe ser mayor a 0").nullish(),
 });
 
 export default function CategoryPage(props: {
@@ -55,9 +57,10 @@ export default function CategoryPage(props: {
     reset,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(renameSchema),
+    resolver: zodResolver(editSchema),
     defaultValues: {
       name: "",
+      budget: undefined as number | null | undefined,
     },
   });
 
@@ -76,7 +79,10 @@ export default function CategoryPage(props: {
       }
       const data = await response.json();
       setCategoryData(data);
-      reset({ name: data.category.name });
+      reset({
+        name: data.category.name,
+        budget: data.category.budget ? Number(data.category.budget) : null,
+      });
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message || "Error al obtener datos de la categoría");
@@ -100,7 +106,7 @@ export default function CategoryPage(props: {
     setShowDeleteDialog(true);
   };
 
-  const onSubmitRename = async (data: { name: string }) => {
+  const onSubmitRename = async (data: { name: string; budget?: number | null }) => {
     try {
       setIsRenaming(true);
       const response = await fetch(`/api/categories/${params.id}`, {
@@ -111,6 +117,7 @@ export default function CategoryPage(props: {
         body: JSON.stringify({
           name: data.name,
           type: categoryData?.category.type,
+          budget: data.budget ?? null,
         }),
       });
 
@@ -332,15 +339,23 @@ export default function CategoryPage(props: {
                 </button>
               </div>
 
-              <div className="flex items-center gap-4">
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium bg-slate-200 dark:bg-slate-700 `}
-                >
+              <div className="flex items-center gap-4 flex-wrap">
+                <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-200 dark:bg-slate-700">
                   {getTypeLabel(categoryData.category.type)}
                 </span>
                 <span className="text-slate-600 dark:text-slate-400">
                   {categoryData.summary.transactionCount} transacciones
                 </span>
+                {categoryData.category.type === "expense" && (
+                  <span className="text-slate-600 dark:text-slate-400 text-sm">
+                    Presupuesto:{" "}
+                    <span className="font-medium text-slate-800 dark:text-slate-200">
+                      {categoryData.category.budget
+                        ? new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(Number(categoryData.category.budget))
+                        : "Sin presupuesto"}
+                    </span>
+                  </span>
+                )}
               </div>
             </div>
 
@@ -459,14 +474,14 @@ export default function CategoryPage(props: {
         </div>
       </div>
 
-      {/* Rename Dialog */}
+      {/* Edit Dialog */}
       <Dialog.Root open={showRenameDialog} onOpenChange={setShowRenameDialog}>
         <Dialog.Content maxWidth="400px">
-          <Dialog.Title>Renombrar Categoría</Dialog.Title>
+          <Dialog.Title>Editar Categoría</Dialog.Title>
           <form onSubmit={handleSubmit(onSubmitRename)} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Nombre de la Categoría
+                Nombre
               </label>
               <Controller
                 name="name"
@@ -474,7 +489,7 @@ export default function CategoryPage(props: {
                 render={({ field }) => (
                   <TextField.Root
                     {...field}
-                    placeholder="Ingrese el nombre de la categoría"
+                    placeholder="Nombre de la categoría"
                     className="w-full"
                   />
                 )}
@@ -485,6 +500,37 @@ export default function CategoryPage(props: {
                 </p>
               )}
             </div>
+            {categoryData.category.type === "expense" && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Presupuesto mensual (MXN)
+                </label>
+                <Controller
+                  name="budget"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField.Root
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="Sin presupuesto"
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === "" ? null : Number(e.target.value)
+                        )
+                      }
+                      className="w-full"
+                    />
+                  )}
+                />
+                {errors.budget && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.budget.message}
+                  </p>
+                )}
+              </div>
+            )}
             <div className="flex justify-end gap-2">
               <Button
                 type="button"
@@ -494,7 +540,7 @@ export default function CategoryPage(props: {
                 Cancelar
               </Button>
               <Button type="submit" disabled={isRenaming}>
-                {isRenaming ? "Renombrando..." : "Renombrar"}
+                {isRenaming ? "Guardando..." : "Guardar"}
               </Button>
             </div>
           </form>

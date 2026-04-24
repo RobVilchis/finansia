@@ -25,6 +25,7 @@ export async function GET(
         id: categories.id,
         name: categories.name,
         type: categories.type,
+        budget: categories.budget,
       })
       .from(categories)
       .where(and(eq(categories.id, categoryId), eq(categories.userId, user.id)))
@@ -114,12 +115,18 @@ export async function PATCH(
     const { id: categoryId } = await params;
 
     const body = await request.json();
-    const { name, type } = body;
+    const { name, type, budget } = body;
 
     // Update the category
     const updatedCategory = await db
       .update(categories)
-      .set({ name, type })
+      .set({
+        name,
+        type,
+        ...(type === "expense"
+          ? { budget: budget != null ? String(budget) : null }
+          : { budget: null }),
+      })
       .where(and(eq(categories.id, categoryId), eq(categories.userId, user.id)))
       .returning();
 

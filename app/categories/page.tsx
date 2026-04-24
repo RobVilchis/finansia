@@ -11,6 +11,8 @@ interface Category {
   id: string;
   name: string;
   type: string;
+  budget: string | null;
+  spent: number;
 }
 
 export default function CategoriesPage() {
@@ -59,6 +61,22 @@ export default function CategoriesPage() {
     (cat) => cat.type === "income"
   );
 
+  // Summary stats — computed from all expense categories (unfiltered)
+  const allExpense = categories.filter((c) => c.type === "expense");
+  const budgeted = allExpense.filter((c) => c.budget && Number(c.budget) > 0);
+  const totalSpent = allExpense.reduce((s, c) => s + Number(c.spent), 0);
+  const totalBudget = budgeted.reduce((s, c) => s + Number(c.budget), 0);
+  const overCategories = budgeted.filter((c) => Number(c.spent) > Number(c.budget));
+  const warningCategories = budgeted.filter((c) => {
+    const pct = Number(c.spent) / Number(c.budget);
+    return pct >= 0.75 && pct <= 1;
+  });
+  const totalOverspent = overCategories.reduce(
+    (s, c) => s + (Number(c.spent) - Number(c.budget)),
+    0
+  );
+  const hasBudgetData = budgeted.length > 0;
+
   useEffect(() => {
     return () => clearTimeout(timerRef.current);
   }, []);
@@ -79,6 +97,52 @@ export default function CategoriesPage() {
       <section className="container px-5 md:px-10 p-4 min-h-screen flex justify-center w-full">
         <div className="w-full max-w-6xl">
           <h1 className="text-3xl font-bold mb-6">Categorías</h1>
+
+          {/* Summary Stats */}
+          {!loading && !error && hasBudgetData && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
+              <div className="rounded-xl border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-slate-800/70 px-4 py-3">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Gastado este mes</p>
+                <p className="font-mono text-lg font-semibold tabular-nums text-slate-800 dark:text-slate-100">
+                  {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(totalSpent)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-slate-800/70 px-4 py-3">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Presupuesto total</p>
+                <p className="font-mono text-lg font-semibold tabular-nums text-slate-800 dark:text-slate-100">
+                  {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(totalBudget)}
+                </p>
+              </div>
+              <div className={`rounded-xl border px-4 py-3 ${
+                overCategories.length > 0
+                  ? "border-rose-200 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10"
+                  : "border-slate-200 dark:border-white/[0.07] bg-white dark:bg-slate-800/70"
+              }`}>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  Excedido{overCategories.length > 0 && ` · ${overCategories.length} categ.`}
+                </p>
+                <p className={`font-mono text-lg font-semibold tabular-nums ${
+                  overCategories.length > 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-800 dark:text-slate-100"
+                }`}>
+                  {totalOverspent > 0
+                    ? new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(totalOverspent)
+                    : "—"}
+                </p>
+              </div>
+              <div className={`rounded-xl border px-4 py-3 ${
+                warningCategories.length > 0
+                  ? "border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/10"
+                  : "border-slate-200 dark:border-white/[0.07] bg-white dark:bg-slate-800/70"
+              }`}>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">En alerta</p>
+                <p className={`font-mono text-lg font-semibold tabular-nums ${
+                  warningCategories.length > 0 ? "text-amber-600 dark:text-amber-400" : "text-slate-800 dark:text-slate-100"
+                }`}>
+                  {warningCategories.length > 0 ? `${warningCategories.length} categ.` : "—"}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Search Bar */}
           <div className="flex justify-between items-center mb-6">
