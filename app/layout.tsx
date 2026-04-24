@@ -5,13 +5,6 @@ import "@radix-ui/themes/styles.css";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono } from "next/font/google";
-import ChatButton from "./components/ChatButton";
-import MobileNavbar from "./components/MobileNavbar";
-import { Sidebar } from "./components/Sidebar";
-import { TransactionsProvider } from "./contexts/TransactionsContext";
-import { ChatProvider } from "./contexts/ChatContext";
-import { ToastProvider } from "./components/GenericToast";
-import ChatInputFloating from "./components/ChatInputFloating";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -43,27 +36,7 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased relative`}
         >
           <ThemeProvider attribute="class">
-            <Theme appearance="inherit">
-              <ToastProvider>
-                <TransactionsProvider>
-                  <ChatProvider>
-                    <div className="relative md:hidden z-50">
-                      <MobileNavbar />
-                    </div>
-                    <section className="flex">
-                      <div className="hidden md:block">
-                        <Sidebar />
-                      </div>
-                      <div className="pt-14 md:pt-6 md:pl-80 pb-28 w-full bg-white dark:bg-slate-950">
-                        {children}
-                      </div>
-                    </section>
-                    <ChatButton />
-                    <ChatInputFloating />
-                  </ChatProvider>
-                </TransactionsProvider>
-              </ToastProvider>
-            </Theme>
+            <Theme appearance="inherit">{children}</Theme>
           </ThemeProvider>
         </body>
       </html>
