@@ -1,7 +1,7 @@
 "use client";
 
 import TransactionCard from "@/app/components/TransactionCard";
-import { Transaction } from "@/app/data/DataDashboard";
+import { Transaction } from "@/app/(main)/data/DataDashboard";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Dialog, TextField } from "@radix-ui/themes";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";

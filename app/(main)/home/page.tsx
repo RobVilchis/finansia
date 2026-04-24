@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import DashboardGoalsList from "../components/DashboardGoalsList";
-import ExpensesPieChart from "../components/ExpensesPieChart";
-import HomeAccountsList from "../components/HomeAccountsList";
-import NewTransactionDialog from "../components/NewTransactionDialog";
-import TipsList from "../components/TipsList";
+import DashboardGoalsList from "@/app/components/DashboardGoalsList";
+import ExpensesPieChart from "@/app/components/ExpensesPieChart";
+import HomeAccountsList from "@/app/components/HomeAccountsList";
+import NewTransactionDialog from "@/app/components/NewTransactionDialog";
+import TipsList from "@/app/components/TipsList";
 
 export default function DashboardPage() {
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);

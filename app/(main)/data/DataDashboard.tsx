@@ -5,18 +5,18 @@ import { Loader2, Upload } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import AccountsList from "../components/AccountsList";
-import { AddButton } from "../components/AddButton";
-import { useToast } from "../components/GenericToast";
-import GoalsList from "../components/GoalsList";
-import NewAccountDialog from "../components/NewAccountDialog";
-import NewTransactionDialog from "../components/NewTransactionDialog";
-import TransactionCard from "../components/TransactionCard";
-import TransactionDialog from "../components/TransactionDialog";
+import AccountsList from "@/app/components/AccountsList";
+import { AddButton } from "@/app/components/AddButton";
+import { useToast } from "@/app/components/GenericToast";
+import GoalsList from "@/app/components/GoalsList";
+import NewAccountDialog from "@/app/components/NewAccountDialog";
+import NewTransactionDialog from "@/app/components/NewTransactionDialog";
+import TransactionCard from "@/app/components/TransactionCard";
+import TransactionDialog from "@/app/components/TransactionDialog";
 import TransactionFilters, {
   type ActiveFilters,
-} from "../components/TransactionFilters";
-import UploadStatementDialog from "../components/UploadStatementDialog";
+} from "@/app/components/TransactionFilters";
+import UploadStatementDialog from "@/app/components/UploadStatementDialog";
 import { Goal } from "@/lib/services/goals";
 
 export interface Transaction {

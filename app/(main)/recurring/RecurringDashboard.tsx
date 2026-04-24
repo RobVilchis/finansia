@@ -10,10 +10,10 @@ import { useRouter } from "next/navigation";
 import {
   deleteRecurringTransactionAction,
   toggleRecurringTransactionAction,
-} from "../actions/recurringTransactions";
-import { useToast } from "../components/GenericToast";
-import RecurringTransactionCard from "../components/RecurringTransactionCard";
-import RecurringTransactionDialog from "../components/RecurringTransactionDialog";
+} from "@/app/actions/recurringTransactions";
+import { useToast } from "@/app/components/GenericToast";
+import RecurringTransactionCard from "@/app/components/RecurringTransactionCard";
+import RecurringTransactionDialog from "@/app/components/RecurringTransactionDialog";
 
 interface RecurringTransactionRow {
   id: string;

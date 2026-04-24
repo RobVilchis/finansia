@@ -2,7 +2,7 @@
 
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useEffect, useState } from "react";
-import ExpensesPieChart from "../components/ExpensesPieChart";
+import ExpensesPieChart from "@/app/components/ExpensesPieChart";
 
 const darkTheme = createTheme({
   palette: {

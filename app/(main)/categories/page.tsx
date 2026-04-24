@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import CategoryCard from "../components/CategoryCard";
-import CategoryDialog from "../components/CategoryDialog";
-import { AddButton } from "../components/AddButton";
+import CategoryCard from "@/app/components/CategoryCard";
+import CategoryDialog from "@/app/components/CategoryDialog";
+import { AddButton } from "@/app/components/AddButton";
 import { Toast } from "radix-ui";
 import { Check } from "lucide-react";
 

@@ -4,8 +4,8 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import TransactionCard from "../../components/TransactionCard";
-import TransactionDialog from "../../components/TransactionDialog";
+import TransactionCard from "@/app/components/TransactionCard";
+import TransactionDialog from "@/app/components/TransactionDialog";
 import { Transaction } from "../DataDashboard";
 
 interface ReviewPageClientProps {
