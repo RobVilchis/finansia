@@ -74,21 +74,13 @@ export default function AccountsList({ onAccountAdded }: AccountsListProps) {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="flex flex-wrap gap-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 w-64"
-            >
-              <div className="space-y-3">
-                <div className="w-24 h-4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-                <div className="w-32 h-6 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-                <div className="w-20 h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="flex flex-wrap gap-3">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="w-40 h-24 bg-white/5 rounded-xl animate-pulse"
+          />
+        ))}
       </div>
     );
   }

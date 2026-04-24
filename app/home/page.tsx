@@ -15,24 +15,23 @@ export default function DashboardPage() {
     fetch("api/create-user");
   }, []);
 
-  // For ExpensesPieChart, show current month
   const now = new Date();
   const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0); // last day of current month
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-  // When a new transaction is added, refresh the pie chart
   const handleAddTransaction = () => {
     setTransactionDialogOpen(false);
     setRefreshTrigger((v) => v + 1);
   };
 
   return (
-    <div className="w-full px-5 md:px-10 p-4 ">
-      <h1 className="text-3xl font-bold mb-6">Inicio</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800">
-          <h2 className="text-xl font-semibold mb-4">
-            Gastos por categoría (mes actual)
+    <div className="min-h-screen bg-gray-950 font-(family-name:--font-outfit) w-full px-5 md:px-10 py-8">
+      <h1 className="text-2xl font-semibold text-white mb-6">Inicio</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <section className="bg-white/6 backdrop-blur-md border border-white/10 rounded-xl p-5">
+          <h2 className="text-xs font-medium text-white/30 uppercase tracking-widest mb-4">
+            Gastos por categoría — mes actual
           </h2>
           <ExpensesPieChart
             refreshTrigger={refreshTrigger}
@@ -40,21 +39,29 @@ export default function DashboardPage() {
             endDate={endDate}
           />
         </section>
-        <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800">
-          <h2 className="text-xl font-semibold mb-4">Tips de esta semana</h2>
+
+        <section className="bg-white/6 backdrop-blur-md border border-white/10 rounded-xl p-5">
+          <h2 className="text-xs font-medium text-white/30 uppercase tracking-widest mb-4">
+            Tips de esta semana
+          </h2>
           <TipsList />
         </section>
       </div>
-      <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Saldos actuales</h2>
-        </div>
-        <HomeAccountsList onAccountAdded={() => { }} />
+
+      <section className="bg-white/6 backdrop-blur-md border border-white/10 rounded-xl p-5 mb-4">
+        <h2 className="text-xs font-medium text-white/30 uppercase tracking-widest mb-4">
+          Saldos actuales
+        </h2>
+        <HomeAccountsList onAccountAdded={() => {}} />
       </section>
-      <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Progreso de metas</h2>
+
+      <section className="bg-white/6 backdrop-blur-md border border-white/10 rounded-xl p-5 mb-4">
+        <h2 className="text-xs font-medium text-white/30 uppercase tracking-widest mb-4">
+          Progreso de metas
+        </h2>
         <DashboardGoalsList />
       </section>
+
       <NewTransactionDialog
         open={transactionDialogOpen}
         onOpenChange={setTransactionDialogOpen}
