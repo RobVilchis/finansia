@@ -1,6 +1,5 @@
 "use client";
 
-import { Tabs } from "@radix-ui/themes";
 import { Loader2, Upload } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -36,8 +35,6 @@ export interface Account {
   id: string;
   name: string;
   balance: number;
-  // type: string;
-  // createdAt: string;
 }
 
 interface Statement {
@@ -55,6 +52,12 @@ export interface Category {
   name: string;
   type: string;
 }
+
+const TABS = [
+  { key: "transactions", label: "Transacciones" },
+  { key: "goals", label: "Metas" },
+  { key: "accounts", label: "Cuentas" },
+] as const;
 
 export default function DataDashboard({
   transactions,
@@ -86,7 +89,6 @@ export default function DataDashboard({
   const [statementDialogOpen, setStatementDialogOpen] = useState(false);
   const [accountDialogOpen, setAccountDialogOpen] = useState(false);
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
-  // const [isLoading, setIsLoading] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [pendingStatements, setPendingStatements] =
@@ -94,16 +96,12 @@ export default function DataDashboard({
   const [processingStatement, setProcessingStatement] = useState(false);
   const { showToast } = useToast();
 
-  /*   const [statementProcessedToastOpen, setStatementProcessedToastOpen] =
-      useState(false); */
+  const activeTab = searchParams.get("tab") || "transactions";
 
-  // Get a new searchParams string by merging the current
-  // searchParams with a provided key/value pair
   const createQueryString = useCallback(
     (name: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
       params.set(name, value);
-
       return params.toString();
     },
     [searchParams],
@@ -120,7 +118,6 @@ export default function DataDashboard({
           message: "",
           variant: "success",
         });
-
         setProcessingStatement(false);
         router.refresh();
       }
@@ -130,29 +127,16 @@ export default function DataDashboard({
     }
   }, [processingStatement]);
 
-  /* useEffect(() => {
-    fetchPendingStatements();
-  }, [statementDialogOpen, fetchPendingStatements]); */
-
-  // Poll for processing statements every 3 seconds
   useEffect(() => {
     if (pendingStatements.length === 0) {
       fetchPendingStatements();
-      // setStatementProcessedToastOpen(true);
       return;
     }
-
     const intervalId = setInterval(() => {
       fetchPendingStatements();
-      // Also refresh unverified transactions in case new ones were created
     }, 3000);
-
     return () => clearInterval(intervalId);
-  }, [
-    pendingStatements.length,
-    fetchPendingStatements,
-    setStatementDialogOpen,
-  ]);
+  }, [pendingStatements.length, fetchPendingStatements, setStatementDialogOpen]);
 
   useEffect(() => {
     fetch("api/create-user");
@@ -161,11 +145,6 @@ export default function DataDashboard({
   const handleAddTransaction = () => {
     setNewTransactionDialogOpen(false);
   };
-
-  /* const handleTransactionClick = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
-    setTransactionDialogOpen(true);
-  }; */
 
   const groupTransactionsByDay = (transactions: Transaction[]) => {
     return transactions.reduce(
@@ -176,12 +155,8 @@ export default function DataDashboard({
           month: "long",
           day: "numeric",
         });
-
         dayKey = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
-
-        if (!groups[dayKey]) {
-          groups[dayKey] = [];
-        }
+        if (!groups[dayKey]) groups[dayKey] = [];
         groups[dayKey].push(transaction);
         return groups;
       },
@@ -194,105 +169,87 @@ export default function DataDashboard({
   }, []);
 
   return (
-    //<StatementProcessedToastProvider open={statementProcessedToastOpen} setOpen={setStatementProcessedToastOpen}>
-    <div className="flex justify-center container mx-auto px-8 py-4 min-h-screen">
-      <main className="flex flex-col w-full max-w-[500px] ">
-        <div className="grow">
-          <Tabs.Root
-            value={searchParams.get("tab") || "transactions"}
-            onValueChange={(value) => {
-              router.push(`?${createQueryString("tab", value)}`);
-            }}
-          >
-            <Tabs.List className="mb-4" color="indigo">
-              <Tabs.Trigger
-                onClick={() => {
-                  router.push(`?${createQueryString("tab", "transactions")}`);
-                }}
-                value="transactions"
+    <div className="relative min-h-screen bg-gray-950 font-(family-name:--font-outfit)">
+
+      <div className="relative flex justify-center container mx-auto px-8 py-6 min-h-screen">
+        <main className="flex flex-col w-full max-w-[500px]">
+
+          {/* Glass tab bar */}
+          <div className="flex gap-1 mb-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-1">
+            {TABS.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => router.push(`?${createQueryString("tab", key)}`)}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${activeTab === key
+                    ? "bg-white/15 text-white shadow-inner shadow-black/20"
+                    : "text-white/40 hover:text-white/70 hover:bg-white/5"
+                  }`}
               >
-                Transacciones
-              </Tabs.Trigger>
-              <Tabs.Trigger
-                onClick={() => {
-                  router.push(`?${createQueryString("tab", "goals")}`);
-                }}
-                value="goals"
-              >
-                Metas
-              </Tabs.Trigger>
-              <Tabs.Trigger
-                onClick={() => {
-                  router.push(`?${createQueryString("tab", "accounts")}`);
-                }}
-                value="accounts"
-              >
-                Cuentas
-              </Tabs.Trigger>
-            </Tabs.List>
-            <Tabs.Content value="goals">
-              <GoalsList goals={goals} />
-            </Tabs.Content>
-            <Tabs.Content value="accounts">
-              <div className="flex mb-8 gap-3 items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Cuentas
-                </h1>
-                <AddButton
-                  onClick={() => {
-                    setAccountDialogOpen(true);
-                  }}
-                />
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Goals tab */}
+          {activeTab === "goals" && <GoalsList goals={goals} />}
+
+          {/* Accounts tab */}
+          {activeTab === "accounts" && (
+            <div className="grow">
+              <div className="flex mb-6 gap-3 items-center justify-between">
+                <h1 className="text-2xl font-semibold text-white">Cuentas</h1>
+                <AddButton onClick={() => setAccountDialogOpen(true)} />
               </div>
-              <AccountsList
-                accounts={accounts}
-                onAccountUpdated={closeAccountDialog}
-              />
-            </Tabs.Content>
-            <Tabs.Content value="transactions">
+              <AccountsList accounts={accounts} onAccountUpdated={closeAccountDialog} />
+            </div>
+          )}
+
+          {/* Transactions tab */}
+          {activeTab === "transactions" && (
+            <div className="grow">
               <div className="flex gap-3 items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold ">Transacciones</h1>
+                <h1 className="text-2xl font-semibold text-white">Transacciones</h1>
                 <div className="flex items-center gap-2">
                   <button
-                    className="bg-none  text-slate-500
-                    px-2 py-2 text-sm font-medium hover:cursor-pointer"
+                    className="p-2 text-white/40 hover:text-white/70 hover:bg-white/5 rounded-lg transition-all cursor-pointer"
                     onClick={() => setStatementDialogOpen(true)}
                   >
-                    <Upload className="w-6 h-6 text-slate-500 font-bold" />
+                    <Upload className="w-5 h-5" />
                   </button>
-                  <AddButton
-                    onClick={() => setNewTransactionDialogOpen(true)}
-                  />
+                  <AddButton onClick={() => setNewTransactionDialogOpen(true)} />
                 </div>
               </div>
+
               <TransactionFilters
                 categories={categories}
                 accounts={accounts}
                 activeFilters={activeFilters}
               />
+
               {pendingStatements.length > 0 && (
-                <div className=" align-middle w-full h-16 bg-blue-100 dark:bg-blue-950 rounded-md text-md p-4 flex items-center gap-2 mb-3">
-                  <Loader2 className="w-5 h-5 text-blue-800 dark:text-blue-400 opacity-70 animate-spin" />
-                  <span className="text-blue-800 dark:text-blue-400 opacity-70 font-medium">
+                <div className="w-full bg-cyan-500/10 backdrop-blur-sm border border-cyan-500/20 rounded-xl p-4 flex items-center gap-3 mb-4">
+                  <Loader2 className="w-4 h-4 text-cyan-400 animate-spin shrink-0" />
+                  <span className="text-cyan-300 text-sm font-medium">
                     Procesando estado de cuenta
                   </span>
                 </div>
               )}
+
               {unverifiedTransactions.length > 0 && (
-                <div className="mb-2">
+                <div className="mb-3">
                   <Link
                     href="/data/review"
-                    className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
+                    className="text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors"
                   >
                     Revisar {unverifiedTransactions.length} transaccion
-                    {unverifiedTransactions.length !== 1 ? "es" : ""} sin
-                    clasificar
+                    {unverifiedTransactions.length !== 1 ? "es" : ""} sin clasificar
                   </Link>
                 </div>
               )}
-              <div className="grid gap-4 mx-auto">
+
+              <div className="flex flex-col gap-4 mx-auto">
                 {transactions.length === 0 ? (
-                  <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+                  <div className="text-center text-white/30 py-12 text-sm">
                     {activeFilters.type ||
                       activeFilters.category ||
                       activeFilters.account ||
@@ -306,7 +263,7 @@ export default function DataDashboard({
                   Object.entries(groupTransactionsByDay(transactions)).map(
                     ([day, dayTransactions]) => (
                       <div key={day}>
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-400 mb-2">
+                        <h2 className="text-[11px] font-medium text-white/30 uppercase tracking-widest mb-2 px-1">
                           {day}
                         </h2>
                         <div className="space-y-2">
@@ -324,12 +281,8 @@ export default function DataDashboard({
                                 amount={transaction.amount}
                                 categoryName={transaction.categoryName}
                                 type={transaction.type}
-                                sourceAccountName={
-                                  transaction.sourceAccountName
-                                }
-                                targetAccountName={
-                                  transaction.targetAccountName
-                                }
+                                sourceAccountName={transaction.sourceAccountName}
+                                targetAccountName={transaction.targetAccountName}
                               />
                             </div>
                           ))}
@@ -339,10 +292,10 @@ export default function DataDashboard({
                   )
                 )}
               </div>
-              {/* Pagination */}
+
               {totalCount > 0 && (
-                <div className="mt-6 flex flex-col items-center gap-2 pb-4">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                <div className="mt-8 flex flex-col items-center gap-3 pb-4">
+                  <p className="text-xs text-white/30">
                     Mostrando {transactions.length} de {totalCount} transacciones
                   </p>
                   {totalPages > 1 && (
@@ -350,30 +303,26 @@ export default function DataDashboard({
                       {currentPage > 1 && (
                         <button
                           onClick={() => {
-                            const params = new URLSearchParams(
-                              searchParams.toString()
-                            );
+                            const params = new URLSearchParams(searchParams.toString());
                             params.set("page", String(currentPage - 1));
                             router.push(`?${params.toString()}`);
                           }}
-                          className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                          className="px-4 py-2 text-sm font-medium text-white/60 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 hover:text-white transition-all cursor-pointer"
                         >
                           Anterior
                         </button>
                       )}
-                      <span className="text-sm text-slate-500 dark:text-slate-400 px-2">
+                      <span className="text-sm text-white/30 px-2">
                         {currentPage} / {totalPages}
                       </span>
                       {currentPage < totalPages && (
                         <button
                           onClick={() => {
-                            const params = new URLSearchParams(
-                              searchParams.toString()
-                            );
+                            const params = new URLSearchParams(searchParams.toString());
                             params.set("page", String(currentPage + 1));
                             router.push(`?${params.toString()}`);
                           }}
-                          className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                          className="px-4 py-2 text-sm font-medium text-white/60 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 hover:text-white transition-all cursor-pointer"
                         >
                           Siguiente
                         </button>
@@ -382,23 +331,21 @@ export default function DataDashboard({
                   )}
                 </div>
               )}
-            </Tabs.Content>
-          </Tabs.Root>
-        </div>
-      </main>
+            </div>
+          )}
+        </main>
+      </div>
 
       <NewTransactionDialog
         open={dialogOpen}
         onOpenChange={setNewTransactionDialogOpen}
         onAddTransaction={handleAddTransaction}
       />
-
       <NewAccountDialog
         open={accountDialogOpen}
         onOpenChange={setAccountDialogOpen}
         onAccountAdded={closeAccountDialog}
       />
-
       <UploadStatementDialog
         open={statementDialogOpen}
         onOpenChange={setStatementDialogOpen}
@@ -407,7 +354,6 @@ export default function DataDashboard({
           fetchPendingStatements();
         }}
       />
-
       {selectedTransaction && (
         <TransactionDialog
           open={transactionDialogOpen}
@@ -418,6 +364,5 @@ export default function DataDashboard({
         />
       )}
     </div>
-    //</StatementProcessedToastProvider>
   );
 }

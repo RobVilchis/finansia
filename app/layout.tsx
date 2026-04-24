@@ -4,7 +4,7 @@ import { Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import ChatButton from "./components/ChatButton";
 import MobileNavbar from "./components/MobileNavbar";
 import { Sidebar } from "./components/Sidebar";
@@ -24,6 +24,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "Finansia",
   description: "Analiza tus finanzas personales con inteligencia artificial.",
@@ -40,7 +45,7 @@ export default function RootLayout({
     <ClerkProvider appearance={{ baseTheme: dark }}>
       <html lang="es" suppressHydrationWarning>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased relative`}
+          className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} antialiased relative`}
         >
           <ThemeProvider attribute="class">
             <Theme appearance="inherit">
