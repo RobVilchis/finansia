@@ -1,6 +1,6 @@
 "use client";
 
-import { Account } from "../data/DataDashboard";
+import { Account } from "@/app/(main)/data/DataDashboard";
 
 interface AccountCardProps {
   account: Account;

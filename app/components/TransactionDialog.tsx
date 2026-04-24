@@ -16,7 +16,7 @@ import {
   deleteTransactionAction,
   updateTransactionAction,
 } from "../actions/transactions";
-import { Transaction } from "../data/DataDashboard";
+import { Transaction } from "@/app/(main)/data/DataDashboard";
 import { useToast } from "./GenericToast";
 import TransactionForm, { Account, Category } from "./TransactionForm";
 

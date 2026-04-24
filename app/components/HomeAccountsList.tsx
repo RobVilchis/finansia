@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import AccountCard from "./AccountCard";
 import AccountDialog from "./AccountDialog";
-import { Account } from "../data/DataDashboard";
+import { Account } from "@/app/(main)/data/DataDashboard";
 import { useToast } from "./GenericToast";
 
 interface AccountsListProps {
