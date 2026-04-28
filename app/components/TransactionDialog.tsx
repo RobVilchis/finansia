@@ -1,13 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Button,
-  Dialog,
-  Flex,
-  Text,
-  VisuallyHidden,
-} from "@radix-ui/themes";
+import { Dialog, VisuallyHidden } from "@radix-ui/themes";
 import { Edit2, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -19,6 +13,7 @@ import {
 import { Transaction } from "../data/DataDashboard";
 import { useToast } from "./GenericToast";
 import TransactionForm, { Account, Category } from "./TransactionForm";
+import { GlassDialogShell, GlassButton, glassDialogContent } from "./ui/glass";
 
 interface TransactionDialogProps {
   open: boolean;
@@ -224,31 +219,15 @@ export default function TransactionDialog({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content
-        style={{ maxWidth: 500, overflow: "visible" }}
-        className="z-40 p-0! rounded-2xl! bg-white! dark:bg-zinc-900! shadow-xl"
-      >
-        {/* Header */}
+      <Dialog.Content maxWidth="500px" className={glassDialogContent}>
         <VisuallyHidden>
           <Dialog.Title>Editar transacción</Dialog.Title>
         </VisuallyHidden>
-        {/* Header */}
-        <div className="bg-linear-to-r bg-slate-600 px-6 py-4 rounded-t-2xl text-white">
-          <Flex align="center" gap="3" className="mb-2">
-            <div className={`p-2 rounded-full bg-white/20 backdrop-blur-sm`}>
-              <Edit2 size={16} className="text-white" />
-            </div>
-
-            <div className="text-xl font-bold m-0 text-white">
-              Editar transacción
-            </div>
-          </Flex>
-          <Text size="2" className="text-blue-100 opacity-90">
-            Modifica los detalles de esta transacción.
-          </Text>
-        </div>
-
-        <div className="p-6">
+        <GlassDialogShell
+          icon={<Edit2 size={16} />}
+          title="Editar transacción"
+          subtitle="Modifica los detalles de este movimiento"
+        >
           <TransactionForm
             form={form}
             categories={categories}
@@ -258,42 +237,42 @@ export default function TransactionDialog({
             submitLabel="Actualizar"
             isSubmitting={isSubmitting}
             extraActions={
-              <Button
+              <GlassButton
                 type="button"
-                variant="soft"
-                color="crimson"
-                size="3"
+                variant="danger"
                 onClick={() => setShowDeleteConfirm(true)}
-                className="cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+                className="p-2!"
+                aria-label="Eliminar"
               >
-                <Trash2 size={18} />
-              </Button>
+                <Trash2 size={16} />
+              </GlassButton>
             }
           />
-        </div>
+        </GlassDialogShell>
       </Dialog.Content>
 
       <Dialog.Root open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <Dialog.Content maxWidth="400px">
-          <div className="space-y-4">
-            <Dialog.Title>Eliminar</Dialog.Title>
-            <p className="text-gray-700 dark:text-gray-300">
-              ¿Estás seguro de que quieres eliminar esta transacción? Esta
-              acción no se puede deshacer.
+        <Dialog.Content maxWidth="400px" className={glassDialogContent}>
+          <GlassDialogShell
+            icon={<Trash2 size={16} />}
+            title="Eliminar transacción"
+            subtitle="Esta acción no se puede deshacer"
+          >
+            <p className="text-sm text-white/70 mb-6">
+              ¿Estás seguro de que quieres eliminar esta transacción?
             </p>
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="soft"
-                color="gray"
+            <div className="flex justify-end gap-2">
+              <GlassButton
+                variant="secondary"
                 onClick={() => setShowDeleteConfirm(false)}
               >
                 Cancelar
-              </Button>
-              <Button color="red" onClick={handleDeleteTransaction}>
-                Eliminar transacción
-              </Button>
+              </GlassButton>
+              <GlassButton variant="danger" onClick={handleDeleteTransaction}>
+                Eliminar
+              </GlassButton>
             </div>
-          </div>
+          </GlassDialogShell>
         </Dialog.Content>
       </Dialog.Root>
     </Dialog.Root>

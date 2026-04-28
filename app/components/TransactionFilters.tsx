@@ -48,15 +48,15 @@ function GlassSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none bg-white/6 backdrop-blur-md border border-white/10
-          rounded-lg px-3 py-2 pr-8 text-sm text-white/70 cursor-pointer
-          hover:bg-white/10 hover:border-white/20 transition-all
-          focus:outline-none focus:border-white/25
+        className="w-full appearance-none bg-surface backdrop-blur-md border border-edge
+          rounded-lg px-3 py-2 pr-8 text-sm text-ink-muted cursor-pointer
+          hover:bg-surface-strong hover:border-edge-strong transition-all
+          focus:outline-none focus:border-accent-border
           scheme-dark"
       >
         {children}
       </select>
-      <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
+      <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-faint pointer-events-none" />
     </div>
   );
 }

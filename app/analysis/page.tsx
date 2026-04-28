@@ -1,14 +1,8 @@
 "use client";
 
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useEffect, useState } from "react";
 import ExpensesPieChart from "../components/ExpensesPieChart";
-
-const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
-  },
-});
+import { GlassCard, GlassInput, SectionHeading } from "../components/ui/glass";
 
 export default function Analysis() {
   const [chartRefreshTrigger, setChartRefreshTrigger] = useState(0);
@@ -29,57 +23,43 @@ export default function Analysis() {
   }, [startDate, endDate]);
 
   return (
-    <ThemeProvider theme={darkTheme}>
-      <div className="flex container px-5 md:px-10 p-4 min-h-screen w-full">
-        <div className="  w-full">
-          {/* <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4"></h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Analyze your spending patterns and financial insights
-            </p>
-          </div> */}
-          <div className="flex flex-col gap 2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Gastos por categoría
-            </h3>
-            <div className="flex gap-3 mb-5">
-              <div className="space-y-1">
-                <p className="opacity-70 text-sm">Fecha de inicio</p>
-                <input
-                  className="h-10 px-2 w-40 rounded-md bg-dark-50 border 
-                border-neutral-600 focus:outline-2 focus:outline-blue-600"
-                  type="date"
-                  id="startDate"
-                  value={startDate.toISOString().split("T")[0]}
-                  onChange={(e) => {
-                    setStartDate(new Date(e.target.value));
-                  }}
-                />
-              </div>
-              <div className="space-y-1">
-                <p className="opacity-70 text-sm">Fecha de fin</p>
-                <input
-                  className="h-10 px-2 w-40 rounded-md bg-dark-50 border 
-                  border-neutral-600 focus:outline-2 focus:outline-blue-600"
-                  type="date"
-                  id="endDate"
-                  value={endDate.toISOString().split("T")[0]}
-                  onChange={(e) => {
-                    setEndDate(new Date(e.target.value));
-                  }}
-                />
-              </div>
+    <div className="min-h-screen bg-app font-(family-name:--font-outfit) w-full px-5 md:px-10 py-8">
+      <div className="w-full max-w-5xl mx-auto">
+        <h1 className="text-2xl font-semibold text-ink mb-6">Análisis</h1>
+
+        <GlassCard className="p-5 w-full max-w-[700px]">
+          <SectionHeading>Gastos por categoría</SectionHeading>
+          <div className="flex gap-3 mt-3 mb-5">
+            <div className="space-y-1.5">
+              <p className="text-[11px] text-ink-subtle uppercase tracking-wider">
+                Fecha de inicio
+              </p>
+              <GlassInput
+                type="date"
+                className="w-40 font-mono scheme-dark"
+                value={startDate.toISOString().split("T")[0]}
+                onChange={(e) => setStartDate(new Date(e.target.value))}
+              />
             </div>
-            <div className="w-full max-w-[500px]">
-              <ExpensesPieChart
-                refreshTrigger={chartRefreshTrigger}
-                startDate={startDate}
-                endDate={endDate}
+            <div className="space-y-1.5">
+              <p className="text-[11px] text-ink-subtle uppercase tracking-wider">
+                Fecha de fin
+              </p>
+              <GlassInput
+                type="date"
+                className="w-40 font-mono scheme-dark"
+                value={endDate.toISOString().split("T")[0]}
+                onChange={(e) => setEndDate(new Date(e.target.value))}
               />
             </div>
           </div>
-        </div>
+          <ExpensesPieChart
+            refreshTrigger={chartRefreshTrigger}
+            startDate={startDate}
+            endDate={endDate}
+          />
+        </GlassCard>
       </div>
-    </ThemeProvider>
+    </div>
   );
 }

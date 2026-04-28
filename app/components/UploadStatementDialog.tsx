@@ -1,19 +1,21 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Button,
-  Dialog,
-  SegmentedControl,
-  Select,
-  TextField,
-} from "@radix-ui/themes";
-import { Upload } from "lucide-react";
+import { Dialog, VisuallyHidden } from "@radix-ui/themes";
+import { Upload, FileText, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import z from "zod";
-import { useBreakpoint } from "../hooks/useBreakpoint";
 import { useToast } from "./GenericToast";
+import {
+  GlassDialogShell,
+  GlassInput,
+  GlassSelect,
+  GlassButton,
+  GlassSegmented,
+  FieldLabel,
+  glassDialogContent,
+} from "./ui/glass";
 
 interface UploadStatementDialogProps {
   open: boolean;
@@ -30,15 +32,11 @@ interface Account {
 
 const uploadSchema = z.object({
   accountId: z.string(),
-  accountType: z.string(),
+  accountType: z.enum(["checking", "credit"]),
   comments: z.string().optional(),
   file: z.any(),
 });
 type UploadFormData = z.infer<typeof uploadSchema>;
-
-export type FieldProps<T extends keyof UploadFormData> = {
-  field: ControllerRenderProps<UploadFormData, T>;
-};
 
 export default function UploadStatementDialog({
   open,
@@ -57,9 +55,7 @@ export default function UploadStatementDialog({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
+    if (file) setSelectedFile(file);
   };
 
   const onSubmit = async (data: UploadFormData) => {
@@ -68,23 +64,17 @@ export default function UploadStatementDialog({
     setIsUploading(true);
     try {
       const formData = new FormData();
-
       if (data.file.length > 0) {
         formData.append("file", data.file[0]);
       }
-
       formData.append("accountId", data.accountId);
       formData.append("accountType", data.accountType);
-
-      if (data.comments) {
-        formData.append("comments", data.comments);
-      }
+      if (data.comments) formData.append("comments", data.comments);
 
       const response = await fetch("/api/upload-statement", {
         method: "POST",
         body: formData,
       });
-
       if (!response.ok) throw new Error("Failed to upload statement");
 
       setSelectedFile(null);
@@ -108,163 +98,139 @@ export default function UploadStatementDialog({
   };
 
   useEffect(() => {
-    const fetchAccounts = async () => {
-      try {
-        const response = await fetch("/api/accounts");
-        if (!response.ok) throw new Error("Failed to fetch accounts");
-        const data = await response.json();
-        setAccounts(data);
-      } catch (error) {
+    fetch("/api/accounts")
+      .then((r) => r.json())
+      .then(setAccounts)
+      .catch((error) => {
         console.error("Error fetching accounts:", error);
         showToast({
           title: "Error al cargar cuentas",
           message: "No se pudieron obtener las cuentas.",
           variant: "error",
         });
-      }
-    };
-
-    fetchAccounts();
+      });
   }, []);
-
-  const bp = useBreakpoint();
-  const size = bp === "lg" ? "2" : bp === "md" ? "2" : "3";
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content maxWidth="400px">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="flex justify-between items-center mb-2">
-            <Dialog.Title>Subir estado de cuenta</Dialog.Title>
-          </div>
-
-          <div className="space-y-4">
+      <Dialog.Content maxWidth="460px" className={glassDialogContent}>
+        <VisuallyHidden>
+          <Dialog.Title>Subir estado de cuenta</Dialog.Title>
+        </VisuallyHidden>
+        <GlassDialogShell
+          icon={<Upload size={16} />}
+          title="Subir estado de cuenta"
+          subtitle="Importa un PDF para extraer transacciones"
+        >
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <div>
-              <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-400 mb-3 block">
-                  Selecciona la cuenta a considerar. Todos los ingresos y gastos
-                  se aplicarán a esta.
-                </label>
+              <FieldLabel>Cuenta destino</FieldLabel>
+              <Controller
+                name="accountId"
+                control={control}
+                render={({ field }) => (
+                  <GlassSelect {...field} value={field.value ?? ""}>
+                    <option value="">Selecciona una cuenta</option>
+                    {accounts.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name} (${a.balance})
+                      </option>
+                    ))}
+                  </GlassSelect>
+                )}
+              />
+            </div>
 
-                <Controller
-                  name="accountId"
-                  control={control}
-                  render={({ field }: FieldProps<"accountId">) => (
-                    <Select.Root
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      size={size}
-                    >
-                      <Select.Trigger placeholder="Elige una" />
-                      <Select.Content>
-                        {accounts.map((account, i) => (
-                          <Select.Item key={i} value={account.id}>
-                            {account.name} (${account.balance})
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select.Root>
-                  )}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-400 mb-3 block">
-                  ¿Tu estado de cuenta es de débito o crédito?
-                </label>
-                <Controller
-                  name="accountType"
-                  control={control}
-                  render={({ field }: FieldProps<"accountType">) => (
-                    <SegmentedControl.Root
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SegmentedControl.Item value="checking">
-                        Débito
-                      </SegmentedControl.Item>
-                      <SegmentedControl.Item value="credit">
-                        Crédito
-                      </SegmentedControl.Item>
-                    </SegmentedControl.Root>
-                  )}
-                />
-              </div>
+            <div>
+              <FieldLabel>Tipo de estado</FieldLabel>
+              <Controller
+                name="accountType"
+                control={control}
+                render={({ field }) => (
+                  <GlassSegmented
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={[
+                      { value: "checking", label: "Débito" },
+                      { value: "credit", label: "Crédito" },
+                    ]}
+                  />
+                )}
+              />
+            </div>
 
-              <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-400 mb-3 block">
-                  ¿Alguna instrucción adicional? (opcional)
-                </label>
-                <Controller
-                  name="comments"
-                  control={control}
-                  render={({ field }: FieldProps<"comments">) => (
-                    <TextField.Root
-                      size={size}
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  )}
-                />
-              </div>
+            <div>
+              <FieldLabel>Instrucciones adicionales (opcional)</FieldLabel>
+              <GlassInput
+                placeholder="Notas para el procesamiento..."
+                {...register("comments")}
+              />
+            </div>
 
-              <div className="relative">
-                <input
-                  type="file"
-                  id="file-upload"
-                  accept=".pdf"
-                  {...register("file", {
-                    onChange: (e) => {
-                      handleFileChange(e);
-                    },
-                  })}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="flex flex-col items-center justify-center w-full h-32 border-2 
-                border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer 
-                  hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
-                >
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-8 h-8 mb-2 text-gray-500 dark:text-gray-400" />
-                    <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                      <span className="font-semibold">Haz clic para subir</span>{" "}
-                      o arrastra y suelta
+            <div>
+              <input
+                type="file"
+                id="file-upload"
+                accept=".pdf"
+                {...register("file", { onChange: handleFileChange })}
+                className="hidden"
+              />
+              {selectedFile ? (
+                <div className="flex items-center gap-3 p-3 bg-white/6 border border-white/10 rounded-lg">
+                  <div className="w-9 h-9 rounded-lg bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center text-cyan-300 shrink-0">
+                    <FileText size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white/90 truncate">
+                      {selectedFile.name}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      PDF, CSV, XLSX (MAX. 10MB)
+                    <p className="text-xs text-white/40 font-mono tabular-nums">
+                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
-                </label>
-              </div>
-              {selectedFile && (
-                <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    {selectedFile.name}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedFile(null)}
+                    className="p-1.5 text-white/40 hover:text-white/80 hover:bg-white/8 rounded-md transition-colors cursor-pointer"
+                    aria-label="Quitar archivo"
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
+              ) : (
+                <label
+                  htmlFor="file-upload"
+                  className="flex flex-col items-center justify-center w-full h-28
+                    bg-white/4 border-2 border-dashed border-white/15 rounded-xl cursor-pointer
+                    hover:bg-white/6 hover:border-cyan-400/30 transition-all"
+                >
+                  <Upload size={20} className="text-white/40 mb-2" />
+                  <p className="text-sm text-white/60">
+                    <span className="text-cyan-300">Haz clic</span> o arrastra un archivo
+                  </p>
+                  <p className="text-[11px] text-white/30 mt-0.5">PDF, máx 10MB</p>
+                </label>
               )}
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
-              <Dialog.Close>
-                <Button variant="soft" color="gray" onClick={handleClose}>
-                  Cancelar
-                </Button>
-              </Dialog.Close>
-              <Button
-                color="blue"
+            <div className="flex justify-end gap-2 pt-4 border-t border-white/8 mt-2">
+              <GlassButton
+                type="button"
+                variant="secondary"
+                onClick={handleClose}
+              >
+                Cancelar
+              </GlassButton>
+              <GlassButton
                 type="submit"
+                variant="primary"
                 disabled={!selectedFile || isUploading}
               >
                 {isUploading ? "Subiendo..." : "Subir"}
-              </Button>
+              </GlassButton>
             </div>
-          </div>
-        </form>
+          </form>
+        </GlassDialogShell>
       </Dialog.Content>
     </Dialog.Root>
   );

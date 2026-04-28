@@ -1,12 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Dialog,
-  Flex,
-  Text,
-  VisuallyHidden,
-} from "@radix-ui/themes";
+import { Dialog, VisuallyHidden } from "@radix-ui/themes";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -14,6 +9,7 @@ import { createTransactionAction } from "../actions/transactions";
 import { useToast } from "./GenericToast";
 import { TransactionFormData, transactionSchema } from "./TransactionDialog";
 import TransactionForm, { Account, Category } from "./TransactionForm";
+import { GlassDialogShell, glassDialogContent } from "./ui/glass";
 
 interface NewTransactionDialogProps {
   open: boolean;
@@ -54,30 +50,14 @@ export default function NewTransactionDialog({
   const { handleSubmit, reset, formState: { isSubmitting } } = form;
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch("/api/categories");
-        if (!response.ok) throw new Error("Failed to fetch categories");
-        const data = await response.json();
-        setCategories(data);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    };
-
-    const fetchAccounts = async () => {
-      try {
-        const response = await fetch("/api/accounts");
-        if (!response.ok) throw new Error("Failed to fetch accounts");
-        const data = await response.json();
-        setAccounts(data);
-      } catch (error) {
-        console.error("Error fetching accounts:", error);
-      }
-    };
-
-    fetchCategories();
-    fetchAccounts();
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then(setCategories)
+      .catch(console.error);
+    fetch("/api/accounts")
+      .then((r) => r.json())
+      .then(setAccounts)
+      .catch(console.error);
   }, []);
 
   const action = handleSubmit(async (formData) => {
@@ -106,30 +86,18 @@ export default function NewTransactionDialog({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content
-        // style={{ maxWidth: 520, overflow: "visible" }}
         minWidth="10px"
-        className="z-40 p-0! rounded-2xl! bg-white! dark:bg-zinc-900! shadow-xl"
+        maxWidth="520px"
+        className={glassDialogContent}
       >
         <VisuallyHidden>
           <Dialog.Title>Nueva transacción</Dialog.Title>
         </VisuallyHidden>
-        {/* Header */}
-        <div className="bg-linear-to-r bg-slate-600 px-6 py-4 rounded-t-2xl text-white">
-          <Flex align="center" gap="3" className="mb-2">
-            <div className={`p-1 rounded-full bg-white/20 backdrop-blur-sm`}>
-              <Plus size={24} className="text-white" />
-            </div>
-
-            <div className="text-xl font-bold m-0 text-white">
-              Nueva transacción
-            </div>
-          </Flex>
-          <Text size="2" className="text-blue-100 opacity-90">
-            Registra un nuevo movimiento en tus cuentas.
-          </Text>
-        </div>
-
-        <div className="p-6">
+        <GlassDialogShell
+          icon={<Plus size={18} />}
+          title="Nueva transacción"
+          subtitle="Registra un nuevo movimiento"
+        >
           <TransactionForm
             form={form}
             categories={categories}
@@ -137,9 +105,9 @@ export default function NewTransactionDialog({
             onSubmit={action}
             onCancel={() => onOpenChange(false)}
             isSubmitting={isSubmitting}
-            submitLabel="Guardar transacción"
+            submitLabel="Guardar"
           />
-        </div>
+        </GlassDialogShell>
       </Dialog.Content>
     </Dialog.Root>
   );

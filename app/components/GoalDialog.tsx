@@ -1,13 +1,21 @@
 "use client";
 
-import { Button, Dialog, TextField } from "@radix-ui/themes";
-import { useState } from "react";
-import { useForm, Controller, ControllerRenderProps } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Dialog, VisuallyHidden } from "@radix-ui/themes";
+import { Target, DollarSign, Calendar, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useBreakpoint } from "../hooks/useBreakpoint";
 import { updateGoalAction, deleteGoalAction } from "@/app/actions/goals";
 import { Goal } from "@/lib/services/goals";
+import {
+  GlassDialogShell,
+  GlassInput,
+  GlassButton,
+  FieldLabel,
+  FieldError,
+  glassDialogContent,
+} from "./ui/glass";
 
 interface GoalDialogProps {
   open: boolean;
@@ -25,10 +33,6 @@ const goalSchema = z.object({
 
 type GoalFormData = z.infer<typeof goalSchema>;
 
-type FieldProps = {
-  field: ControllerRenderProps<GoalFormData, keyof GoalFormData>;
-};
-
 export default function GoalDialog({
   open,
   onOpenChange,
@@ -39,9 +43,9 @@ export default function GoalDialog({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const {
-    control,
+    register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<GoalFormData>({
     resolver: zodResolver(goalSchema),
     defaultValues: {
@@ -50,10 +54,8 @@ export default function GoalDialog({
       targetDate: goal.targetDate || "",
     },
   });
-  const bp = useBreakpoint();
-  const size = bp === "lg" ? "2" : bp === "md" ? "2" : "3";
 
-  const action: () => void = handleSubmit(async (formData) => {
+  const action = handleSubmit(async (formData) => {
     try {
       await updateGoalAction(goal.id, {
         name: formData.name,
@@ -79,132 +81,91 @@ export default function GoalDialog({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content maxWidth="400px">
-        <div className="flex justify-between items-center mb-2">
+      <Dialog.Content maxWidth="420px" className={glassDialogContent}>
+        <VisuallyHidden>
           <Dialog.Title>Editar meta</Dialog.Title>
-        </div>
+        </VisuallyHidden>
+
         {showDeleteConfirm ? (
-          <div className="space-y-4">
-            <p className="text-gray-700 dark:text-gray-300">
-              ¿Estás seguro de que quieres eliminar esta meta? Esta acción no se
-              puede deshacer.
+          <GlassDialogShell
+            icon={<Trash2 size={16} />}
+            title="Eliminar meta"
+            subtitle="Esta acción no se puede deshacer"
+          >
+            <p className="text-sm text-white/70 mb-6">
+              ¿Estás seguro de que quieres eliminar esta meta?
             </p>
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="soft"
-                color="gray"
+            <div className="flex justify-end gap-2">
+              <GlassButton
+                variant="secondary"
                 onClick={() => setShowDeleteConfirm(false)}
               >
                 Cancelar
-              </Button>
-              <Button color="red" onClick={handleDelete}>
+              </GlassButton>
+              <GlassButton variant="danger" onClick={handleDelete}>
                 Eliminar
-              </Button>
+              </GlassButton>
             </div>
-          </div>
+          </GlassDialogShell>
         ) : (
-          <form action={action} className="space-y-4">
-            <div className="flex flex-col gap-5">
+          <GlassDialogShell
+            icon={<Target size={16} />}
+            title="Editar meta"
+            subtitle="Actualiza tu objetivo de ahorro"
+          >
+            <form onSubmit={action} className="flex flex-col gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Nombre de la meta
-                </label>
-                <Controller
-                  name="name"
-                  control={control}
-                  render={({ field }: FieldProps) => (
-                    <TextField.Root
-                      size={size}
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  )}
-                />
-                {errors.name && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.name.message}
-                  </p>
-                )}
+                <FieldLabel>Nombre</FieldLabel>
+                <GlassInput {...register("name")} />
+                <FieldError message={errors.name?.message} />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Monto objetivo
-                </label>
-                <Controller
-                  name="targetAmount"
-                  control={control}
-                  render={({ field }: FieldProps) => (
-                    <TextField.Root
-                      size={size}
-                      type="number"
-                      step="0.01"
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  )}
+                <FieldLabel>Monto objetivo</FieldLabel>
+                <GlassInput
+                  leadingIcon={<DollarSign size={16} />}
+                  type="number"
+                  step="0.01"
+                  className="font-mono tabular-nums"
+                  {...register("targetAmount")}
                 />
-                {errors.targetAmount && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.targetAmount.message}
-                  </p>
-                )}
+                <FieldError message={errors.targetAmount?.message} />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Fecha objetivo
-                </label>
-                <Controller
-                  name="targetDate"
-                  control={control}
-                  render={({ field }: FieldProps) => (
-                    <TextField.Root
-                      size={size}
-                      type="date"
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  )}
+                <FieldLabel>Fecha objetivo</FieldLabel>
+                <GlassInput
+                  leadingIcon={<Calendar size={16} />}
+                  type="date"
+                  {...register("targetDate")}
                 />
               </div>
-            </div>
-            <div className="flex justify-between items-center  mt-6">
-              <Button
-                variant="ghost"
-                color="gray"
-                onClick={() => setShowDeleteConfirm(true)}
-                title="Eliminar meta"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+
+              <div className="flex justify-between items-center pt-4 border-t border-white/8 mt-2">
+                <GlassButton
+                  type="button"
+                  variant="danger"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="p-2!"
+                  aria-label="Eliminar meta"
                 >
-                  <path d="M3 6h18" />
-                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                </svg>
-              </Button>
-
-              <div className="flex justify-end gap-3">
-                <Dialog.Close>
-                  <Button variant="soft" color="gray">
+                  <Trash2 size={16} />
+                </GlassButton>
+                <div className="flex gap-2">
+                  <GlassButton
+                    type="button"
+                    variant="secondary"
+                    onClick={() => onOpenChange(false)}
+                  >
                     Cancelar
-                  </Button>
-                </Dialog.Close>
-                <Button type="submit" color="blue">
-                  Actualizar
-                </Button>
+                  </GlassButton>
+                  <GlassButton type="submit" variant="primary" disabled={isSubmitting}>
+                    {isSubmitting ? "Guardando..." : "Actualizar"}
+                  </GlassButton>
+                </div>
               </div>
-            </div>
-          </form>
+            </form>
+          </GlassDialogShell>
         )}
       </Dialog.Content>
     </Dialog.Root>

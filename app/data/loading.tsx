@@ -1,70 +1,59 @@
 export default function Loading() {
   return (
-    <div className="flex justify-center container mx-auto px-8 py-4 min-h-screen">
-      <main className="flex flex-col w-full max-w-[500px]">
-        <div className="grow">
+    <div className="relative min-h-screen bg-app font-(family-name:--font-outfit)">
+      <div className="relative flex justify-center container mx-auto px-8 py-6 min-h-screen">
+        <main className="flex flex-col w-full max-w-[500px]">
           {/* Tabs skeleton */}
-          <div className="mb-4 flex gap-2">
-            <div className="h-10 w-32 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-            <div className="h-10 w-24 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-            <div className="h-10 w-28 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+          <div className="flex gap-1 mb-6 bg-surface backdrop-blur-md border border-edge rounded-xl p-1">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="flex-1 h-8 bg-surface-strong rounded-lg animate-pulse"
+              />
+            ))}
           </div>
 
-          {/* Header skeleton - matches transactions tab by default */}
-          <div className="flex gap-3 items-center justify-between mb-8">
-            <div className="h-8 w-48 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+          {/* Header skeleton */}
+          <div className="flex gap-3 items-center justify-between mb-4">
+            <div className="h-8 w-48 bg-surface-strong rounded-lg animate-pulse" />
             <div className="flex items-center gap-2">
-              <div className="h-10 w-10 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse"></div>
-              <div className="h-10 w-10 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse"></div>
+              <div className="h-10 w-10 bg-surface-strong rounded-lg animate-pulse" />
+              <div className="h-10 w-10 bg-surface-strong rounded-lg animate-pulse" />
             </div>
           </div>
 
-          {/* Content skeleton - transaction cards */}
-          <div className="grid gap-4 mx-auto">
-            {/* Day header skeleton */}
-            <div className="h-6 w-40 bg-gray-300 dark:bg-gray-600 rounded animate-pulse mb-2"></div>
+          {/* Filters skeleton */}
+          <div className="h-10 w-full bg-surface-strong rounded-lg animate-pulse mb-4" />
 
-            {/* Transaction cards skeleton */}
-            <div className="space-y-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700"
-                >
-                  <div className="flex justify-between items-center gap-3">
-                    <div className="flex-1 space-y-2">
-                      <div className="h-5 w-3/4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-                      <div className="h-4 w-1/2 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-                    </div>
-                    <div className="h-6 w-20 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Another day group */}
-            <div className="mt-6">
-              <div className="h-6 w-40 bg-gray-300 dark:bg-gray-600 rounded animate-pulse mb-2"></div>
-              <div className="space-y-2">
-                {[1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700"
-                  >
-                    <div className="flex justify-between items-center gap-3">
-                      <div className="flex-1 space-y-2">
-                        <div className="h-5 w-3/4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-                        <div className="h-4 w-1/2 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+          {/* Day groups */}
+          <div className="flex flex-col gap-4 mx-auto">
+            {[
+              { count: 4 },
+              { count: 2 },
+            ].map((group, gi) => (
+              <div key={gi}>
+                <div className="h-3 w-32 bg-surface-strong rounded animate-pulse mb-2 ml-1" />
+                <div className="space-y-2">
+                  {Array.from({ length: group.count }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-full py-3 px-4 rounded-xl bg-surface backdrop-blur-md border border-edge-soft"
+                    >
+                      <div className="flex justify-between items-center gap-3">
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div className="h-4 w-3/4 bg-surface-strong rounded animate-pulse" />
+                          <div className="h-3 w-1/3 bg-surface-strong rounded animate-pulse" />
+                        </div>
+                        <div className="h-5 w-20 bg-surface-strong rounded animate-pulse shrink-0" />
                       </div>
-                      <div className="h-6 w-20 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            ))}
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

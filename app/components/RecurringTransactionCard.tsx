@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@radix-ui/themes";
 import { Pause, Play } from "lucide-react";
 import { FREQUENCY_LABELS, type Frequency } from "@/lib/db/schema/recurringTransactions";
 
@@ -32,6 +31,37 @@ function formatDate(dateStr: string) {
   });
 }
 
+function formatMXN(amount: number) {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+function Badge({
+  children,
+  tone = "default",
+}: {
+  children: React.ReactNode;
+  tone?: "default" | "accent" | "warn";
+}) {
+  const styles =
+    tone === "accent"
+      ? "bg-accent-soft border-accent-border text-accent-fg"
+      : tone === "warn"
+        ? "bg-warn-soft border-warn-border text-warn"
+        : "bg-surface border-edge text-ink-subtle";
+
+  return (
+    <span
+      className={`px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider border ${styles}`}
+    >
+      {children}
+    </span>
+  );
+}
+
 export default function RecurringTransactionCard({
   id,
   description,
@@ -46,68 +76,63 @@ export default function RecurringTransactionCard({
   targetAccountName,
   onToggle,
 }: RecurringTransactionCardProps) {
-  let amountColor = "";
-  if (type === "income") amountColor = "text-green-600 dark:text-green-400";
-  else if (type === "expense") amountColor = "text-red-600 dark:text-red-400";
-  else amountColor = "text-blue-600 dark:text-blue-400";
+  let amountColor = "text-transfer";
+  if (type === "income") amountColor = "text-income";
+  else if (type === "expense") amountColor = "text-expense";
 
   return (
     <div
-      className={`w-full flex flex-col py-3 px-4 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-none cursor-pointer hover:shadow-md dark:hover:bg-slate-700 transition-all ${!isActive ? "opacity-50" : ""
-        }`}
+      className={`w-full flex flex-col py-3 px-4 rounded-xl
+        bg-surface backdrop-blur-md border border-edge-soft
+        cursor-pointer hover:bg-surface-hover hover:border-edge
+        transition-all duration-200 shadow-lg shadow-black/10
+        ${!isActive ? "opacity-60" : ""}`}
     >
-      {/* Main row: description + badges + amount */}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1 min-w-0 flex-1">
-          <h3 className="text-md font-semibold text-slate-900 dark:text-slate-100 line-clamp-1">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0 flex-1">
+          <h3 className="text-sm font-medium text-ink/90 line-clamp-1">
             {description}
           </h3>
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Badge variant="soft" color="iris" size="1">
+            <Badge tone="accent">
               {FREQUENCY_LABELS[frequency as Frequency] ?? frequency}
             </Badge>
-            {categoryName && (
-              <Badge variant="soft" color="gray" size="1">
-                {categoryName}
-              </Badge>
-            )}
-            {!isActive && (
-              <Badge variant="soft" color="orange" size="1">
-                Pausada
-              </Badge>
-            )}
+            {categoryName && <Badge>{categoryName}</Badge>}
+            {!isActive && <Badge tone="warn">Pausada</Badge>}
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className={`text-lg font-bold ${amountColor}`}>
-            {type === "expense" ? "-" : ""}${Number(amount).toFixed(2)}
+          <span
+            className={`text-base font-semibold font-mono tabular-nums ${amountColor}`}
+          >
+            {type === "expense" ? "-" : ""}
+            {formatMXN(Number(amount))}
           </span>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onToggle(id, isActive);
             }}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-surface-strong transition-colors cursor-pointer"
             title={isActive ? "Pausar" : "Activar"}
           >
             {isActive ? (
-              <Pause size={16} className="text-amber-500" />
+              <Pause size={16} className="text-warn" />
             ) : (
-              <Play size={16} className="text-green-500" />
+              <Play size={16} className="text-income" />
             )}
           </button>
         </div>
       </div>
 
-      {/* Secondary row: next date + accounts */}
-      <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
+      <div className="flex items-center gap-3 mt-2 text-[11px] text-ink-faint flex-wrap">
         <span>Próximo: {formatDate(nextRunDate)}</span>
-        {sourceAccountName && <span>Origen: {sourceAccountName}</span>}
-        {targetAccountName && <span>Destino: {targetAccountName}</span>}
+        {sourceAccountName && <span>· Origen: {sourceAccountName}</span>}
+        {targetAccountName && <span>· Destino: {targetAccountName}</span>}
         {endDate ? (
-          <span>Hasta: {formatDate(endDate)}</span>
+          <span>· Hasta: {formatDate(endDate)}</span>
         ) : (
-          <span>Sin fecha de fin</span>
+          <span>· Sin fecha de fin</span>
         )}
       </div>
     </div>
