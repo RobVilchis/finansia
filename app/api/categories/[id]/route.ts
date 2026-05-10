@@ -78,6 +78,13 @@ export async function GET(
       return sum + Number(transaction.amount);
     }, 0);
 
+    const distinctMonths = new Set(
+      categoryTransactions.map((t) => {
+        const d = new Date(t.date);
+        return `${d.getFullYear()}-${d.getMonth()}`;
+      })
+    ).size;
+
     const response = {
       category: category[0],
       transactions: categoryTransactions,
@@ -85,8 +92,8 @@ export async function GET(
         totalAmount: Number(totalAmount.toFixed(2)),
         transactionCount: categoryTransactions.length,
         averageAmount:
-          categoryTransactions.length > 0
-            ? Number((totalAmount / categoryTransactions.length).toFixed(2))
+          distinctMonths > 0
+            ? Number((totalAmount / distinctMonths).toFixed(2))
             : 0,
         lastTransactionDate:
           categoryTransactions.length > 0 ? categoryTransactions[0].date : null,

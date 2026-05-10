@@ -10,9 +10,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import {
-  Sparkles
-} from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useEffect, useState } from "react";
 
@@ -28,27 +26,34 @@ export default function ChatButton() {
   if (!mounted) return null;
 
   const TriggerButton = (
-    <div
+    <button
       onClick={() => setIsSheetOpen(true)}
-      className="hidden md:flex fixed right-10 bottom-10 h-14 w-14 bg-gray-200 dark:bg-gray-600 
-      rounded-lg p-3 items-center justify-center hover:bg-gray-300 
-      dark:hover:bg-gray-500 transition-colors cursor-pointer z-50"
+      className="hidden md:flex fixed right-8 bottom-8 h-12 w-12
+        bg-gray-900/80 backdrop-blur-xl border border-white/10
+        rounded-full items-center justify-center
+        hover:border-cyan-400/40 hover:bg-gray-900
+        transition-all cursor-pointer z-50
+        shadow-2xl shadow-cyan-500/10
+        font-(family-name:--font-outfit)"
+      aria-label="Abrir chat"
     >
-      <Sparkles />
-    </div>
+      <Sparkles className="w-5 h-5 text-cyan-400" />
+    </button>
   );
 
   if (isDesktop) {
     return (
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetTrigger asChild>
-          {TriggerButton}
-        </SheetTrigger>
-        <SheetContent className="w-[50vw]! sm:max-w-[1200px]!">
-          <SheetHeader>
-            <SheetTitle>Chat</SheetTitle>
+        <SheetTrigger asChild>{TriggerButton}</SheetTrigger>
+        <SheetContent className="w-[50vw]! sm:max-w-[1200px]! bg-gray-950! border-l! border-white/8! p-0! flex! flex-col! font-(family-name:--font-outfit)">
+          <SheetHeader className="px-5 pt-5 pb-3 border-b border-white/8 space-y-0!">
+            <SheetTitle className="text-xs font-medium text-white/30 uppercase tracking-widest text-left!">
+              Asistente
+            </SheetTitle>
           </SheetHeader>
-          <ChatUI messages={messages} sendMessage={sendMessage} />
+          <div className="flex-1 min-h-0 px-4 pb-4">
+            <ChatUI messages={messages} sendMessage={sendMessage} />
+          </div>
         </SheetContent>
       </Sheet>
     );
@@ -56,14 +61,14 @@ export default function ChatButton() {
 
   return (
     <Drawer open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-      <DrawerTrigger asChild>
-        {TriggerButton}
-      </DrawerTrigger>
-      <DrawerContent className="h-[85dvh] flex flex-col">
-        <DrawerHeader>
-          <DrawerTitle>Chat</DrawerTitle>
+      <DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
+      <DrawerContent className="h-[85dvh] flex flex-col bg-gray-950! border-t! border-white/8! font-(family-name:--font-outfit)">
+        <DrawerHeader className="px-5 pt-3 pb-2">
+          <DrawerTitle className="text-xs font-medium text-white/30 uppercase tracking-widest text-left!">
+            Asistente
+          </DrawerTitle>
         </DrawerHeader>
-        <div className="px-4 flex-1 min-h-0">
+        <div className="px-4 pb-4 flex-1 min-h-0">
           <ChatUI messages={messages} sendMessage={sendMessage} />
         </div>
       </DrawerContent>

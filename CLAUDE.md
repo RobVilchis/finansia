@@ -91,3 +91,75 @@ PDF upload flow: upload file → parse with pdf2json → send to Claude Sonnet v
 - Categories have a `type` field matching transaction types; transfers have no category
 - All user-facing error messages and UI text are in **Spanish**
 - `force-dynamic` is set on the root layout — all pages are server-rendered on every request
+
+## Design System — Glassmorphism OS
+
+The app uses a dark-only glassmorphism aesthetic. All design tokens live in `app/globals.css` under `:root` and are exposed as Tailwind utilities via `@theme inline`. **Never use raw color values like `bg-white/6`, `text-white/40`, `border-white/10`, `bg-gray-950`, etc. — always use the semantic tokens below.**
+
+### Tailwind Utilities (generated from tokens)
+
+| Category | Utilities |
+|---|---|
+| Page background | `bg-app`, `bg-app-elevated` |
+| Surfaces | `bg-surface`, `bg-surface-strong`, `bg-surface-hover` |
+| Borders | `border-edge`, `border-edge-strong`, `border-edge-soft` |
+| Text | `text-ink`, `text-ink-muted`, `text-ink-subtle`, `text-ink-faint` |
+| Accent (cyan) | `bg-accent-soft`, `border-accent-border`, `text-accent`, `text-accent-fg` |
+| Income (emerald) | `text-income`, `bg-income-soft`, `border-income-border` |
+| Expense (rose) | `text-expense`, `bg-expense-soft`, `border-expense-border` |
+| Warning (amber) | `text-warn`, `bg-warn-soft`, `border-warn-border` |
+| Transfer (cyan) | `text-transfer`, `bg-transfer-soft`, `border-transfer-border` |
+
+### Glass Primitives — `app/components/ui/glass.tsx`
+
+Shared components used across all dialogs and pages. Always prefer these over re-inventing inline styles:
+
+- `GlassInput` — text input with optional `leadingIcon`
+- `GlassTextarea` — resizable textarea
+- `GlassSelect` — native `<select>` with chevron; add `scheme-dark` so the option popup is dark
+- `GlassButton` — variants: `primary` (cyan), `secondary` (neutral), `danger` (rose), `ghost`
+- `GlassSegmented` — pill-style toggle group
+- `GlassCard` — `bg-surface backdrop-blur-md border border-edge rounded-xl`
+- `GlassDialogShell` — standard dialog header: icon medallion + title + subtitle + divider
+- `glassDialogContent` — className string for Radix `Dialog.Content` to style the dialog chrome
+- `FieldLabel` / `FieldError` — form field label and validation error
+- `SectionHeading` — small uppercase section title
+
+### Dialog Pattern
+
+All dialogs use Radix `Dialog.Root` / `Dialog.Content` (kept as chrome, restyled) with:
+
+```tsx
+import { Dialog, VisuallyHidden } from "@radix-ui/themes";
+import { GlassDialogShell, glassDialogContent } from "@/app/components/ui/glass";
+
+<Dialog.Content maxWidth="420px" className={glassDialogContent}>
+  <VisuallyHidden><Dialog.Title>…</Dialog.Title></VisuallyHidden>
+  <GlassDialogShell icon={<Icon size={16} />} title="…" subtitle="…">
+    {/* form content */}
+    <div className="flex justify-end gap-2 pt-4 border-t border-edge-soft mt-2">
+      <GlassButton variant="secondary" …>Cancelar</GlassButton>
+      <GlassButton variant="primary" …>Guardar</GlassButton>
+    </div>
+  </GlassDialogShell>
+</Dialog.Content>
+```
+
+### Page Layout Pattern
+
+Every client page wraps its content in:
+
+```tsx
+<div className="min-h-screen bg-app font-(family-name:--font-outfit) w-full px-5 md:px-10 py-8">
+  <div className="w-full max-w-[…] mx-auto">
+    …
+  </div>
+</div>
+```
+
+### Tailwind v4 Notes
+
+- Important modifier suffix: `p-2!` not `!p-2`
+- Font family: `font-(family-name:--font-outfit)`
+- Color scheme: `scheme-dark` class (sets `color-scheme: dark` — required on `<select>` so native option popups render dark)
+- Native `<option>` elements have a global base style in `globals.css` that sets `background-color: var(--app-elevated)` and `color: var(--ink)` for consistent dark popup rendering across browsers

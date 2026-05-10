@@ -1,15 +1,23 @@
 "use client";
 
-import { Button, Dialog, TextField } from "@radix-ui/themes";
+import { Dialog, VisuallyHidden } from "@radix-ui/themes";
+import { Wallet, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { useForm, Controller, ControllerRenderProps } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useBreakpoint } from "../hooks/useBreakpoint";
 import {
   updateAccountAction,
   deleteAccountAction,
 } from "@/app/actions/accounts";
+import {
+  GlassDialogShell,
+  GlassInput,
+  GlassButton,
+  FieldLabel,
+  FieldError,
+  glassDialogContent,
+} from "./ui/glass";
 
 interface AccountDialogProps {
   open: boolean;
@@ -30,10 +38,6 @@ const accountSchema = z.object({
 
 type AccountFormData = z.infer<typeof accountSchema>;
 
-type FieldProps = {
-  field: ControllerRenderProps<AccountFormData, keyof AccountFormData>;
-};
-
 export default function AccountDialog({
   open,
   onOpenChange,
@@ -45,21 +49,15 @@ export default function AccountDialog({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const {
-    control,
+    register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<AccountFormData>({
     resolver: zodResolver(accountSchema),
-    defaultValues: {
-      name: account.name,
-      type: "",
-    },
+    defaultValues: { name: account.name, type: "" },
   });
 
-  const bp = useBreakpoint();
-  const size = bp === "lg" ? "2" : bp === "md" ? "2" : "3";
-
-  const action: () => void = handleSubmit(async (formData) => {
+  const action = handleSubmit(async (formData) => {
     try {
       await updateAccountAction(account.id, {
         name: formData.name,
@@ -77,7 +75,7 @@ export default function AccountDialog({
     onOpenChange(false);
 
     if (!success) {
-      onFailed({ title: "Ocurrió un error", message: message });
+      onFailed({ title: "Ocurrió un error", message });
     } else {
       onDeleteSuccess();
     }
@@ -85,117 +83,81 @@ export default function AccountDialog({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content maxWidth="400px">
-        <div className="mb-2">
+      <Dialog.Content maxWidth="420px" className={glassDialogContent}>
+        <VisuallyHidden>
           <Dialog.Title>
-            {showDeleteConfirm ? "Eliminar cuenta" : "Editar cuenta"}{" "}
+            {showDeleteConfirm ? "Eliminar cuenta" : "Editar cuenta"}
           </Dialog.Title>
-        </div>
+        </VisuallyHidden>
 
         {showDeleteConfirm ? (
-          <div className="space-y-4">
-            <p className="text-gray-700 dark:text-gray-300">
-              ¿Estás seguro de que quieres eliminar esta cuenta? Esta acción no
-              se puede deshacer.
+          <GlassDialogShell
+            icon={<Trash2 size={16} />}
+            title="Eliminar cuenta"
+            subtitle="Esta acción no se puede deshacer"
+          >
+            <p className="text-sm text-white/70 mb-6">
+              ¿Estás seguro de que quieres eliminar esta cuenta?
             </p>
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="soft"
-                color="gray"
+            <div className="flex justify-end gap-2">
+              <GlassButton
+                variant="secondary"
                 onClick={() => setShowDeleteConfirm(false)}
               >
                 Cancelar
-              </Button>
-              <Button color="red" onClick={handleDelete}>
-                Eliminar cuenta
-              </Button>
+              </GlassButton>
+              <GlassButton variant="danger" onClick={handleDelete}>
+                Eliminar
+              </GlassButton>
             </div>
-          </div>
+          </GlassDialogShell>
         ) : (
-          <form action={action} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Nombre de la cuenta
-              </label>
-              <Controller
-                name="name"
-                control={control}
-                render={({ field }: FieldProps) => (
-                  <TextField.Root
-                    size={size}
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-              {errors.name && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.name.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Tipo de cuenta
-              </label>
-              <Controller
-                name="type"
-                control={control}
-                render={({ field }: FieldProps) => (
-                  <TextField.Root
-                    size={size}
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="ej., Corriente, Ahorro, Tarjeta de crédito"
-                  />
-                )}
-              />
-              {errors.type && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.type.message}
-                </p>
-              )}
-            </div>
-
-            <div className="flex justify-between items-center mt-6">
-              {!showDeleteConfirm && (
-                <Button
-                  variant="ghost"
-                  color="gray"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  title="Eliminar cuenta"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M3 6h18" />
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                  </svg>
-                </Button>
-              )}
-
-              <div className="flex justify-end gap-3">
-                <Dialog.Close>
-                  <Button variant="soft" color="gray">
-                    Cancelar
-                  </Button>
-                </Dialog.Close>
-                <Button type="submit" color="blue">
-                  Actualizar
-                </Button>
+          <GlassDialogShell
+            icon={<Wallet size={16} />}
+            title="Editar cuenta"
+            subtitle="Actualiza el nombre o tipo"
+          >
+            <form onSubmit={action} className="flex flex-col gap-4">
+              <div>
+                <FieldLabel>Nombre</FieldLabel>
+                <GlassInput {...register("name")} />
+                <FieldError message={errors.name?.message} />
               </div>
-            </div>
-          </form>
+
+              <div>
+                <FieldLabel>Tipo de cuenta</FieldLabel>
+                <GlassInput
+                  placeholder="ej. Corriente, Ahorro, Crédito"
+                  {...register("type")}
+                />
+                <FieldError message={errors.type?.message} />
+              </div>
+
+              <div className="flex justify-between items-center pt-4 border-t border-white/8 mt-2">
+                <GlassButton
+                  type="button"
+                  variant="danger"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="p-2!"
+                  aria-label="Eliminar cuenta"
+                >
+                  <Trash2 size={16} />
+                </GlassButton>
+                <div className="flex gap-2">
+                  <GlassButton
+                    type="button"
+                    variant="secondary"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    Cancelar
+                  </GlassButton>
+                  <GlassButton type="submit" variant="primary" disabled={isSubmitting}>
+                    {isSubmitting ? "Guardando..." : "Actualizar"}
+                  </GlassButton>
+                </div>
+              </div>
+            </form>
+          </GlassDialogShell>
         )}
       </Dialog.Content>
     </Dialog.Root>

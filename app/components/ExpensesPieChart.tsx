@@ -29,17 +29,25 @@ interface Props {
 }
 
 const COLORS = [
-  "#6366f1", // indigo
-  "#22d3ee", // cyan
-  "#f59e0b", // amber
-  "#10b981", // emerald
-  "#f43f5e", // rose
-  "#a78bfa", // violet
-  "#fb923c", // orange
-  "#2dd4bf", // teal
-  "#e879f9", // fuchsia
-  "#38bdf8", // sky
+  "#6366f1",
+  "#22d3ee",
+  "#f59e0b",
+  "#10b981",
+  "#f43f5e",
+  "#a78bfa",
+  "#fb923c",
+  "#2dd4bf",
+  "#e879f9",
+  "#38bdf8",
 ];
+
+function formatMXN(amount: number) {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
 
 export default function ExpensesPieChart({
   refreshTrigger = 0,
@@ -72,13 +80,8 @@ export default function ExpensesPieChart({
     fetchData();
   }, [refreshTrigger]);
 
-  if (isLoading) {
-    return <ChartSkeleton />;
-  }
-
-  if (data.length === 0) {
-    return <EmptyStateSkeleton />;
-  }
+  if (isLoading) return <ChartSkeleton />;
+  if (data.length === 0) return <EmptyStateSkeleton />;
 
   const chartData = data
     .map((item) => ({
@@ -93,13 +96,9 @@ export default function ExpensesPieChart({
 
   const totalExpenses = chartData.reduce((sum, item) => sum + item.value, 0);
 
-  // Custom legend renderer sorted by amount descending
   const renderCustomLegend = (props: Props) => {
     const { payload } = props;
-
-    if (!payload || payload.length === 0) {
-      return null;
-    }
+    if (!payload || payload.length === 0) return null;
 
     const sorted = [...payload].sort((a, b) => {
       const aVal = (a.payload as { value?: number })?.value ?? 0;
@@ -109,33 +108,24 @@ export default function ExpensesPieChart({
 
     return (
       <ul
-        className={`recharts-legend-item-list flex flex-col flex-wrap ${isMediumOrLarge ? "h-fit w-44" : "h-36 w-80"
-          }`}
+        className={`recharts-legend-item-list flex flex-col flex-wrap ${
+          isMediumOrLarge ? "h-fit w-44" : "h-36 w-80"
+        }`}
         style={{ listStyle: "none", padding: 0, margin: 0 }}
       >
         {sorted.map((category, index) => (
           <li
             key={`legend-item-${index}`}
-            className="recharts-legend-item w-fit text-black dark:text-white"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "4px",
-              // fontSize: "12px",
-            }}
+            className="recharts-legend-item w-fit"
+            style={{ display: "flex", alignItems: "center", marginBottom: "6px" }}
           >
-            <svg width="12" height="12" style={{ marginRight: "8px" }}>
-              <rect
-                width="12"
-                height="12"
-                fill={category.color}
-                stroke="none"
-              />
+            <svg width="10" height="10" style={{ marginRight: "8px", flexShrink: 0 }}>
+              <rect width="10" height="10" rx="2" fill={category.color} />
             </svg>
-            <span className="font-medium text-sm">
+            <span className="text-xs font-medium text-ink-muted">
               {category.value}{" "}
-              <span className="text-gray-500 dark:text-gray-400">
-                ${((category.payload as { value?: number })?.value ?? 0).toFixed(2)}
+              <span className="text-ink-faint font-mono">
+                {formatMXN((category.payload as { value?: number })?.value ?? 0)}
               </span>
             </span>
           </li>
@@ -146,9 +136,9 @@ export default function ExpensesPieChart({
 
   return (
     <div>
-      <div className="text-sm text-gray-600 dark:text-gray-400 ">
-        Total: ${totalExpenses.toFixed(2)}
-      </div>
+      <p className="text-xs text-ink-subtle mb-3 font-mono tabular-nums">
+        Total: {formatMXN(totalExpenses)}
+      </p>
       <ResponsiveContainer width="100%" height={350}>
         <PieChart>
           <Pie
@@ -156,9 +146,6 @@ export default function ExpensesPieChart({
             cx={isMediumOrLarge ? "50%" : "45%"}
             cy="50%"
             labelLine={false}
-            /* label={({ percent }) =>
-              `${percent ? (percent * 100).toFixed(0) : 0}%`
-            } */
             outerRadius={isMediumOrLarge ? 120 : 90}
             fill="#8884d8"
             dataKey="value"
@@ -169,16 +156,18 @@ export default function ExpensesPieChart({
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name]}
-            labelStyle={{ color: "#000" }}
+            formatter={(value: number, name: string) => [formatMXN(value), name]}
             contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
+              backgroundColor: "oklch(0.20 0.013 256)",
+              border: "1px solid oklch(1 0 0 / 10%)",
+              borderRadius: "10px",
+              color: "oklch(1 0 0)",
+              fontSize: "13px",
             }}
+            labelStyle={{ color: "oklch(1 0 0 / 70%)" }}
+            cursor={{ fill: "oklch(1 0 0 / 4%)" }}
           />
           <Legend
-
             layout="vertical"
             verticalAlign={isMediumOrLarge ? "middle" : "bottom"}
             align={isMediumOrLarge ? "right" : "center"}

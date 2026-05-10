@@ -17,6 +17,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "Finansia",
   description: "Analiza tus finanzas personales con inteligencia artificial.",
@@ -33,7 +38,7 @@ export default function RootLayout({
     <ClerkProvider appearance={{ baseTheme: dark }}>
       <html lang="es" suppressHydrationWarning>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased relative`}
+          className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} antialiased relative`}
         >
           <ThemeProvider attribute="class">
             <Theme appearance="inherit">{children}</Theme>

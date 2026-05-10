@@ -1,14 +1,20 @@
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Button,
-  Dialog,
-  SegmentedControl,
-  Switch,
-  TextField,
-} from "@radix-ui/themes";
+import { Dialog, VisuallyHidden } from "@radix-ui/themes";
+import { FolderPlus, DollarSign } from "lucide-react";
 import { useEffect } from "react";
-import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import z from "zod";
+import {
+  GlassDialogShell,
+  GlassInput,
+  GlassButton,
+  GlassSegmented,
+  FieldLabel,
+  FieldError,
+  glassDialogContent,
+} from "./ui/glass";
 
 interface CategoryDialogProps {
   open: boolean;
@@ -24,15 +30,11 @@ interface CategoryFormData {
 }
 
 const categorySchema = z.object({
-  name: z.string().min(1, "Category name is required"),
+  name: z.string().min(1, "El nombre es requerido"),
   budget: z.string().nullable(),
   budgeted: z.boolean(),
   type: z.enum(["expense", "income"]),
 });
-
-type FieldProps<T extends keyof CategoryFormData> = {
-  field: ControllerRenderProps<CategoryFormData, T>;
-};
 
 export default function CategoryDialog({
   open,
@@ -41,10 +43,11 @@ export default function CategoryDialog({
 }: CategoryDialogProps) {
   const {
     control,
+    register,
     reset,
     handleSubmit,
     watch,
-    formState: {},
+    formState: { errors },
   } = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
@@ -55,31 +58,18 @@ export default function CategoryDialog({
     },
   });
 
-  // Reset form values when category changes
   useEffect(() => {
-    reset({
-      name: "",
-      budget: null,
-      budgeted: false,
-      type: "expense",
-    });
+    reset({ name: "", budget: null, budgeted: false, type: "expense" });
   }, [reset]);
 
   const onSubmit = async (data: CategoryFormData) => {
     try {
       const response = await fetch("/api/categories", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...data,
-          budget: Number(data.budget),
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, budget: Number(data.budget) }),
       });
-
       if (!response.ok) throw new Error("Failed to create category");
-
       reset();
       onCategoryAdded();
       onOpenChange(false);
@@ -88,103 +78,106 @@ export default function CategoryDialog({
     }
   };
 
+  const type = watch("type");
+  const budgeted = watch("budgeted");
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content maxWidth="300px">
-        <Dialog.Title>Crear categoría</Dialog.Title>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-              Nombre:
-            </label>
-            <Controller
-              name="name"
-              control={control}
-              render={({ field }: FieldProps<"name">) => (
-                <TextField.Root value={field.value} onChange={field.onChange} />
-              )}
-            />
-          </div>
-          <div className="mt-6 w-full">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-              Tipo de categoría:
-            </label>
-            <div className="w-full">
+      <Dialog.Content maxWidth="420px" className={glassDialogContent}>
+        <VisuallyHidden>
+          <Dialog.Title>Crear categoría</Dialog.Title>
+        </VisuallyHidden>
+        <GlassDialogShell
+          icon={<FolderPlus size={16} />}
+          title="Crear categoría"
+          subtitle="Organiza tus gastos e ingresos"
+        >
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            <div>
+              <FieldLabel>Nombre</FieldLabel>
+              <GlassInput
+                placeholder="ej. Comida, Transporte..."
+                {...register("name")}
+              />
+              <FieldError message={errors.name?.message} />
+            </div>
+
+            <div>
+              <FieldLabel>Tipo</FieldLabel>
               <Controller
                 name="type"
                 control={control}
-                render={({ field }: FieldProps<"type">) => (
-                  <SegmentedControl.Root
+                render={({ field }) => (
+                  <GlassSegmented
                     value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SegmentedControl.Item value="expense">
-                      Gastos
-                    </SegmentedControl.Item>
-                    <SegmentedControl.Item value="income">
-                      Ingresos
-                    </SegmentedControl.Item>
-                  </SegmentedControl.Root>
+                    onChange={field.onChange}
+                    options={[
+                      { value: "expense", label: "Gasto" },
+                      { value: "income", label: "Ingreso" },
+                    ]}
+                  />
                 )}
               />
             </div>
-          </div>
-          <div className="mt-6">
-            {watch("type") === "expense" && (
+
+            {type === "expense" && (
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Asignar presupuesto mensual:
-                </label>
-                <div className="flex items-center gap-2">
+                <FieldLabel>Presupuesto mensual</FieldLabel>
+                <div className="flex items-center gap-3">
                   <Controller
                     name="budgeted"
                     control={control}
-                    render={({ field }: FieldProps<"budgeted">) => (
-                      <Switch
-                        size="3"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                    render={({ field }) => (
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={field.value}
+                        onClick={() => field.onChange(!field.value)}
+                        className={`relative w-10 h-6 rounded-full border transition-colors shrink-0 cursor-pointer ${
+                          field.value
+                            ? "bg-cyan-500/30 border-cyan-400/40"
+                            : "bg-white/6 border-white/10"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 w-5 h-5 rounded-full transition-transform ${
+                            field.value
+                              ? "translate-x-[18px] bg-cyan-300"
+                              : "translate-x-0.5 bg-white/40"
+                          }`}
+                        />
+                      </button>
                     )}
                   />
-
-                  <div
-                    className={`w-full ${
-                      watch("budgeted") ? "" : "opacity-70"
-                    }`}
-                  >
-                    <Controller
-                      name="budget"
-                      control={control}
-                      render={({ field }: FieldProps<"budget">) => (
-                        <TextField.Root
-                          disabled={!watch("budgeted")}
-                          type="number"
-                          value={field.value ?? ""}
-                          onChange={field.onChange}
-                        >
-                          <TextField.Slot>$</TextField.Slot>
-                          {/*<TextField.Input type="number" value={field.value || ""} onChange={field.onChange} />*/}
-                        </TextField.Root>
-                      )}
+                  <div className={`flex-1 transition-opacity ${budgeted ? "" : "opacity-40"}`}>
+                    <GlassInput
+                      leadingIcon={<DollarSign size={16} />}
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      disabled={!budgeted}
+                      className="font-mono tabular-nums"
+                      {...register("budget")}
                     />
                   </div>
                 </div>
               </div>
             )}
-          </div>
 
-          <div className="flex justify-end gap-3 mt-6">
-            <Dialog.Close>
-              <Button variant="soft" color="gray">
+            <div className="flex justify-end gap-2 pt-4 border-t border-white/8 mt-2">
+              <GlassButton
+                type="button"
+                variant="secondary"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancelar
-              </Button>
-            </Dialog.Close>
-            <Button type="submit" color="blue">
-              Aceptar
-            </Button>
-          </div>
-        </form>
+              </GlassButton>
+              <GlassButton type="submit" variant="primary">
+                Crear
+              </GlassButton>
+            </div>
+          </form>
+        </GlassDialogShell>
       </Dialog.Content>
     </Dialog.Root>
   );
