@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@radix-ui/themes";
 import { Transaction } from "@/app/(main)/data/DataDashboard";
 
 export default function TransactionCard({
