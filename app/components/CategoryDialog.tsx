@@ -133,18 +133,16 @@ export default function CategoryDialog({
                         role="switch"
                         aria-checked={field.value}
                         onClick={() => field.onChange(!field.value)}
-                        className={`relative w-10 h-6 rounded-full border transition-colors shrink-0 cursor-pointer ${
-                          field.value
-                            ? "bg-cyan-500/30 border-cyan-400/40"
-                            : "bg-white/6 border-white/10"
-                        }`}
+                        className={`relative w-10 h-6 rounded-full border transition-colors shrink-0 cursor-pointer ${field.value
+                          ? "bg-cyan-500/30 border-cyan-400/40"
+                          : "bg-white/6 border-white/10"
+                          }`}
                       >
                         <span
-                          className={`absolute top-0.5 w-5 h-5 rounded-full transition-transform ${
-                            field.value
-                              ? "translate-x-[18px] bg-cyan-300"
-                              : "translate-x-0.5 bg-white/40"
-                          }`}
+                          className={`absolute top-0.5 w-5 h-5 rounded-full transition-transform ${field.value
+                            ? "-translate-x-0.5 bg-cyan-300"
+                            : "-translate-x-4.5 bg-white/40"
+                            }`}
                         />
                       </button>
                     )}

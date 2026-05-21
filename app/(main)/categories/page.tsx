@@ -33,7 +33,8 @@ export default function CategoriesPage() {
       const response = await fetch("/api/categories");
       if (!response.ok) throw new Error("Failed to fetch categories");
       const data = await response.json();
-      setCategories(data);
+      const sortedData = data.sort((a: { spent: string; }, b: { spent: string }) => Number(b.spent) - Number(a.spent))
+      setCategories(sortedData);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message || "Error al obtener categorías");
@@ -113,31 +114,27 @@ export default function CategoriesPage() {
                   {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(totalBudget)}
                 </p>
               </div>
-              <div className={`rounded-xl border px-4 py-3 ${
-                overCategories.length > 0
-                  ? "border-rose-200 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10"
-                  : "border-slate-200 dark:border-white/[0.07] bg-white dark:bg-slate-800/70"
-              }`}>
+              <div className={`rounded-xl border px-4 py-3 ${overCategories.length > 0
+                ? "border-rose-200 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10"
+                : "border-slate-200 dark:border-white/[0.07] bg-white dark:bg-slate-800/70"
+                }`}>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
                   Excedido{overCategories.length > 0 && ` · ${overCategories.length} categ.`}
                 </p>
-                <p className={`font-mono text-lg font-semibold tabular-nums ${
-                  overCategories.length > 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-800 dark:text-slate-100"
-                }`}>
+                <p className={`font-mono text-lg font-semibold tabular-nums ${overCategories.length > 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-800 dark:text-slate-100"
+                  }`}>
                   {totalOverspent > 0
                     ? new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(totalOverspent)
                     : "—"}
                 </p>
               </div>
-              <div className={`rounded-xl border px-4 py-3 ${
-                warningCategories.length > 0
-                  ? "border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/10"
-                  : "border-slate-200 dark:border-white/[0.07] bg-white dark:bg-slate-800/70"
-              }`}>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">En alerta</p>
-                <p className={`font-mono text-lg font-semibold tabular-nums ${
-                  warningCategories.length > 0 ? "text-amber-600 dark:text-amber-400" : "text-slate-800 dark:text-slate-100"
+              <div className={`rounded-xl border px-4 py-3 ${warningCategories.length > 0
+                ? "border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/10"
+                : "border-slate-200 dark:border-white/[0.07] bg-white dark:bg-slate-800/70"
                 }`}>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">En alerta</p>
+                <p className={`font-mono text-lg font-semibold tabular-nums ${warningCategories.length > 0 ? "text-amber-600 dark:text-amber-400" : "text-slate-800 dark:text-slate-100"
+                  }`}>
                   {warningCategories.length > 0 ? `${warningCategories.length} categ.` : "—"}
                 </p>
               </div>

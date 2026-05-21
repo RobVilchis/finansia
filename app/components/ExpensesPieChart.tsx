@@ -108,9 +108,8 @@ export default function ExpensesPieChart({
 
     return (
       <ul
-        className={`recharts-legend-item-list flex flex-col flex-wrap ${
-          isMediumOrLarge ? "h-fit w-44" : "h-36 w-80"
-        }`}
+        className={`recharts-legend-item-list flex flex-col flex-wrap ${isMediumOrLarge ? "h-fit w-44" : "h-36 w-80"
+          }`}
         style={{ listStyle: "none", padding: 0, margin: 0 }}
       >
         {sorted.map((category, index) => (
@@ -165,6 +164,7 @@ export default function ExpensesPieChart({
               fontSize: "13px",
             }}
             labelStyle={{ color: "oklch(1 0 0 / 70%)" }}
+            itemStyle={{ color: "oklch(1 0 0)" }}
             cursor={{ fill: "oklch(1 0 0 / 4%)" }}
           />
           <Legend
