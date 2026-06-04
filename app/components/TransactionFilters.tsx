@@ -1,8 +1,9 @@
 "use client";
 
-import { Search, X, Calendar, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { Search, X, Calendar, SlidersHorizontal } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
+import { GlassSelect } from "@/app/components/ui/glass";
 
 interface Category {
   id: string;
@@ -32,35 +33,6 @@ const TYPE_OPTIONS = [
   { value: "transfer", label: "Transferencias" },
 ];
 
-function GlassSelect({
-  value,
-  onChange,
-  children,
-  className = "",
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={`relative ${className}`}>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none bg-surface backdrop-blur-md border border-edge
-          rounded-lg px-3 py-2 pr-8 text-sm text-ink-muted cursor-pointer
-          hover:bg-surface-strong hover:border-edge-strong transition-all
-          focus:outline-none focus:border-accent-border
-          scheme-dark"
-      >
-        {children}
-      </select>
-      <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-faint pointer-events-none" />
-    </div>
-  );
-}
-
 export default function TransactionFilters({
   categories,
   accounts,
@@ -81,8 +53,7 @@ export default function TransactionFilters({
       activeFilters.category ||
       activeFilters.account ||
       activeFilters.startDate ||
-      activeFilters.endDate ||
-      activeFilters.description
+      activeFilters.endDate
     )
   );
 
@@ -122,8 +93,8 @@ export default function TransactionFilters({
 
   return (
     <div className="mb-4 space-y-2">
-      {/* Type filter — glass pill */}
-      <div className="flex gap-1 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-1">
+      {/* Row 1 — Type filter pills */}
+      <div className="flex gap-1 bg-surface backdrop-blur-md border border-edge rounded-xl p-1">
         {TYPE_OPTIONS.map(({ value, label }) => (
           <button
             key={value}
@@ -140,8 +111,8 @@ export default function TransactionFilters({
             }}
             className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
               (activeFilters.type || "all") === value
-                ? "bg-white/15 text-white shadow-inner shadow-black/20"
-                : "text-white/40 hover:text-white/60 hover:bg-white/5"
+                ? "bg-surface-strong text-ink shadow-inner shadow-black/20"
+                : "text-ink-faint hover:text-ink-muted hover:bg-surface"
             }`}
           >
             {label}
@@ -149,73 +120,75 @@ export default function TransactionFilters({
         ))}
       </div>
 
-      {/* Sort + toggle row */}
-      <div className="flex items-center justify-between gap-2">
-        <GlassSelect
-          value={activeFilters.sort || "date_desc"}
-          onChange={(v) => updateFilter("sort", v)}
-          className="w-40"
-        >
-          <option value="date_desc">Más reciente</option>
-          <option value="date_asc">Más antiguo</option>
-          <option value="amount_desc">Mayor monto</option>
-          <option value="amount_asc">Menor monto</option>
-        </GlassSelect>
-
-        <div className="flex items-center gap-2">
-          {hasActiveFilters && (
-            <button
-              onClick={clearAllFilters}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer"
-            >
-              <X size={13} />
-              Limpiar
-            </button>
-          )}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg border transition-all cursor-pointer ${
-              showFilters
-                ? "bg-white/10 border-white/20 text-white/80"
-                : "bg-white/6 border-white/10 text-white/50 hover:bg-white/10 hover:text-white/70"
-            }`}
-          >
-            <SlidersHorizontal size={13} />
-            Filtros
-          </button>
+      {/* Row 2 — Search + sort + controls */}
+      <div className="flex items-center gap-2">
+        {/* Description search — always visible */}
+        <div className="relative flex-1 min-w-0">
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Buscar..."
+            value={descriptionInput}
+            onChange={(e) => setDescriptionInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") updateFilter("description", descriptionInput);
+            }}
+            onBlur={() => {
+              if (descriptionInput !== (activeFilters.description || "")) {
+                updateFilter("description", descriptionInput);
+              }
+            }}
+            className="w-full h-9 bg-surface border border-edge rounded-lg pl-8 pr-3
+              text-sm text-ink-muted placeholder:text-ink-faint
+              focus:outline-none focus:border-accent-border hover:border-edge-strong transition-all"
+          />
         </div>
+
+        {/* Sort */}
+        <div className="w-36 shrink-0">
+          <GlassSelect
+            value={activeFilters.sort || "date_desc"}
+            onChange={(e) => updateFilter("sort", e.target.value)}
+          >
+            <option value="date_desc">Más reciente</option>
+            <option value="date_asc">Más antiguo</option>
+            <option value="amount_desc">Mayor monto</option>
+            <option value="amount_asc">Menor monto</option>
+          </GlassSelect>
+        </div>
+
+        {/* Clear */}
+        {hasActiveFilters && (
+          <button
+            onClick={clearAllFilters}
+            className="shrink-0 flex items-center gap-1 px-2.5 py-2 text-xs text-ink-faint hover:text-ink-muted transition-colors cursor-pointer"
+          >
+            <X size={13} />
+          </button>
+        )}
+
+        {/* Filters toggle */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`shrink-0 flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg border transition-all cursor-pointer ${
+            showFilters
+              ? "bg-surface-strong border-edge-strong text-ink-muted"
+              : "bg-surface border-edge text-ink-subtle hover:bg-surface-strong hover:text-ink-muted"
+          }`}
+        >
+          <SlidersHorizontal size={13} />
+          Filtros
+        </button>
       </div>
 
-      {/* Expandable panel */}
+      {/* Expandable panel — category, account, dates */}
       {showFilters && (
-        <div className="space-y-2 p-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl">
-          {/* Description search */}
-          <div className="relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Buscar por descripción..."
-              value={descriptionInput}
-              onChange={(e) => setDescriptionInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") updateFilter("description", descriptionInput);
-              }}
-              onBlur={() => {
-                if (descriptionInput !== (activeFilters.description || "")) {
-                  updateFilter("description", descriptionInput);
-                }
-              }}
-              className="w-full bg-white/6 border border-white/10 rounded-lg pl-8 pr-3 py-2
-                text-sm text-white/80 placeholder:text-white/25
-                focus:outline-none focus:border-white/25 hover:border-white/20 transition-all"
-            />
-          </div>
-
+        <div className="space-y-2 p-3 bg-surface backdrop-blur-md border border-edge rounded-xl">
           {/* Category + Account */}
           <div className="grid grid-cols-2 gap-2">
             <GlassSelect
               value={activeFilters.category || "all"}
-              onChange={(v) => updateFilter("category", v)}
+              onChange={(e) => updateFilter("category", e.target.value)}
             >
               <option value="all">Categoría</option>
               {filteredCategories.map((cat) => (
@@ -227,7 +200,7 @@ export default function TransactionFilters({
 
             <GlassSelect
               value={activeFilters.account || "all"}
-              onChange={(v) => updateFilter("account", v)}
+              onChange={(e) => updateFilter("account", e.target.value)}
             >
               <option value="all">Cuenta</option>
               {accounts.map((account) => (
@@ -242,18 +215,18 @@ export default function TransactionFilters({
           <div className="grid grid-cols-2 gap-2">
             {(["startDate", "endDate"] as const).map((field) => (
               <label key={field} className="space-y-1">
-                <span className="text-[11px] text-white/30 ml-1">
+                <span className="text-[11px] text-ink-faint ml-1">
                   {field === "startDate" ? "Desde" : "Hasta"}
                 </span>
                 <div className="relative">
-                  <Calendar size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none z-10" />
+                  <Calendar size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint pointer-events-none z-10" />
                   <input
                     type="date"
                     value={activeFilters[field] || ""}
                     onChange={(e) => updateFilter(field, e.target.value)}
-                    className="w-full h-9 pl-8 pr-2 bg-white/6 border border-white/10 rounded-lg
-                      text-sm text-white/70 focus:outline-none focus:border-white/25
-                      hover:border-white/20 transition-all scheme-dark"
+                    className="w-full h-9 pl-8 pr-2 bg-surface border border-edge rounded-lg
+                      text-sm text-ink-muted focus:outline-none focus:border-accent-border
+                      hover:border-edge-strong transition-all scheme-dark"
                   />
                 </div>
               </label>

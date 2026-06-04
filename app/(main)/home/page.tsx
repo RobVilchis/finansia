@@ -27,7 +27,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="w-full px-5 md:px-10 p-4 ">
+    <div className="w-full px-5 md:px-10 p-4 pb-28 ">
       <h1 className="text-3xl font-bold mb-6">Inicio</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800">
@@ -49,7 +49,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Saldos actuales</h2>
         </div>
-        <HomeAccountsList onAccountAdded={() => { }} />
+        <HomeAccountsList onAccountAdded={() => {}} />
       </section>
       <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800 mb-6">
         <h2 className="text-xl font-semibold mb-4">Progreso de metas</h2>

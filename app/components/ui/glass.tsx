@@ -1,7 +1,13 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { forwardRef, InputHTMLAttributes, SelectHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
+import {
+  forwardRef,
+  InputHTMLAttributes,
+  SelectHTMLAttributes,
+  ButtonHTMLAttributes,
+  ReactNode,
+} from "react";
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   leadingIcon?: ReactNode;
@@ -25,7 +31,7 @@ export const GlassInput = forwardRef<HTMLInputElement, InputProps>(
           hover:border-edge-strong transition-all scheme-dark ${className}`}
       />
     </div>
-  )
+  ),
 );
 GlassInput.displayName = "GlassInput";
 
@@ -40,7 +46,7 @@ export const GlassTextarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         focus:outline-none focus:border-accent-border focus:bg-surface-strong
         hover:border-edge-strong transition-all resize-none ${className}`}
     />
-  )
+  ),
 );
 GlassTextarea.displayName = "GlassTextarea";
 
@@ -69,9 +75,12 @@ export const GlassSelect = forwardRef<HTMLSelectElement, SelectProps>(
       >
         {children}
       </select>
-      <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-faint pointer-events-none" />
+      <ChevronDown
+        size={14}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-faint pointer-events-none"
+      />
     </div>
-  )
+  ),
 );
 GlassSelect.displayName = "GlassSelect";
 
@@ -142,7 +151,11 @@ export function GlassSegmented<T extends string>({
             }`}
         >
           {opt.icon && (
-            <span className={value === opt.value ? opt.accent ?? "" : "text-ink-subtle"}>
+            <span
+              className={
+                value === opt.value ? (opt.accent ?? "") : "text-ink-subtle"
+              }
+            >
               {opt.icon}
             </span>
           )}

@@ -27,32 +27,32 @@ async function ReviewPageContent() {
 function LoadingSkeleton() {
   return (
     <div className="flex justify-center container mx-auto px-8 py-4 min-h-screen">
-      <main className="flex flex-col w-full max-w-[500px]">
+      <main className="flex flex-col w-full max-w-[680px]">
         <div className="grow">
-          <div className="flex flex-col md:flex-row mb-4 gap-3 md:items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-5 h-5 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-              <div className="w-48 h-7 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+          {/* Header skeleton */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-9 h-9 bg-surface-strong rounded-lg animate-pulse" />
+            <div className="w-52 h-7 bg-surface-strong rounded-lg animate-pulse" />
+          </div>
+          {/* Info banner skeleton */}
+          <div className="flex items-start gap-3 p-4 bg-surface border border-edge rounded-xl mb-4">
+            <div className="w-4 h-4 bg-surface-strong rounded animate-pulse shrink-0 mt-0.5" />
+            <div className="flex-1 space-y-2">
+              <div className="w-full h-3 bg-surface-strong rounded animate-pulse" />
+              <div className="w-3/4 h-3 bg-surface-strong rounded animate-pulse" />
             </div>
           </div>
-          <div className="py-3 px-4 bg-slate-100 dark:bg-slate-800 rounded-md font-medium dark:text-slate-300 text-slate-500 mb-4">
-            <div className="w-64 h-4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-          </div>
-          <div className="grid gap-4 mx-auto">
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700"
-                >
-                  <div className="space-y-3">
-                    <div className="w-32 h-4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-                    <div className="w-48 h-6 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-                    <div className="w-24 h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* Cards skeleton */}
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-surface border border-edge-soft rounded-xl px-4 py-3 flex items-center justify-between gap-3"
+              >
+                <div className="w-36 h-4 bg-surface-strong rounded animate-pulse" />
+                <div className="w-20 h-4 bg-surface-strong rounded animate-pulse" />
+              </div>
+            ))}
           </div>
         </div>
       </main>

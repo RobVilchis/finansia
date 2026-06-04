@@ -1,10 +1,7 @@
 "use client";
 
 import { Button, Dialog } from "@radix-ui/themes";
-import {
-  Plus,
-  Repeat,
-} from "lucide-react";
+import { Plus, Repeat } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -59,7 +56,7 @@ export default function RecurringDashboard({
   const [editingTransaction, setEditingTransaction] =
     useState<RecurringTransactionRow | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
-    null
+    null,
   );
   const router = useRouter();
   const { showToast } = useToast();
@@ -103,12 +100,15 @@ export default function RecurringDashboard({
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto w-full">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto w-full min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30">
-            <Repeat size={24} className="text-indigo-600 dark:text-indigo-400" />
+            <Repeat
+              size={24}
+              className="text-indigo-600 dark:text-indigo-400"
+            />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -159,10 +159,7 @@ export default function RecurringDashboard({
         <div className="space-y-2">
           {recurringTransactions.map((rt) => (
             <div key={rt.id} onClick={() => setEditingTransaction(rt)}>
-              <RecurringTransactionCard
-                {...rt}
-                onToggle={handleToggle}
-              />
+              <RecurringTransactionCard {...rt} onToggle={handleToggle} />
             </div>
           ))}
         </div>
@@ -222,7 +219,9 @@ export default function RecurringDashboard({
               </Button>
               <Button
                 color="red"
-                onClick={() => showDeleteConfirm && handleDelete(showDeleteConfirm)}
+                onClick={() =>
+                  showDeleteConfirm && handleDelete(showDeleteConfirm)
+                }
               >
                 Eliminar
               </Button>
