@@ -4,7 +4,7 @@ import { Tabs } from "@radix-ui/themes";
 import { AlertCircle, ArrowRight, Loader2, Upload } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AccountsList from "@/app/components/AccountsList";
 import { AddButton } from "@/app/components/AddButton";
 import { useToast } from "@/app/components/GenericToast";
@@ -102,7 +102,7 @@ export default function DataDashboard({
 
   const activeTab = (searchParams.get("tab") || "transactions") as TabValue;
 
-  const summaryStats = useMemo(() => {
+  /* const summaryStats = useMemo(() => {
     const income = transactions
       .filter((t) => t.type === "income")
       .reduce((sum, t) => sum + Number(t.amount), 0);
@@ -110,7 +110,7 @@ export default function DataDashboard({
       .filter((t) => t.type === "expense")
       .reduce((sum, t) => sum + Number(t.amount), 0);
     return { income, expense };
-  }, [transactions]);
+  }, [transactions]); */
 
   const createQueryString = useCallback(
     (name: string, value: string) => {
@@ -118,7 +118,7 @@ export default function DataDashboard({
       params.set(name, value);
       return params.toString();
     },
-    [searchParams],
+    [searchParams]
   );
 
   const fetchPendingStatements = useCallback(async () => {
@@ -165,21 +165,18 @@ export default function DataDashboard({
   };
 
   const groupTransactionsByDay = (transactions: Transaction[]) => {
-    return transactions.reduce(
-      (groups, transaction) => {
-        const date = new Date(transaction.date);
-        let dayKey = date.toLocaleDateString("es-MX", {
-          weekday: "long",
-          month: "long",
-          day: "numeric",
-        });
-        dayKey = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
-        if (!groups[dayKey]) groups[dayKey] = [];
-        groups[dayKey].push(transaction);
-        return groups;
-      },
-      {} as Record<string, Transaction[]>,
-    );
+    return transactions.reduce((groups, transaction) => {
+      const date = new Date(transaction.date);
+      let dayKey = date.toLocaleDateString("es-MX", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      });
+      dayKey = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
+      if (!groups[dayKey]) groups[dayKey] = [];
+      groups[dayKey].push(transaction);
+      return groups;
+    }, {} as Record<string, Transaction[]>);
   };
 
   const closeAccountDialog = useCallback(() => {
@@ -323,7 +320,7 @@ export default function DataDashboard({
                           ))}
                         </div>
                       </div>
-                    ),
+                    )
                   )
                 )}
               </div>
@@ -339,7 +336,7 @@ export default function DataDashboard({
                           className="px-4 py-1.5 text-xs"
                           onClick={() => {
                             const params = new URLSearchParams(
-                              searchParams.toString(),
+                              searchParams.toString()
                             );
                             params.set("page", String(currentPage - 1));
                             router.push(`?${params.toString()}`);
@@ -359,7 +356,7 @@ export default function DataDashboard({
                           className="px-4 py-1.5 text-xs"
                           onClick={() => {
                             const params = new URLSearchParams(
-                              searchParams.toString(),
+                              searchParams.toString()
                             );
                             params.set("page", String(currentPage + 1));
                             router.push(`?${params.toString()}`);
