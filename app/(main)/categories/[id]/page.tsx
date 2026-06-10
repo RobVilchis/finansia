@@ -1,10 +1,12 @@
 "use client";
 
 import TransactionCard from "@/app/components/TransactionCard";
+import { useToast } from "@/app/components/GenericToast";
+import { EmptyState, ErrorState } from "@/app/components/ui/states";
 import { Transaction } from "@/app/(main)/data/DataDashboard";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Dialog, TextField } from "@radix-ui/themes";
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, FolderX, Pencil, ReceiptText, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useState } from "react";
@@ -42,6 +44,8 @@ export default function CategoryPage(props: {
   const [categoryData, setCategoryData] = useState<CategoryData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
+  const { showToast } = useToast();
   const [isRenaming, setIsRenaming] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
@@ -68,10 +72,11 @@ export default function CategoryPage(props: {
     try {
       setIsLoading(true);
       setError(null);
+      setNotFound(false);
       const response = await fetch(`/api/categories/${params.id}`);
       if (!response.ok) {
         if (response.status === 404) {
-          setError("Categoría no encontrada");
+          setNotFound(true);
         } else {
           throw new Error("Error al obtener datos de la categoría");
         }
@@ -92,11 +97,11 @@ export default function CategoryPage(props: {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [params.id, reset]);
 
   useEffect(() => {
     fetchCategoryData();
-  }, [params.id, fetchCategoryData]);
+  }, [fetchCategoryData]);
 
   const handleRename = () => {
     setShowRenameDialog(true);
@@ -128,11 +133,12 @@ export default function CategoryPage(props: {
       setShowRenameDialog(false);
       fetchCategoryData(); // Refresh data
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || "Error al renombrar la categoría");
-      } else {
-        setError("Error al renombrar la categoría");
-      }
+      console.error(err);
+      showToast({
+        title: "No se pudo actualizar la categoría",
+        message: "Intenta de nuevo.",
+        variant: "error",
+      });
     } finally {
       setIsRenaming(false);
     }
@@ -153,11 +159,15 @@ export default function CategoryPage(props: {
       setShowDeleteDialog(false);
       router.push("/categories"); // Redirect to categories list
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || "Error al eliminar la categoría");
-      } else {
-        setError("Error al eliminar la categoría");
-      }
+      console.error(err);
+      showToast({
+        title: "No se pudo eliminar la categoría",
+        message:
+          err instanceof Error && err.message
+            ? err.message
+            : "Intenta de nuevo.",
+        variant: "error",
+      });
     } finally {
       setIsDeleting(false);
     }
@@ -248,35 +258,40 @@ export default function CategoryPage(props: {
         <div className="max-w-4xl mx-auto">
           <Link
             href="/categories"
-            className="inline-flex items-center gap-2  text-slate-600 
+            className="inline-flex items-center gap-2  text-slate-600
             dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Volver a Categorías
           </Link>
-          <div className="text-center py-12">
-            <div className="text-red-500 mb-4">{error}</div>
-            <Link
-              href="/categories"
-              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-            >
-              Volver a Categorías
-            </Link>
-          </div>
+          <ErrorState
+            title="No se pudo cargar la categoría"
+            message="Revisa tu conexión e intenta de nuevo."
+            onRetry={fetchCategoryData}
+          />
         </div>
       </div>
     );
   }
 
-  if (!categoryData) {
+  if (notFound || !categoryData) {
     return (
       <div className="min-h-screen bg-white dark:bg-slate-950 p-6">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center py-12">
-            <div className="text-slate-600 dark:text-slate-400">
-              Categoría no encontrada
-            </div>
-          </div>
+          <EmptyState
+            icon={<FolderX size={24} />}
+            title="Categoría no encontrada"
+            description="Esta categoría no existe o fue eliminada."
+            action={
+              <Link
+                href="/categories"
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all bg-surface border border-edge text-ink-muted hover:bg-surface-strong hover:text-ink hover:border-edge-strong inline-flex items-center gap-2"
+              >
+                <ArrowLeft size={14} />
+                Volver a categorías
+              </Link>
+            }
+          />
         </div>
       </div>
     );
@@ -315,13 +330,6 @@ export default function CategoryPage(props: {
           <ArrowLeft className="w-4 h-4" />
           Volver a Categorías
         </Link>
-
-        {/* Error Display */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-red-600 dark:text-red-400">{error}</p>
-          </div>
-        )}
 
         {/* Category Header */}
         <div className="mb-6 ">
@@ -465,11 +473,11 @@ export default function CategoryPage(props: {
               );
             })
           ) : (
-            <div className="text-center py-12">
-              <p className="text-slate-600 dark:text-slate-400">
-                No se encontraron transacciones en esta categoría.
-              </p>
-            </div>
+            <EmptyState
+              icon={<ReceiptText size={24} />}
+              title="Sin transacciones"
+              description="Aún no hay transacciones en esta categoría."
+            />
           )}
         </div>
       </div>

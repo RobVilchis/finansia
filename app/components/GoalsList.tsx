@@ -2,11 +2,14 @@
 
 import { deleteGoal, Goal } from "@/lib/services/goals";
 import { useState } from "react";
+import { Plus, Target } from "lucide-react";
 import { AddButton } from "./AddButton";
 import { useToast } from "./GenericToast";
 import GoalCard from "./GoalCard";
 import GoalDialog from "./GoalDialog";
 import NewGoalDialog from "./NewGoalDialog";
+import { GlassButton } from "./ui/glass";
+import { EmptyState } from "./ui/states";
 
 export default function GoalsList({ goals }: { goals: Goal[] }) {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
@@ -35,9 +38,7 @@ export default function GoalsList({ goals }: { goals: Goal[] }) {
   return (
     <div>
       <div className="flex mb-8 gap-3 items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Metas
-        </h1>
+        <h1 className="text-2xl font-bold text-ink">Metas</h1>
         <AddButton
           onClick={() => {
             setGoalDialogOpen(true);
@@ -45,11 +46,28 @@ export default function GoalsList({ goals }: { goals: Goal[] }) {
         />
       </div>
       <div className="space-y-4">
-        {goals.length > 0 ? <div className="grid gap-4">
-          {goals.map((goal, i) => (
-            <GoalCard key={i} goal={goal} onEdit={setEditingGoal} />
-          ))}
-        </div> : <div className="text-gray-500 dark:text-gray-400 mb-4 px-10"> Registra tus metas financieras que tengas a corto, mediano y largo plazo. Cada Meta tiene una Cuenta asociada a ella.</div>}
+        {goals.length > 0 ? (
+          <div className="grid gap-4">
+            {goals.map((goal, i) => (
+              <GoalCard key={i} goal={goal} onEdit={setEditingGoal} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon={<Target size={24} />}
+            title="Aún no tienes metas"
+            description="Registra tus metas financieras a corto, mediano y largo plazo. Cada meta tiene una cuenta asociada."
+            action={
+              <GlassButton
+                onClick={() => setGoalDialogOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus size={16} />
+                Crear meta
+              </GlassButton>
+            }
+          />
+        )}
         {editingGoal && (
           <GoalDialog
             open={!!editingGoal}

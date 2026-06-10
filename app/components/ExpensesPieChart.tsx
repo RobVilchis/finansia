@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { ChartPie } from "lucide-react";
 import {
   Cell,
   Legend,
@@ -11,7 +12,8 @@ import {
   Tooltip,
 } from "recharts";
 import { useBreakpoint } from "../hooks/useBreakpoint";
-import { ChartSkeleton, EmptyStateSkeleton } from "./LoadingSkeleton";
+import { ChartSkeleton } from "./LoadingSkeleton";
+import { EmptyState, ErrorState } from "./ui/states";
 
 interface ExpenseData {
   categoryName: string;
@@ -56,11 +58,14 @@ export default function ExpensesPieChart({
 }: ExpensesPieChartProps) {
   const [data, setData] = useState<ExpenseData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const bp = useBreakpoint();
   const isMediumOrLarge = bp === "md" || bp === "lg";
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
+      setIsLoading(true);
+      setHasError(false);
       const params = new URLSearchParams({
         startDate: startDate.toISOString().split("T")[0],
         endDate: endDate.toISOString().split("T")[0],
@@ -71,17 +76,34 @@ export default function ExpensesPieChart({
       setData(result);
     } catch (error) {
       console.error("Error fetching pie chart data:", error);
+      setHasError(true);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [startDate, endDate]);
 
   useEffect(() => {
     fetchData();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, fetchData]);
 
   if (isLoading) return <ChartSkeleton />;
-  if (data.length === 0) return <EmptyStateSkeleton />;
+  if (hasError)
+    return (
+      <ErrorState
+        compact
+        message="No se pudo cargar la gráfica de gastos."
+        onRetry={fetchData}
+      />
+    );
+  if (data.length === 0)
+    return (
+      <EmptyState
+        compact
+        icon={<ChartPie size={18} />}
+        title="Sin gastos este mes"
+        description="Registra algunos gastos para ver la gráfica."
+      />
+    );
 
   const chartData = data
     .map((item) => ({

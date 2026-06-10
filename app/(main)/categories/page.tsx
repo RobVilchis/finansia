@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import CategoryCard from "@/app/components/CategoryCard";
 import CategoryDialog from "@/app/components/CategoryDialog";
 import { AddButton } from "@/app/components/AddButton";
+import { GlassButton } from "@/app/components/ui/glass";
+import { EmptyState, ErrorState } from "@/app/components/ui/states";
 import { Toast } from "radix-ui";
-import { Check } from "lucide-react";
+import { Check, FolderOpen, Plus, SearchX } from "lucide-react";
 
 interface Category {
   id: string;
@@ -30,6 +32,8 @@ export default function CategoriesPage() {
 
   const fetchCategories = useCallback(async () => {
     try {
+      setLoading(true);
+      setError(null);
       const response = await fetch("/api/categories");
       if (!response.ok) throw new Error("Failed to fetch categories");
       const data = await response.json();
@@ -229,7 +233,13 @@ export default function CategoriesPage() {
               ))}
             </div>
           )}
-          {error && <div className="text-red-500">{error}</div>}
+          {error && !loading && (
+            <ErrorState
+              title="No se pudieron cargar las categorías"
+              message="Revisa tu conexión e intenta de nuevo."
+              onRetry={fetchCategories}
+            />
+          )}
           {!loading && !error && (
             <>
               <section className="mb-8">
@@ -237,11 +247,31 @@ export default function CategoriesPage() {
                   Gastos
                 </h2>
                 {expenseCategories.length === 0 ? (
-                  <div className="text-gray-400">
-                    {searchTerm
-                      ? "No se encontraron categorías de gastos que coincidan con la búsqueda."
-                      : "No se encontraron categorías de gastos."}
-                  </div>
+                  searchTerm ? (
+                    <EmptyState
+                      compact
+                      icon={<SearchX size={18} />}
+                      title="Sin coincidencias"
+                      description="Ninguna categoría de gastos coincide con tu búsqueda."
+                    />
+                  ) : (
+                    <EmptyState
+                      compact
+                      icon={<FolderOpen size={18} />}
+                      title="No hay categorías de gastos"
+                      description="Crea una categoría para organizar tus gastos."
+                      action={
+                        <GlassButton
+                          variant="secondary"
+                          onClick={() => setOpen(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <Plus size={14} />
+                          Crear categoría
+                        </GlassButton>
+                      }
+                    />
+                  )
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {expenseCategories.map((cat) => (
@@ -255,11 +285,31 @@ export default function CategoriesPage() {
                   Ingresos
                 </h2>
                 {incomeCategories.length === 0 ? (
-                  <div className="text-gray-400">
-                    {searchTerm
-                      ? "No se encontraron categorías de ingresos que coincidan con la búsqueda."
-                      : "No se encontraron categorías de ingresos."}
-                  </div>
+                  searchTerm ? (
+                    <EmptyState
+                      compact
+                      icon={<SearchX size={18} />}
+                      title="Sin coincidencias"
+                      description="Ninguna categoría de ingresos coincide con tu búsqueda."
+                    />
+                  ) : (
+                    <EmptyState
+                      compact
+                      icon={<FolderOpen size={18} />}
+                      title="No hay categorías de ingresos"
+                      description="Crea una categoría para clasificar tus ingresos."
+                      action={
+                        <GlassButton
+                          variant="secondary"
+                          onClick={() => setOpen(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <Plus size={14} />
+                          Crear categoría
+                        </GlassButton>
+                      }
+                    />
+                  )
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {incomeCategories.map((cat) => (

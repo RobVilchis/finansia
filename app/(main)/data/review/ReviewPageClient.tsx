@@ -3,9 +3,10 @@
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Info } from "lucide-react";
 import TransactionCard from "@/app/components/TransactionCard";
 import TransactionDialog from "@/app/components/TransactionDialog";
+import { EmptyState } from "@/app/components/ui/states";
 import { Transaction } from "../DataDashboard";
 
 interface ReviewPageClientProps {
@@ -92,14 +93,11 @@ export default function ReviewPageClient({
 
           <div className="grid gap-4 mx-auto">
             {transactions.length === 0 ? (
-              <div className="py-16 flex flex-col items-center gap-2 text-center">
-                <p className="text-base font-medium text-ink-muted">
-                  No hay transacciones pendientes
-                </p>
-                <p className="text-sm text-ink-faint">
-                  Todas las transacciones han sido revisadas
-                </p>
-              </div>
+              <EmptyState
+                icon={<CheckCircle2 size={24} />}
+                title="No hay transacciones pendientes"
+                description="Todas las transacciones han sido revisadas."
+              />
             ) : (
               Object.entries(groupTransactionsByDay(transactions)).map(
                 ([day, dayTransactions]) => (

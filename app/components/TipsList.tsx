@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ChevronRight, Sparkles } from "lucide-react";
 import TipDialog from "./TipDialog";
 import { useToast } from "./GenericToast";
+import { EmptyState, ErrorState } from "./ui/states";
 
 interface Tip {
   id: string;
@@ -17,6 +18,7 @@ interface Tip {
 export default function TipsList() {
   const [tips, setTips] = useState<Tip[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTip, setSelectedTip] = useState<Tip | null>(null);
@@ -24,18 +26,15 @@ export default function TipsList() {
 
   const fetchTips = async () => {
     try {
+      setLoading(true);
+      setHasError(false);
       const response = await fetch("/api/tips");
-      if (response.ok) {
-        const data = await response.json();
-        setTips(data);
-      }
+      if (!response.ok) throw new Error("Failed to fetch tips");
+      const data = await response.json();
+      setTips(data);
     } catch (error) {
       console.error("Failed to fetch tips:", error);
-      showToast({
-        title: "Error al cargar tips",
-        message: "No se pudieron obtener los tips financieros.",
-        variant: "error",
-      });
+      setHasError(true);
     } finally {
       setLoading(false);
     }
@@ -86,10 +85,19 @@ export default function TipsList() {
 
   return (
     <div className="space-y-3">
-      {tips.length === 0 ? (
-        <div className="text-center py-6">
-          <p className="text-white/30 text-sm mb-4">Aún no se han generado tips</p>
-        </div>
+      {hasError ? (
+        <ErrorState
+          compact
+          message="No se pudieron cargar los tips."
+          onRetry={fetchTips}
+        />
+      ) : tips.length === 0 ? (
+        <EmptyState
+          compact
+          icon={<Sparkles size={18} />}
+          title="Aún no hay tips"
+          description="Genera tips personalizados con base en tus gastos."
+        />
       ) : (
         <ul className="flex flex-col gap-2">
           {tips.slice(0, 3).map((tip) => (

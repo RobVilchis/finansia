@@ -11,6 +11,8 @@ import {
 import { useToast } from "@/app/components/GenericToast";
 import RecurringTransactionCard from "@/app/components/RecurringTransactionCard";
 import RecurringTransactionDialog from "@/app/components/RecurringTransactionDialog";
+import { GlassButton } from "@/app/components/ui/glass";
+import { EmptyState } from "@/app/components/ui/states";
 
 interface RecurringTransactionRow {
   id: string;
@@ -131,27 +133,20 @@ export default function RecurringDashboard({
 
       {/* Empty State */}
       {recurringTransactions.length === 0 && (
-        <div className="text-center py-16 border border-dashed border-gray-200 dark:border-zinc-700 rounded-2xl">
-          <Repeat
-            size={48}
-            className="mx-auto text-gray-300 dark:text-zinc-600 mb-4"
-          />
-          <h3 className="text-lg font-medium text-gray-600 dark:text-gray-400 mb-2">
-            No hay transacciones recurrentes
-          </h3>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">
-            Crea tu primera transacción recurrente para automatizar tus pagos e
-            ingresos.
-          </p>
-          <Button
-            size="3"
-            onClick={() => setShowCreateDialog(true)}
-            className="bg-linear-to-r from-indigo-600 to-blue-600 text-white cursor-pointer"
-          >
-            <Plus size={18} />
-            Crear transacción recurrente
-          </Button>
-        </div>
+        <EmptyState
+          icon={<Repeat size={24} />}
+          title="No hay transacciones recurrentes"
+          description="Crea tu primera transacción recurrente para automatizar tus pagos e ingresos."
+          action={
+            <GlassButton
+              onClick={() => setShowCreateDialog(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus size={16} />
+              Crear transacción recurrente
+            </GlassButton>
+          }
+        />
       )}
 
       {/* List */}

@@ -14,6 +14,7 @@ import {
   FieldError,
   glassDialogContent,
 } from "./ui/glass";
+import { useToast } from "./GenericToast";
 
 interface NewGoalDialogProps {
   open: boolean;
@@ -34,6 +35,7 @@ export default function NewGoalDialog({
   onOpenChange,
   onGoalAdded,
 }: NewGoalDialogProps) {
+  const { showToast } = useToast();
   const {
     register,
     handleSubmit,
@@ -60,6 +62,11 @@ export default function NewGoalDialog({
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to create goal:", error);
+      showToast({
+        title: "No se pudo crear la meta",
+        message: "Intenta de nuevo.",
+        variant: "error",
+      });
     }
   });
 

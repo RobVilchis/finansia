@@ -28,14 +28,6 @@ export const ChartSkeleton: React.FC = () => {
   );
 };
 
-export const EmptyStateSkeleton: React.FC = () => {
-  return (
-    <div className="text-sm text-ink-subtle my-4 pt-6 px-2">
-      Registra algunos de tus gastos para ver la gráfica
-    </div>
-  );
-};
-
 export const TextSkeleton: React.FC<{ lines?: number }> = ({ lines = 1 }) => {
   return (
     <div className="space-y-2">

@@ -1,10 +1,19 @@
 "use client";
 
 import { Tabs } from "@radix-ui/themes";
-import { AlertCircle, ArrowRight, Loader2, Upload } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  Loader2,
+  Plus,
+  ReceiptText,
+  SearchX,
+  Upload,
+  Wallet,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AccountsList from "@/app/components/AccountsList";
 import { AddButton } from "@/app/components/AddButton";
 import { useToast } from "@/app/components/GenericToast";
@@ -18,6 +27,7 @@ import TransactionFilters, {
 } from "@/app/components/TransactionFilters";
 import UploadStatementDialog from "@/app/components/UploadStatementDialog";
 import { GlassButton, GlassSegmented } from "@/app/components/ui/glass";
+import { EmptyState } from "@/app/components/ui/states";
 import { Goal } from "@/lib/services/goals";
 
 export interface Transaction {
@@ -98,6 +108,7 @@ export default function DataDashboard({
   const [pendingStatements, setPendingStatements] =
     useState<Statement[]>(pending);
   const [processingStatement, setProcessingStatement] = useState(false);
+  const pollErrorNotified = useRef(false);
   const { showToast } = useToast();
 
   const activeTab = (searchParams.get("tab") || "transactions") as TabValue;
@@ -136,8 +147,17 @@ export default function DataDashboard({
         router.refresh();
       }
       setPendingStatements(data);
+      pollErrorNotified.current = false;
     } catch (error) {
-      console.error("Error fetching transactions:", error);
+      console.error("Error fetching pending statements:", error);
+      if (processingStatement && !pollErrorNotified.current) {
+        pollErrorNotified.current = true;
+        showToast({
+          title: "No se pudo verificar el estado de cuenta",
+          message: "Seguiremos intentando en unos segundos.",
+          variant: "warning",
+        });
+      }
     }
   }, [processingStatement]);
 
@@ -207,10 +227,27 @@ export default function DataDashboard({
                 <h1 className="text-2xl font-bold text-ink">Cuentas</h1>
                 <AddButton onClick={() => setAccountDialogOpen(true)} />
               </div>
-              <AccountsList
-                accounts={accounts}
-                onAccountUpdated={closeAccountDialog}
-              />
+              {accounts.length === 0 ? (
+                <EmptyState
+                  icon={<Wallet size={24} />}
+                  title="No hay cuentas"
+                  description="Agrega tu primera cuenta para registrar transacciones y saldos."
+                  action={
+                    <GlassButton
+                      onClick={() => setAccountDialogOpen(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Plus size={16} />
+                      Crear cuenta
+                    </GlassButton>
+                  }
+                />
+              ) : (
+                <AccountsList
+                  accounts={accounts}
+                  onAccountUpdated={closeAccountDialog}
+                />
+              )}
             </Tabs.Content>
 
             <Tabs.Content value="transactions">
@@ -269,18 +306,48 @@ export default function DataDashboard({
 
               <div className="grid gap-4 mx-auto">
                 {transactions.length === 0 ? (
-                  <div className="py-12 flex flex-col items-center gap-2 text-center">
-                    <p className="text-sm text-ink-subtle">
-                      {activeFilters.type ||
-                      activeFilters.category ||
-                      activeFilters.account ||
-                      activeFilters.startDate ||
-                      activeFilters.endDate ||
-                      activeFilters.description
-                        ? "No se encontraron transacciones con los filtros seleccionados."
-                        : "Aun no se han registrado transacciones."}
-                    </p>
-                  </div>
+                  activeFilters.type ||
+                  activeFilters.category ||
+                  activeFilters.account ||
+                  activeFilters.startDate ||
+                  activeFilters.endDate ||
+                  activeFilters.description ? (
+                    <EmptyState
+                      icon={<SearchX size={24} />}
+                      title="Sin resultados"
+                      description="No se encontraron transacciones con los filtros seleccionados."
+                      className="mt-3"
+                      action={
+                        <GlassButton
+                          variant="secondary"
+                          onClick={() => {
+                            const params = new URLSearchParams();
+                            const tab = searchParams.get("tab");
+                            if (tab) params.set("tab", tab);
+                            router.push(`?${params.toString()}`);
+                          }}
+                        >
+                          Limpiar filtros
+                        </GlassButton>
+                      }
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={<ReceiptText size={24} />}
+                      title="Aún no hay transacciones"
+                      description="Registra tu primera transacción o sube un estado de cuenta."
+                      className="mt-3"
+                      action={
+                        <GlassButton
+                          onClick={() => setNewTransactionDialogOpen(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <Plus size={16} />
+                          Nueva transacción
+                        </GlassButton>
+                      }
+                    />
+                  )
                 ) : (
                   Object.entries(groupTransactionsByDay(transactions)).map(
                     ([day, dayTransactions]) => (

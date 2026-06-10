@@ -15,6 +15,7 @@ import {
   FieldError,
   glassDialogContent,
 } from "./ui/glass";
+import { useToast } from "./GenericToast";
 
 interface CategoryDialogProps {
   open: boolean;
@@ -41,6 +42,7 @@ export default function CategoryDialog({
   onOpenChange,
   onCategoryAdded,
 }: CategoryDialogProps) {
+  const { showToast } = useToast();
   const {
     control,
     register,
@@ -75,6 +77,11 @@ export default function CategoryDialog({
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to create category:", error);
+      showToast({
+        title: "No se pudo crear la categoría",
+        message: "Intenta de nuevo.",
+        variant: "error",
+      });
     }
   };
 

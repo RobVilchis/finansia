@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Wallet } from "lucide-react";
 import AccountCard from "./AccountCard";
 import AccountDialog from "./AccountDialog";
 import { Account } from "@/app/(main)/data/DataDashboard";
 import { useToast } from "./GenericToast";
+import { EmptyState, ErrorState } from "./ui/states";
 
 interface AccountsListProps {
   onAccountAdded: () => void;
@@ -32,10 +35,6 @@ export default function AccountsList({ onAccountAdded }: AccountsListProps) {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchAccounts();
-  }, []);
 
   const handleUpdateFailure = ({
     title,
@@ -86,7 +85,32 @@ export default function AccountsList({ onAccountAdded }: AccountsListProps) {
   }
 
   if (error) {
-    return <div className="text-red-500">{error}</div>;
+    return (
+      <ErrorState
+        compact
+        message="No se pudieron cargar tus cuentas."
+        onRetry={fetchAccounts}
+      />
+    );
+  }
+
+  if (accounts.length === 0) {
+    return (
+      <EmptyState
+        compact
+        icon={<Wallet size={18} />}
+        title="Sin cuentas registradas"
+        description="Crea una cuenta para llevar el control de tus saldos."
+        action={
+          <Link
+            href="/data?tab=accounts"
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all bg-surface border border-edge text-ink-muted hover:bg-surface-strong hover:text-ink hover:border-edge-strong"
+          >
+            Ir a cuentas
+          </Link>
+        }
+      />
+    );
   }
 
   return (

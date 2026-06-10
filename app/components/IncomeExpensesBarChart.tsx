@@ -10,7 +10,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { EmptyStateSkeleton } from "./LoadingSkeleton";
+import { BarChart3 } from "lucide-react";
+import { EmptyState } from "./ui/states";
 
 interface TooltipEntry {
   dataKey?: string | number;
@@ -99,7 +100,15 @@ function CustomLegend() {
 
 export default function IncomeExpensesBarChart({ data }: IncomeExpensesBarChartProps) {
   const isEmpty = data.every((d) => d.income === 0 && d.expenses === 0);
-  if (isEmpty) return <EmptyStateSkeleton />;
+  if (isEmpty)
+    return (
+      <EmptyState
+        compact
+        icon={<BarChart3 size={18} />}
+        title="Sin movimientos aún"
+        description="Tus ingresos y gastos de los últimos 6 meses aparecerán aquí."
+      />
+    );
 
   const chartData = data.map((d) => ({
     label: MONTHS_ES[parseInt(d.month.split("-")[1], 10) - 1],
