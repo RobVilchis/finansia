@@ -1,7 +1,7 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { BarChart3, Home, CircleDollarSign, AppWindow, Repeat } from "lucide-react";
+import { Home, CircleDollarSign, AppWindow, Repeat } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -11,7 +11,7 @@ export const navLinks = [
   { href: "/data", label: "Datos", icon: CircleDollarSign },
   { href: "/recurring", label: "Recurrentes", icon: Repeat },
   { href: "/categories", label: "Categorías", icon: AppWindow },
-  { href: "/analysis", label: "Análisis", icon: BarChart3 },
+  /*  { href: "/analysis", label: "Análisis", icon: BarChart3 }, */
 ];
 
 export const Sidebar = () => {
@@ -41,9 +41,10 @@ export const Sidebar = () => {
               key={href}
               href={href}
               className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200
-                ${isActive
-                  ? "bg-white/10 text-white"
-                  : "text-white/40 hover:text-white/80 hover:bg-white/6"
+                ${
+                  isActive
+                    ? "bg-white/10 text-white"
+                    : "text-white/40 hover:text-white/80 hover:bg-white/6"
                 }`}
             >
               <Icon className="w-4 h-4 shrink-0" />
