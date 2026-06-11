@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import DashboardGoalsList from "@/app/components/DashboardGoalsList";
 import ExpensesPieChart from "@/app/components/ExpensesPieChart";
@@ -15,6 +15,45 @@ interface HomeShellProps {
   monthlySummary: MonthlySummaryItem[];
   startDate: Date;
   endDate: Date;
+}
+
+/* Glass "window" panel: hairline sheen on the top edge + a chrome-style
+   title bar with an optional meta detail on the right. */
+function HomeSection({
+  title,
+  meta,
+  delay = 0,
+  className = "",
+  children,
+}: {
+  title: string;
+  meta?: string;
+  delay?: number;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      className={`home-reveal relative overflow-hidden rounded-2xl bg-surface backdrop-blur-md border border-edge ${className}`}
+      style={{ "--delay": `${delay}ms` } as CSSProperties}
+    >
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-edge-strong to-transparent"
+      />
+      <header className="flex items-baseline justify-between gap-3 px-5 pt-4 pb-3 border-b border-edge-soft">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-muted">
+          {title}
+        </h2>
+        {meta && (
+          <span className="text-[11px] uppercase tracking-wider text-ink-faint">
+            {meta}
+          </span>
+        )}
+      </header>
+      <div className="p-5">{children}</div>
+    </section>
+  );
 }
 
 export default function HomeShell({
@@ -36,47 +75,82 @@ export default function HomeShell({
     router.refresh();
   };
 
+  const monthLabel = startDate.toLocaleDateString("es-MX", {
+    month: "long",
+    year: "numeric",
+  });
+
   return (
-    <div className="w-full px-5 md:px-10 p-4 pb-28">
-      <h1 className="text-3xl font-bold mb-6">Inicio</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800">
-          <h2 className="text-xl font-semibold mb-4">
-            Gastos por categoría (mes actual)
-          </h2>
-          <ExpensesPieChart
-            refreshTrigger={refreshTrigger}
-            startDate={startDate}
-            endDate={endDate}
-          />
-        </section>
-        <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800">
-          <h2 className="text-xl font-semibold mb-4">Tips de esta semana</h2>
-          <TipsList />
-        </section>
+    <div className="relative min-h-screen bg-app w-full px-5 md:px-10 py-8 pb-28 font-(family-name:--font-outfit)">
+      {/* Ambient backdrop — gives the glass surfaces something to refract */}
+
+      <div className="relative w-full max-w-6xl mx-auto">
+        <header
+          className="home-reveal mb-8"
+          style={{ "--delay": "0ms" } as CSSProperties}
+        >
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-accent-fg">
+            {monthLabel}
+          </p>
+          <h1 className="mt-1.5 text-3xl md:text-4xl font-bold tracking-tight text-ink leading-none">
+            Inicio
+          </h1>
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <HomeSection
+            title="Gastos por categoría"
+            meta="Mes actual"
+            delay={60}
+          >
+            <ExpensesPieChart
+              refreshTrigger={refreshTrigger}
+              startDate={startDate}
+              endDate={endDate}
+            />
+          </HomeSection>
+          <HomeSection title="Tips de esta semana" delay={120}>
+            <TipsList />
+          </HomeSection>
+        </div>
+
+        <HomeSection
+          title="Ingresos vs gastos"
+          meta="Últimos 6 meses"
+          delay={180}
+          className="mb-6"
+        >
+          <IncomeExpensesBarChart data={monthlySummary} />
+        </HomeSection>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <HomeSection title="Saldos actuales" delay={240}>
+            <HomeAccountsList onAccountAdded={() => {}} />
+          </HomeSection>
+          <HomeSection title="Progreso de metas" delay={300}>
+            <DashboardGoalsList />
+          </HomeSection>
+        </div>
       </div>
-      <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800 mb-6">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold">Ingresos vs Gastos</h2>
-          <p className="text-sm text-ink-subtle mt-0.5">Últimos 6 meses</p>
-        </div>
-        <IncomeExpensesBarChart data={monthlySummary} />
-      </section>
-      <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Saldos actuales</h2>
-        </div>
-        <HomeAccountsList onAccountAdded={() => {}} />
-      </section>
-      <section className="rounded-lg p-4 shadow-sm border-2 border-slate-200 dark:border-slate-800 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Progreso de metas</h2>
-        <DashboardGoalsList />
-      </section>
+
       <NewTransactionDialog
         open={transactionDialogOpen}
         onOpenChange={setTransactionDialogOpen}
         onAddTransaction={handleAddTransaction}
       />
+
+      <style>{`
+        .home-reveal {
+          animation: homeFadeUp 0.6s calc(var(--delay, 0ms)) cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes homeFadeUp {
+          from { opacity: 0; transform: translateY(14px); }
+          to   { opacity: 1; transform: translateY(0);    }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .home-reveal { animation: none; }
+        }
+      `}</style>
     </div>
   );
 }

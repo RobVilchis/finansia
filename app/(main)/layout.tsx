@@ -22,7 +22,7 @@ export default function MainLayout({
             <div className="hidden md:block">
               <Sidebar />
             </div>
-            <div className="pt-14 md:pt-6 md:pl-80 w-full bg-white dark:bg-slate-950">
+            <div className="pt-14 md:pt-6 md:pl-80 w-full bg-app">
               {children}
             </div>
           </section>
