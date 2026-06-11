@@ -3,7 +3,6 @@ import { dark } from "@clerk/themes";
 import { Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
 import type { Metadata } from "next";
-import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import "./globals.css";
 
@@ -36,13 +35,11 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider appearance={{ baseTheme: dark }}>
-      <html lang="es" suppressHydrationWarning>
+      <html lang="es" className="dark" suppressHydrationWarning>
         <body
           className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} antialiased relative`}
         >
-          <ThemeProvider attribute="class">
-            <Theme appearance="inherit">{children}</Theme>
-          </ThemeProvider>
+          <Theme appearance="dark">{children}</Theme>
         </body>
       </html>
     </ClerkProvider>
