@@ -22,8 +22,9 @@ interface ExpenseData {
 
 interface ExpensesPieChartProps {
   refreshTrigger?: number;
-  startDate: Date;
-  endDate: Date;
+  startDate?: Date;
+  endDate?: Date;
+  monthSwitcher?: boolean;
 }
 
 interface Props {
@@ -54,13 +55,16 @@ function formatMXN(amount: number) {
 export default function ExpensesPieChart({
   refreshTrigger = 0,
   startDate,
+  endDate,
+  monthSwitcher = false,
 }: ExpensesPieChartProps) {
   const [data, setData] = useState<ExpenseData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [viewMonth, setViewMonth] = useState(
-    () => new Date(startDate.getFullYear(), startDate.getMonth(), 1)
-  );
+  const [viewMonth, setViewMonth] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
   const bp = useBreakpoint();
   const isMediumOrLarge = bp === "md" || bp === "lg";
 
@@ -90,16 +94,18 @@ export default function ExpensesPieChart({
     try {
       setIsLoading(true);
       setHasError(false);
-      const rangeStart = new Date(
-        viewMonth.getFullYear(),
-        viewMonth.getMonth(),
-        1
-      );
-      const rangeEnd = new Date(
-        viewMonth.getFullYear(),
-        viewMonth.getMonth() + 1,
-        0
-      );
+      let rangeStart: Date;
+      let rangeEnd: Date;
+      if (monthSwitcher) {
+        rangeStart = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
+        rangeEnd = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0);
+      } else {
+        const fallback = new Date();
+        rangeStart =
+          startDate ??
+          new Date(fallback.getFullYear(), fallback.getMonth(), 1);
+        rangeEnd = endDate ?? fallback;
+      }
       const params = new URLSearchParams({
         startDate: rangeStart.toISOString().split("T")[0],
         endDate: rangeEnd.toISOString().split("T")[0],
@@ -114,19 +120,19 @@ export default function ExpensesPieChart({
     } finally {
       setIsLoading(false);
     }
-  }, [viewMonth]);
+  }, [monthSwitcher, viewMonth, startDate, endDate]);
 
   useEffect(() => {
     fetchData();
   }, [refreshTrigger, fetchData]);
 
-  const monthSwitcher = (
+  const switcherHeader = monthSwitcher ? (
     <div className="flex items-center justify-between mb-4">
       <button
         type="button"
         onClick={goToPrevMonth}
         aria-label="Mes anterior"
-        className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-surface transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-surface transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed"
       >
         <ChevronLeft size={18} />
       </button>
@@ -138,12 +144,12 @@ export default function ExpensesPieChart({
         onClick={goToNextMonth}
         disabled={isCurrentMonth}
         aria-label="Mes siguiente"
-        className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-surface transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-surface transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed"
       >
         <ChevronRight size={18} />
       </button>
     </div>
-  );
+  ) : null;
 
   let body: ReactNode;
   if (isLoading) {
@@ -171,7 +177,7 @@ export default function ExpensesPieChart({
 
   return (
     <div>
-      {monthSwitcher}
+      {switcherHeader}
       {body}
     </div>
   );

@@ -42,8 +42,6 @@ export default async function DashboardPage() {
   }
 
   const now = new Date();
-  const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
   let monthlySummary: MonthlySummaryItem[] = [];
 
@@ -92,11 +90,5 @@ export default async function DashboardPage() {
     });
   }
 
-  return (
-    <HomeShell
-      monthlySummary={monthlySummary}
-      startDate={startDate}
-      endDate={endDate}
-    />
-  );
+  return <HomeShell monthlySummary={monthlySummary} />;
 }
