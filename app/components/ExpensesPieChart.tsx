@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { ChartPie } from "lucide-react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { ChartPie, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Cell,
   Legend,
@@ -54,21 +54,55 @@ function formatMXN(amount: number) {
 export default function ExpensesPieChart({
   refreshTrigger = 0,
   startDate,
-  endDate,
 }: ExpensesPieChartProps) {
   const [data, setData] = useState<ExpenseData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [viewMonth, setViewMonth] = useState(
+    () => new Date(startDate.getFullYear(), startDate.getMonth(), 1)
+  );
   const bp = useBreakpoint();
   const isMediumOrLarge = bp === "md" || bp === "lg";
+
+  const now = new Date();
+  const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const isCurrentMonth =
+    viewMonth.getFullYear() === currentMonth.getFullYear() &&
+    viewMonth.getMonth() === currentMonth.getMonth();
+
+  const monthLabel = viewMonth.toLocaleDateString("es-MX", {
+    month: "long",
+    year: "numeric",
+  });
+  const monthLabelDisplay =
+    monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+
+  const goToPrevMonth = () =>
+    setViewMonth(
+      (m) => new Date(m.getFullYear(), m.getMonth() - 1, 1)
+    );
+  const goToNextMonth = () =>
+    setViewMonth(
+      (m) => new Date(m.getFullYear(), m.getMonth() + 1, 1)
+    );
 
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       setHasError(false);
+      const rangeStart = new Date(
+        viewMonth.getFullYear(),
+        viewMonth.getMonth(),
+        1
+      );
+      const rangeEnd = new Date(
+        viewMonth.getFullYear(),
+        viewMonth.getMonth() + 1,
+        0
+      );
       const params = new URLSearchParams({
-        startDate: startDate.toISOString().split("T")[0],
-        endDate: endDate.toISOString().split("T")[0],
+        startDate: rangeStart.toISOString().split("T")[0],
+        endDate: rangeEnd.toISOString().split("T")[0],
       });
       const response = await fetch(`/api/pie-chart?${params.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch data");
@@ -80,31 +114,69 @@ export default function ExpensesPieChart({
     } finally {
       setIsLoading(false);
     }
-  }, [startDate, endDate]);
+  }, [viewMonth]);
 
   useEffect(() => {
     fetchData();
   }, [refreshTrigger, fetchData]);
 
-  if (isLoading) return <ChartSkeleton />;
-  if (hasError)
-    return (
+  const monthSwitcher = (
+    <div className="flex items-center justify-between mb-4">
+      <button
+        type="button"
+        onClick={goToPrevMonth}
+        aria-label="Mes anterior"
+        className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-surface transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        <ChevronLeft size={18} />
+      </button>
+      <span className="text-sm font-medium text-ink tabular-nums">
+        {monthLabelDisplay}
+      </span>
+      <button
+        type="button"
+        onClick={goToNextMonth}
+        disabled={isCurrentMonth}
+        aria-label="Mes siguiente"
+        className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-surface transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        <ChevronRight size={18} />
+      </button>
+    </div>
+  );
+
+  let body: ReactNode;
+  if (isLoading) {
+    body = <ChartSkeleton />;
+  } else if (hasError) {
+    body = (
       <ErrorState
         compact
         message="No se pudo cargar la gráfica de gastos."
         onRetry={fetchData}
       />
     );
-  if (data.length === 0)
-    return (
+  } else if (data.length === 0) {
+    body = (
       <EmptyState
         compact
         icon={<ChartPie size={18} />}
-        title="Sin gastos este mes"
+        title="Sin gastos en este mes"
         description="Registra algunos gastos para ver la gráfica."
       />
     );
+  } else {
+    body = renderChart();
+  }
 
+  return (
+    <div>
+      {monthSwitcher}
+      {body}
+    </div>
+  );
+
+  function renderChart() {
   const chartData = data
     .map((item) => ({
       name: item.categoryName,
@@ -204,4 +276,5 @@ export default function ExpensesPieChart({
       </ResponsiveContainer>
     </div>
   );
+  }
 }

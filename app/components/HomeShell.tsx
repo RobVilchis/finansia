@@ -98,11 +98,7 @@ export default function HomeShell({
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <HomeSection
-            title="Gastos por categoría"
-            meta="Mes actual"
-            delay={60}
-          >
+          <HomeSection title="Gastos por categoría" delay={60}>
             <ExpensesPieChart
               refreshTrigger={refreshTrigger}
               startDate={startDate}
