@@ -61,44 +61,51 @@ export default function ExpensesPieChart({
   const [data, setData] = useState<ExpenseData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [viewMonth, setViewMonth] = useState(() => {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1);
-  });
+  const [viewMonth, setViewMonth] = useState<Date | null>(null);
   const bp = useBreakpoint();
   const isMediumOrLarge = bp === "md" || bp === "lg";
+
+  // Seed the viewed month from the CLIENT clock after mount. Computing it during
+  // SSR would lock in the server's clock, which can differ from the browser's
+  // month and leave the chart stuck on the wrong month after hydration.
+  useEffect(() => {
+    if (!monthSwitcher) return;
+    const d = new Date();
+    setViewMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+  }, [monthSwitcher]);
 
   const now = new Date();
   const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const isCurrentMonth =
+    viewMonth != null &&
     viewMonth.getFullYear() === currentMonth.getFullYear() &&
     viewMonth.getMonth() === currentMonth.getMonth();
 
-  const monthLabel = viewMonth.toLocaleDateString("es-MX", {
-    month: "long",
-    year: "numeric",
-  });
-  const monthLabelDisplay =
-    monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+  const monthLabelDisplay = viewMonth
+    ? (() => {
+        const label = viewMonth.toLocaleDateString("es-MX", {
+          month: "long",
+          year: "numeric",
+        });
+        return label.charAt(0).toUpperCase() + label.slice(1);
+      })()
+    : "";
 
   const goToPrevMonth = () =>
-    setViewMonth(
-      (m) => new Date(m.getFullYear(), m.getMonth() - 1, 1)
-    );
+    setViewMonth((m) => (m ? new Date(m.getFullYear(), m.getMonth() - 1, 1) : m));
   const goToNextMonth = () =>
-    setViewMonth(
-      (m) => new Date(m.getFullYear(), m.getMonth() + 1, 1)
-    );
+    setViewMonth((m) => (m ? new Date(m.getFullYear(), m.getMonth() + 1, 1) : m));
 
   const fetchData = useCallback(async () => {
+    if (monthSwitcher && !viewMonth) return;
     try {
       setIsLoading(true);
       setHasError(false);
       let rangeStart: Date;
       let rangeEnd: Date;
       if (monthSwitcher) {
-        rangeStart = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
-        rangeEnd = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0);
+        rangeStart = new Date(viewMonth!.getFullYear(), viewMonth!.getMonth(), 1);
+        rangeEnd = new Date(viewMonth!.getFullYear(), viewMonth!.getMonth() + 1, 0);
       } else {
         const fallback = new Date();
         rangeStart =
@@ -126,7 +133,7 @@ export default function ExpensesPieChart({
     fetchData();
   }, [refreshTrigger, fetchData]);
 
-  const switcherHeader = monthSwitcher ? (
+  const switcherHeader = monthSwitcher && viewMonth ? (
     <div className="flex items-center justify-between mb-4">
       <button
         type="button"
@@ -183,16 +190,30 @@ export default function ExpensesPieChart({
   );
 
   function renderChart() {
-  const chartData = data
+  const sortedDesc = data
     .map((item) => ({
       name: item.categoryName,
       value: parseFloat(item.totalAmount),
     }))
-    .sort((a, b) => b.value - a.value)
-    .map((item, index) => ({
-      ...item,
-      color: COLORS[index % COLORS.length],
-    }));
+    .sort((a, b) => b.value - a.value);
+
+  // Cap the slices so the legend stays inside the card and every slice keeps a
+  // distinct color (COLORS has 10 entries). The smaller categories collapse into
+  // a single "Otros" slice; full detail lives on /analysis.
+  const MAX_SLICES = COLORS.length;
+  let slices = sortedDesc;
+  if (sortedDesc.length > MAX_SLICES) {
+    const top = sortedDesc.slice(0, MAX_SLICES - 1);
+    const otros = sortedDesc
+      .slice(MAX_SLICES - 1)
+      .reduce((sum, item) => sum + item.value, 0);
+    slices = [...top, { name: "Otros", value: otros }];
+  }
+
+  const chartData = slices.map((item, index) => ({
+    ...item,
+    color: COLORS[index % COLORS.length],
+  }));
 
   const totalExpenses = chartData.reduce((sum, item) => sum + item.value, 0);
 
