@@ -13,8 +13,6 @@ import TipsList from "@/app/components/TipsList";
 
 interface HomeShellProps {
   monthlySummary: MonthlySummaryItem[];
-  startDate: Date;
-  endDate: Date;
 }
 
 /* Glass "window" panel: hairline sheen on the top edge + a chrome-style
@@ -56,11 +54,7 @@ function HomeSection({
   );
 }
 
-export default function HomeShell({
-  monthlySummary,
-  startDate,
-  endDate,
-}: HomeShellProps) {
+export default function HomeShell({ monthlySummary }: HomeShellProps) {
   const router = useRouter();
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -75,7 +69,7 @@ export default function HomeShell({
     router.refresh();
   };
 
-  const monthLabel = startDate.toLocaleDateString("es-MX", {
+  const monthLabel = new Date().toLocaleDateString("es-MX", {
     month: "long",
     year: "numeric",
   });
@@ -98,16 +92,8 @@ export default function HomeShell({
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <HomeSection
-            title="Gastos por categoría"
-            meta="Mes actual"
-            delay={60}
-          >
-            <ExpensesPieChart
-              refreshTrigger={refreshTrigger}
-              startDate={startDate}
-              endDate={endDate}
-            />
+          <HomeSection title="Gastos por categoría" delay={60}>
+            <ExpensesPieChart monthSwitcher refreshTrigger={refreshTrigger} />
           </HomeSection>
           <HomeSection title="Tips de esta semana" delay={120}>
             <TipsList />

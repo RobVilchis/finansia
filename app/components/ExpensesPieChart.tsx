@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { ChartPie } from "lucide-react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { ChartPie, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Cell,
   Legend,
@@ -22,8 +22,9 @@ interface ExpenseData {
 
 interface ExpensesPieChartProps {
   refreshTrigger?: number;
-  startDate: Date;
-  endDate: Date;
+  startDate?: Date;
+  endDate?: Date;
+  monthSwitcher?: boolean;
 }
 
 interface Props {
@@ -55,20 +56,66 @@ export default function ExpensesPieChart({
   refreshTrigger = 0,
   startDate,
   endDate,
+  monthSwitcher = false,
 }: ExpensesPieChartProps) {
   const [data, setData] = useState<ExpenseData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [viewMonth, setViewMonth] = useState<Date | null>(null);
   const bp = useBreakpoint();
   const isMediumOrLarge = bp === "md" || bp === "lg";
 
+  // Seed the viewed month from the CLIENT clock after mount. Computing it during
+  // SSR would lock in the server's clock, which can differ from the browser's
+  // month and leave the chart stuck on the wrong month after hydration.
+  useEffect(() => {
+    if (!monthSwitcher) return;
+    const d = new Date();
+    setViewMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+  }, [monthSwitcher]);
+
+  const now = new Date();
+  const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const isCurrentMonth =
+    viewMonth != null &&
+    viewMonth.getFullYear() === currentMonth.getFullYear() &&
+    viewMonth.getMonth() === currentMonth.getMonth();
+
+  const monthLabelDisplay = viewMonth
+    ? (() => {
+        const label = viewMonth.toLocaleDateString("es-MX", {
+          month: "long",
+          year: "numeric",
+        });
+        return label.charAt(0).toUpperCase() + label.slice(1);
+      })()
+    : "";
+
+  const goToPrevMonth = () =>
+    setViewMonth((m) => (m ? new Date(m.getFullYear(), m.getMonth() - 1, 1) : m));
+  const goToNextMonth = () =>
+    setViewMonth((m) => (m ? new Date(m.getFullYear(), m.getMonth() + 1, 1) : m));
+
   const fetchData = useCallback(async () => {
+    if (monthSwitcher && !viewMonth) return;
     try {
       setIsLoading(true);
       setHasError(false);
+      let rangeStart: Date;
+      let rangeEnd: Date;
+      if (monthSwitcher) {
+        rangeStart = new Date(viewMonth!.getFullYear(), viewMonth!.getMonth(), 1);
+        rangeEnd = new Date(viewMonth!.getFullYear(), viewMonth!.getMonth() + 1, 0);
+      } else {
+        const fallback = new Date();
+        rangeStart =
+          startDate ??
+          new Date(fallback.getFullYear(), fallback.getMonth(), 1);
+        rangeEnd = endDate ?? fallback;
+      }
       const params = new URLSearchParams({
-        startDate: startDate.toISOString().split("T")[0],
-        endDate: endDate.toISOString().split("T")[0],
+        startDate: rangeStart.toISOString().split("T")[0],
+        endDate: rangeEnd.toISOString().split("T")[0],
       });
       const response = await fetch(`/api/pie-chart?${params.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch data");
@@ -80,41 +127,93 @@ export default function ExpensesPieChart({
     } finally {
       setIsLoading(false);
     }
-  }, [startDate, endDate]);
+  }, [monthSwitcher, viewMonth, startDate, endDate]);
 
   useEffect(() => {
     fetchData();
   }, [refreshTrigger, fetchData]);
 
-  if (isLoading) return <ChartSkeleton />;
-  if (hasError)
-    return (
+  const switcherHeader = monthSwitcher && viewMonth ? (
+    <div className="flex items-center justify-between mb-4">
+      <button
+        type="button"
+        onClick={goToPrevMonth}
+        aria-label="Mes anterior"
+        className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-surface transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed"
+      >
+        <ChevronLeft size={18} />
+      </button>
+      <span className="text-sm font-medium text-ink tabular-nums">
+        {monthLabelDisplay}
+      </span>
+      <button
+        type="button"
+        onClick={goToNextMonth}
+        disabled={isCurrentMonth}
+        aria-label="Mes siguiente"
+        className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-surface transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed"
+      >
+        <ChevronRight size={18} />
+      </button>
+    </div>
+  ) : null;
+
+  let body: ReactNode;
+  if (isLoading) {
+    body = <ChartSkeleton />;
+  } else if (hasError) {
+    body = (
       <ErrorState
         compact
         message="No se pudo cargar la gráfica de gastos."
         onRetry={fetchData}
       />
     );
-  if (data.length === 0)
-    return (
+  } else if (data.length === 0) {
+    body = (
       <EmptyState
         compact
         icon={<ChartPie size={18} />}
-        title="Sin gastos este mes"
+        title="Sin gastos en este mes"
         description="Registra algunos gastos para ver la gráfica."
       />
     );
+  } else {
+    body = renderChart();
+  }
 
-  const chartData = data
+  return (
+    <div>
+      {switcherHeader}
+      {body}
+    </div>
+  );
+
+  function renderChart() {
+  const sortedDesc = data
     .map((item) => ({
       name: item.categoryName,
       value: parseFloat(item.totalAmount),
     }))
-    .sort((a, b) => b.value - a.value)
-    .map((item, index) => ({
-      ...item,
-      color: COLORS[index % COLORS.length],
-    }));
+    .sort((a, b) => b.value - a.value);
+
+  // Cap the slices so the legend stays inside the card and every slice keeps a
+  // distinct color (COLORS has 10 entries). The smaller categories collapse into
+  // a single "Otros" slice; full detail lives on /analysis.
+  const MAX_SLICES = COLORS.length;
+  let slices = sortedDesc;
+  if (sortedDesc.length > MAX_SLICES) {
+    const top = sortedDesc.slice(0, MAX_SLICES - 1);
+    const otros = sortedDesc
+      .slice(MAX_SLICES - 1)
+      .reduce((sum, item) => sum + item.value, 0);
+    slices = [...top, { name: "Otros", value: otros }];
+  }
+
+  const chartData = slices.map((item, index) => ({
+    ...item,
+    color: COLORS[index % COLORS.length],
+  }));
 
   const totalExpenses = chartData.reduce((sum, item) => sum + item.value, 0);
 
@@ -204,4 +303,5 @@ export default function ExpensesPieChart({
       </ResponsiveContainer>
     </div>
   );
+  }
 }
