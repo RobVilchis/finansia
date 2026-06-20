@@ -57,13 +57,13 @@ export default function ChatUI({ messages, sendMessage }: ChatUIProps) {
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-6 px-4">
             <div className="text-center">
-              <div className="w-12 h-12 bg-white/6 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-cyan-500/10">
-                <Sparkles className="w-5 h-5 text-cyan-400" />
+              <div className="w-12 h-12 bg-surface border border-edge rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-cyan-500/10">
+                <Sparkles className="w-5 h-5 text-accent" />
               </div>
-              <h3 className="text-base font-medium text-white mb-1">
+              <h3 className="text-base font-medium text-ink mb-1">
                 ¿En qué te ayudo?
               </h3>
-              <p className="text-xs text-white/40">
+              <p className="text-xs text-ink-subtle">
                 Pregúntame sobre tus finanzas
               </p>
             </div>
@@ -72,8 +72,8 @@ export default function ChatUI({ messages, sendMessage }: ChatUIProps) {
                 <button
                   key={s}
                   onClick={() => submit(s)}
-                  className="text-left text-sm text-white/70 px-3 py-2.5 bg-white/6 border border-white/10
-                    rounded-xl hover:bg-white/10 hover:border-cyan-400/30 hover:text-white
+                  className="text-left text-sm text-ink-muted px-3 py-2.5 bg-surface border border-edge
+                    rounded-xl hover:bg-surface-strong hover:border-accent-border hover:text-ink
                     transition-all cursor-pointer"
                 >
                   {s}
@@ -91,13 +91,13 @@ export default function ChatUI({ messages, sendMessage }: ChatUIProps) {
                 <div
                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                     message.role === "user"
-                      ? "bg-cyan-500/15 border border-cyan-500/25 text-white/95"
-                      : "bg-white/6 border border-white/10 text-white/85"
+                      ? "bg-accent-soft border border-accent-border text-ink"
+                      : "bg-surface border border-edge text-ink-muted"
                   }`}
                 >
                   {message.parts.map((part: MessagePart, index: number) =>
                     part.type === "text" ? (
-                      <div key={index} className="prose prose-sm prose-invert max-w-none prose-p:my-1.5 prose-headings:text-white prose-strong:text-white">
+                      <div key={index} className="prose prose-sm prose-invert max-w-none prose-p:my-1.5 prose-headings:text-ink prose-strong:text-ink">
                         <Markdown>{part.text}</Markdown>
                       </div>
                     ) : null,
@@ -118,8 +118,8 @@ export default function ChatUI({ messages, sendMessage }: ChatUIProps) {
         }}
         className="pt-3 pb-1"
       >
-        <div className="relative flex items-end bg-white/6 backdrop-blur-md border border-white/10
-          rounded-xl focus-within:border-cyan-400/40 transition-all overflow-hidden">
+        <div className="relative flex items-end bg-surface backdrop-blur-md border border-edge
+          rounded-xl focus-within:border-accent-border transition-all overflow-hidden">
           <textarea
             ref={textareaRef}
             value={input}
@@ -135,14 +135,14 @@ export default function ChatUI({ messages, sendMessage }: ChatUIProps) {
             }}
             placeholder="Pregunta sobre tus gastos..."
             className="min-h-[48px] max-h-[160px] w-full bg-transparent px-4 py-3 pr-12
-              text-sm text-white/90 placeholder:text-white/30 focus:outline-none resize-none"
+              text-sm text-ink/90 placeholder:text-ink-faint focus:outline-none resize-none"
             rows={1}
           />
           <button
             type="submit"
             disabled={!input.trim()}
-            className="absolute right-2 bottom-2 p-2 bg-cyan-500/20 border border-cyan-500/30
-              text-cyan-300 rounded-lg hover:bg-cyan-500/30 hover:text-cyan-200
+            className="absolute right-2 bottom-2 p-2 bg-accent-soft border border-accent-border
+              text-accent rounded-lg hover:bg-accent/30 hover:text-accent-fg
               transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
           >
             <ArrowUp className="w-4 h-4" />

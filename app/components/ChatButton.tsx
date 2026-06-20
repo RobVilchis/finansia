@@ -2,7 +2,13 @@
 
 import { useChatContext } from "../contexts/ChatContext";
 import ChatUI from "./ChatUI";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   Drawer,
   DrawerContent,
@@ -15,7 +21,8 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { useEffect, useState } from "react";
 
 export default function ChatButton() {
-  const { messages, sendMessage, isSheetOpen, setIsSheetOpen } = useChatContext();
+  const { messages, sendMessage, isSheetOpen, setIsSheetOpen } =
+    useChatContext();
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [mounted, setMounted] = useState(false);
 
@@ -28,16 +35,16 @@ export default function ChatButton() {
   const TriggerButton = (
     <button
       onClick={() => setIsSheetOpen(true)}
-      className="hidden md:flex fixed right-8 bottom-8 h-12 w-12
-        bg-gray-900/80 backdrop-blur-xl border border-white/10
+      className="hidden md:flex fixed right-8 bottom-8 h-16 w-16
+        bg-app-elevated/80 backdrop-blur-xl border border-edge
         rounded-full items-center justify-center
-        hover:border-cyan-400/40 hover:bg-gray-900
+        hover:border-accent-border hover:bg-app-elevated
         transition-all cursor-pointer z-50
         shadow-2xl shadow-cyan-500/10
         font-(family-name:--font-outfit)"
       aria-label="Abrir chat"
     >
-      <Sparkles className="w-5 h-5 text-cyan-400" />
+      <Sparkles className="w-7 h-7 text-accent" />
     </button>
   );
 
@@ -45,9 +52,9 @@ export default function ChatButton() {
     return (
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetTrigger asChild>{TriggerButton}</SheetTrigger>
-        <SheetContent className="w-[50vw]! sm:max-w-[1200px]! bg-gray-950! border-l! border-white/8! p-0! flex! flex-col! font-(family-name:--font-outfit)">
-          <SheetHeader className="px-5 pt-5 pb-3 border-b border-white/8 space-y-0!">
-            <SheetTitle className="text-xs font-medium text-white/30 uppercase tracking-widest text-left!">
+        <SheetContent className="w-[50vw]! sm:max-w-[1200px]! bg-app! border-l! border-edge-soft! p-0! flex! flex-col! font-(family-name:--font-outfit)">
+          <SheetHeader className="px-5 pt-5 pb-3 border-b border-edge-soft space-y-0!">
+            <SheetTitle className="text-xs font-medium text-ink-faint uppercase tracking-widest text-left!">
               Asistente
             </SheetTitle>
           </SheetHeader>
@@ -62,9 +69,9 @@ export default function ChatButton() {
   return (
     <Drawer open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       <DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
-      <DrawerContent className="h-[85dvh] flex flex-col bg-gray-950! border-t! border-white/8! font-(family-name:--font-outfit)">
+      <DrawerContent className="h-[85dvh] flex flex-col bg-app! border-t! border-edge-soft! font-(family-name:--font-outfit)">
         <DrawerHeader className="px-5 pt-3 pb-2">
-          <DrawerTitle className="text-xs font-medium text-white/30 uppercase tracking-widest text-left!">
+          <DrawerTitle className="text-xs font-medium text-ink-faint uppercase tracking-widest text-left!">
             Asistente
           </DrawerTitle>
         </DrawerHeader>

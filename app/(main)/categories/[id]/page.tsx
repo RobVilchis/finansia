@@ -3,10 +3,25 @@
 import TransactionCard from "@/app/components/TransactionCard";
 import { useToast } from "@/app/components/GenericToast";
 import { EmptyState, ErrorState } from "@/app/components/ui/states";
+import {
+  GlassButton,
+  GlassInput,
+  GlassDialogShell,
+  glassDialogContent,
+  FieldLabel,
+  FieldError,
+} from "@/app/components/ui/glass";
 import { Transaction } from "@/app/(main)/data/DataDashboard";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Dialog, TextField } from "@radix-ui/themes";
-import { ArrowLeft, FolderX, Pencil, ReceiptText, Trash2 } from "lucide-react";
+import { Dialog, VisuallyHidden } from "@radix-ui/themes";
+import {
+  ArrowLeft,
+  FolderX,
+  Pencil,
+  ReceiptText,
+  Trash2,
+  FolderPen,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useState } from "react";
@@ -31,9 +46,20 @@ interface CategoryData {
   };
 }
 
+function formatMXN(amount: number, withCents = false) {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: withCents ? 2 : 0,
+  }).format(amount);
+}
+
 const editSchema = z.object({
   name: z.string().min(1, "El nombre de la categoría es requerido"),
-  budget: z.number({ invalid_type_error: "Ingresa un número válido" }).positive("El presupuesto debe ser mayor a 0").nullish(),
+  budget: z
+    .number({ invalid_type_error: "Ingresa un número válido" })
+    .positive("El presupuesto debe ser mayor a 0")
+    .nullish(),
 });
 
 export default function CategoryPage(props: {
@@ -111,7 +137,10 @@ export default function CategoryPage(props: {
     setShowDeleteDialog(true);
   };
 
-  const onSubmitRename = async (data: { name: string; budget?: number | null }) => {
+  const onSubmitRename = async (data: {
+    name: string;
+    budget?: number | null;
+  }) => {
     try {
       setIsRenaming(true);
       const response = await fetch(`/api/categories/${params.id}`, {
@@ -186,65 +215,65 @@ export default function CategoryPage(props: {
     }
   };
 
+  const typeChipClass = (type: string) => {
+    switch (type) {
+      case "expense":
+        return "bg-expense-soft border-expense-border text-expense";
+      case "income":
+        return "bg-income-soft border-income-border text-income";
+      default:
+        return "bg-transfer-soft border-transfer-border text-transfer";
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 p-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-app font-(family-name:--font-outfit) w-full px-5 md:px-10 py-8">
+        <div className="w-full max-w-4xl mx-auto">
           {/* Back Button Skeleton */}
           <div className="mb-6">
-            <div className="w-32 h-6 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+            <div className="w-32 h-6 bg-surface rounded animate-pulse"></div>
           </div>
 
           {/* Category Header Skeleton */}
-          <div className="mb-6">
+          <div className="rounded-xl border border-edge bg-surface backdrop-blur-md p-5 mb-6">
             <div className="flex justify-between items-start">
               <div>
-                <div className="flex gap-2 items-center mb-2">
-                  <div className="w-48 h-10 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
-                  <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                <div className="flex gap-2 items-center mb-3">
+                  <div className="w-48 h-9 bg-surface-strong rounded animate-pulse"></div>
+                  <div className="w-8 h-8 bg-surface-strong rounded animate-pulse"></div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-20 h-6 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
-                  <div className="w-32 h-6 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                <div className="flex items-center gap-3">
+                  <div className="w-20 h-6 bg-surface-strong rounded-full animate-pulse"></div>
+                  <div className="w-32 h-6 bg-surface-strong rounded animate-pulse"></div>
                 </div>
               </div>
-              <div className="w-24 h-10 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
+              <div className="w-24 h-9 bg-surface-strong rounded-lg animate-pulse"></div>
             </div>
 
-            {/* Category Summary Skeleton */}
-            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-              <div className="flex items-end justify-between gap-2 sm:gap-4">
-                <div className="text-center">
-                  <div className="w-20 h-4 bg-slate-200 dark:bg-slate-700 rounded mx-auto mb-2 animate-pulse"></div>
-                  <div className="w-24 h-8 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
-                </div>
-                <div className="text-center">
-                  <div className="w-32 h-4 bg-slate-200 dark:bg-slate-700 rounded mx-auto mb-2 animate-pulse"></div>
-                  <div className="w-28 h-8 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
-                </div>
-                <div className="text-center">
-                  <div className="w-24 h-4 bg-slate-200 dark:bg-slate-700 rounded mx-auto mb-2 animate-pulse"></div>
-                  <div className="w-20 h-8 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
-                </div>
+            <div className="mt-5 pt-5 border-t border-edge-soft">
+              <div className="grid grid-cols-3 gap-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="h-16 bg-surface-strong rounded-lg animate-pulse"
+                  ></div>
+                ))}
               </div>
             </div>
           </div>
 
           {/* Transactions List Skeleton */}
-          <div className="space-y-4">
-            <div className="w-32 h-6 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
-
-            {/* Month Group Skeleton */}
-            <div>
-              <div className="w-40 h-5 bg-slate-200 dark:bg-slate-700 rounded mb-2 animate-pulse"></div>
-              <div className="space-y-2">
-                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                  <div
-                    key={i}
-                    className="w-full h-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"
-                  ></div>
-                ))}
-              </div>
+          <div className="space-y-3">
+            <div className="w-32 h-7 bg-surface rounded animate-pulse"></div>
+            <div className="w-40 h-5 bg-surface rounded animate-pulse"></div>
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <div
+                  key={i}
+                  className="w-full h-14 bg-surface rounded-xl animate-pulse"
+                ></div>
+              ))}
             </div>
           </div>
         </div>
@@ -254,12 +283,11 @@ export default function CategoryPage(props: {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 p-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-app font-(family-name:--font-outfit) w-full px-5 md:px-10 py-8">
+        <div className="w-full max-w-4xl mx-auto">
           <Link
             href="/categories"
-            className="inline-flex items-center gap-2  text-slate-600
-            dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 mb-6 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-medium text-ink-subtle hover:text-ink mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Volver a Categorías
@@ -276,8 +304,8 @@ export default function CategoryPage(props: {
 
   if (notFound || !categoryData) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 p-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-app font-(family-name:--font-outfit) w-full px-5 md:px-10 py-8">
+        <div className="w-full max-w-4xl mx-auto">
           <EmptyState
             icon={<FolderX size={24} />}
             title="Categoría no encontrada"
@@ -318,114 +346,177 @@ export default function CategoryPage(props: {
     );
   };
 
+  const { category, summary } = categoryData;
+  const isExpense = category.type === "expense";
+  const budget = category.budget ? Number(category.budget) : null;
+  const hasBudget = isExpense && budget !== null && budget > 0;
+
+  // Budget is monthly, so compare it against the current calendar month's
+  // spend (matches the `spent` figure shown on the categories list cards),
+  // not the all-time total.
+  const now = new Date();
+  const monthlySpent = categoryData.transactions.reduce((sum, t) => {
+    const d = new Date(t.date);
+    return d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear()
+      ? sum + Number(t.amount)
+      : sum;
+  }, 0);
+
+  const rawPct = hasBudget ? (monthlySpent / budget!) * 100 : 0;
+  const clampedPct = Math.min(rawPct, 100);
+  const budgetStatus =
+    rawPct >= 100 ? "over" : rawPct >= 75 ? "warning" : "ok";
+  const budgetAccent = {
+    over: { bar: "bg-expense", text: "text-expense", glow: "shadow-rose-500/10" },
+    warning: { bar: "bg-warn", text: "text-warn", glow: "shadow-amber-500/10" },
+    ok: { bar: "bg-income", text: "text-income", glow: "shadow-emerald-500/10" },
+  }[budgetStatus];
+  const remaining = hasBudget ? budget! - monthlySpent : 0;
+
+  const totalColor = isExpense
+    ? "text-expense"
+    : category.type === "income"
+      ? "text-income"
+      : "text-ink";
+
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-app font-(family-name:--font-outfit) w-full px-5 md:px-10 py-8">
+      <div className="w-full max-w-4xl mx-auto animate-fadeIn">
         {/* Back Button */}
         <Link
           href="/categories"
-          className="inline-flex items-center font-medium gap-2 text-slate-500 
-          dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 mb-6 transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-medium text-ink-subtle hover:text-ink mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver a Categorías
         </Link>
 
-        {/* Category Header */}
-        <div className="mb-6 ">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="flex gap-2 items-center  mb-2">
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                  {categoryData.category.name}
+        {/* Category Header Card */}
+        <div
+          className={`rounded-xl border border-edge bg-surface backdrop-blur-md p-5 mb-6 shadow-lg shadow-black/10 ${
+            hasBudget ? budgetAccent.glow : ""
+          }`}
+        >
+          <div className="flex justify-between items-start gap-3">
+            <div className="min-w-0">
+              <div className="flex gap-1.5 items-center mb-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-ink truncate">
+                  {category.name}
                 </h1>
                 <button
                   onClick={handleRename}
-                  className="flex items-center gap-2 px-2 py-2 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 rounded-lg transition-colors"
+                  aria-label="Editar categoría"
+                  className="shrink-0 p-2 text-ink-subtle hover:text-ink hover:bg-surface rounded-lg transition-colors cursor-pointer"
                 >
-                  <Pencil className="w-4 h-4 font-bold" />
+                  <Pencil className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="flex items-center gap-4 flex-wrap">
-                <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-200 dark:bg-slate-700">
-                  {getTypeLabel(categoryData.category.type)}
+              <div className="flex items-center gap-3 flex-wrap">
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-medium border ${typeChipClass(
+                    category.type,
+                  )}`}
+                >
+                  {getTypeLabel(category.type)}
                 </span>
-                <span className="text-slate-600 dark:text-slate-400">
-                  {categoryData.summary.transactionCount} transacciones
+                <span className="text-sm text-ink-muted">
+                  {summary.transactionCount}{" "}
+                  {summary.transactionCount === 1
+                    ? "transacción"
+                    : "transacciones"}
                 </span>
-                {categoryData.category.type === "expense" && (
-                  <span className="text-slate-600 dark:text-slate-400 text-sm">
-                    Presupuesto:{" "}
-                    <span className="font-medium text-slate-800 dark:text-slate-200">
-                      {categoryData.category.budget
-                        ? new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(Number(categoryData.category.budget))
-                        : "Sin presupuesto"}
-                    </span>
-                  </span>
-                )}
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2">
-              <button
-                onClick={handleDelete}
-                className="flex items-center gap-2 px-4 py-2 dark:bg-red-950 bg-red-100 
-                hover:bg-red-200 dark:hover:bg-red-800 text-red-800 dark:text-red-100 rounded-lg transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-                Eliminar
-              </button>
-            </div>
+            <GlassButton
+              variant="danger"
+              onClick={handleDelete}
+              className="flex items-center gap-2 shrink-0"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Eliminar</span>
+            </GlassButton>
           </div>
 
-          {/* Category Summary */}
-          <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-            <div className="flex items-end justify-between gap-2 sm:gap-4">
-              <div className="text-center">
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-                  Monto total
-                </p>
-                <p className={`text-lg sm:text-2xl font-bold`}>
-                  ${categoryData.summary.totalAmount}
-                </p>
+          {/* Budget hero — only for expense categories with a budget */}
+          {hasBudget && (
+            <div className="mt-5 pt-5 border-t border-edge-soft">
+              <div className="flex items-end justify-between gap-2 mb-2">
+                <div>
+                  <p className="text-[11px] font-medium text-ink-subtle uppercase tracking-wider mb-1">
+                    Gastado este mes
+                  </p>
+                  <p className="font-mono text-2xl sm:text-3xl font-bold tabular-nums text-ink">
+                    {formatMXN(monthlySpent)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span
+                    className={`font-mono text-2xl font-semibold tabular-nums ${budgetAccent.text}`}
+                  >
+                    {Math.round(rawPct)}%
+                  </span>
+                  <p className="text-xs text-ink-faint mt-0.5">
+                    de {formatMXN(budget!)}
+                  </p>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-                  Promedio por transacción
-                </p>
-                <p className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                  ${categoryData.summary.averageAmount.toFixed(2)}
-                </p>
+
+              <div className="h-2 w-full bg-surface-strong rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ease-out ${budgetAccent.bar}`}
+                  style={{ width: `${clampedPct}%` }}
+                />
               </div>
-              <div className="text-center">
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-                  Última transacción
-                </p>
-                <p className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                  {categoryData.summary.lastTransactionDate
-                    ? new Date(
-                      categoryData.summary.lastTransactionDate,
-                    ).toLocaleDateString("es-MX", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })
-                    : "N/A"}
-                </p>
-              </div>
+
+              <p className={`text-xs mt-2 font-medium ${budgetAccent.text}`}>
+                {remaining >= 0
+                  ? `Te quedan ${formatMXN(remaining)}`
+                  : `Excedido por ${formatMXN(Math.abs(remaining))}`}
+              </p>
+            </div>
+          )}
+
+          {/* Secondary stats */}
+          <div className="mt-5 pt-5 border-t border-edge-soft grid grid-cols-3 gap-3">
+            <div className="rounded-lg bg-surface border border-edge-soft px-3 py-2.5">
+              <p className="text-[11px] text-ink-subtle mb-1">Monto total</p>
+              <p
+                className={`font-mono text-base sm:text-lg font-bold tabular-nums ${totalColor}`}
+              >
+                {formatMXN(summary.totalAmount)}
+              </p>
+            </div>
+            <div className="rounded-lg bg-surface border border-edge-soft px-3 py-2.5">
+              <p className="text-[11px] text-ink-subtle mb-1">Promedio</p>
+              <p className="font-mono text-base sm:text-lg font-bold tabular-nums text-ink">
+                {formatMXN(summary.averageAmount, true)}
+              </p>
+            </div>
+            <div className="rounded-lg bg-surface border border-edge-soft px-3 py-2.5">
+              <p className="text-[11px] text-ink-subtle mb-1">Última</p>
+              <p className="text-base sm:text-lg font-bold text-ink">
+                {summary.lastTransactionDate
+                  ? new Date(summary.lastTransactionDate).toLocaleDateString(
+                      "es-MX",
+                      {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      },
+                    )
+                  : "N/A"}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Transactions List */}
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-              Transacciones
-            </h2>
-          </div>
+          <h2 className="text-xl font-semibold text-ink">Transacciones</h2>
 
           {categoryData.transactions.length > 0 ? (
             Object.entries(
@@ -437,36 +528,28 @@ export default function CategoryPage(props: {
               );
               return (
                 <div key={month}>
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-md font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                  <div className="sticky top-0 z-10 flex justify-between items-center py-2 bg-app/80 backdrop-blur-md">
+                    <h3 className="text-sm font-semibold text-ink-muted">
                       {month}
-                    </h2>
-                    {monthTransactions.length > 1 && (
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mr-2">
-                        Total - ${monthlyTotal}
-                      </span>
-                    )}
+                    </h3>
+                    <span className="font-mono text-xs font-medium text-ink-subtle tabular-nums">
+                      {formatMXN(monthlyTotal)}
+                    </span>
                   </div>
                   <div className="space-y-2">
                     {monthTransactions.map((transaction) => (
-                      <div
+                      <TransactionCard
                         key={transaction.id}
-                      /* onClick={() => {
-                      setSelectedTransaction(transaction);
-                      setTransactionDialogOpen(true);
-                    }} */
-                      >
-                        <TransactionCard
-                          description={transaction.description}
-                          date={transaction.date}
-                          amount={transaction.amount}
-                          showCategory={false}
-                          categoryName={transaction.categoryName}
-                          type={transaction.type}
-                          sourceAccountName={transaction.sourceAccountName}
-                          targetAccountName={transaction.targetAccountName}
-                        />
-                      </div>
+                        description={transaction.description}
+                        date={transaction.date}
+                        amount={transaction.amount}
+                        showCategory={false}
+                        showDate
+                        categoryName={transaction.categoryName}
+                        type={transaction.type}
+                        sourceAccountName={transaction.sourceAccountName}
+                        targetAccountName={transaction.targetAccountName}
+                      />
                     ))}
                   </div>
                 </div>
@@ -484,113 +567,119 @@ export default function CategoryPage(props: {
 
       {/* Edit Dialog */}
       <Dialog.Root open={showRenameDialog} onOpenChange={setShowRenameDialog}>
-        <Dialog.Content maxWidth="400px">
-          <Dialog.Title>Editar Categoría</Dialog.Title>
-          <form onSubmit={handleSubmit(onSubmitRename)} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Nombre
-              </label>
-              <Controller
-                name="name"
-                control={control}
-                render={({ field }) => (
-                  <TextField.Root
-                    {...field}
-                    placeholder="Nombre de la categoría"
-                    className="w-full"
-                  />
-                )}
-              />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.name.message}
-                </p>
-              )}
-            </div>
-            {categoryData.category.type === "expense" && (
+        <Dialog.Content maxWidth="420px" className={glassDialogContent}>
+          <VisuallyHidden>
+            <Dialog.Title>Editar Categoría</Dialog.Title>
+          </VisuallyHidden>
+          <GlassDialogShell
+            icon={<FolderPen size={16} />}
+            title="Editar categoría"
+            subtitle="Actualiza el nombre y el presupuesto."
+          >
+            <form
+              onSubmit={handleSubmit(onSubmitRename)}
+              className="space-y-4"
+            >
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Presupuesto mensual (MXN)
-                </label>
+                <FieldLabel>Nombre</FieldLabel>
                 <Controller
-                  name="budget"
+                  name="name"
                   control={control}
                   render={({ field }) => (
-                    <TextField.Root
-                      type="number"
-                      min="0"
-                      step="1"
-                      placeholder="Sin presupuesto"
-                      value={field.value ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === "" ? null : Number(e.target.value)
-                        )
-                      }
-                      className="w-full"
+                    <GlassInput
+                      {...field}
+                      placeholder="Nombre de la categoría"
                     />
                   )}
                 />
-                {errors.budget && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.budget.message}
-                  </p>
-                )}
+                <FieldError message={errors.name?.message} />
               </div>
-            )}
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="soft"
-                onClick={() => setShowRenameDialog(false)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isRenaming}>
-                {isRenaming ? "Guardando..." : "Guardar"}
-              </Button>
-            </div>
-          </form>
+              {isExpense && (
+                <div>
+                  <FieldLabel>Presupuesto mensual (MXN)</FieldLabel>
+                  <Controller
+                    name="budget"
+                    control={control}
+                    render={({ field }) => (
+                      <GlassInput
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="Sin presupuesto"
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === ""
+                              ? null
+                              : Number(e.target.value),
+                          )
+                        }
+                      />
+                    )}
+                  />
+                  <FieldError message={errors.budget?.message} />
+                </div>
+              )}
+              <div className="flex justify-end gap-2 pt-4 border-t border-edge-soft mt-2">
+                <GlassButton
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setShowRenameDialog(false)}
+                >
+                  Cancelar
+                </GlassButton>
+                <GlassButton type="submit" variant="primary" disabled={isRenaming}>
+                  {isRenaming ? "Guardando..." : "Guardar"}
+                </GlassButton>
+              </div>
+            </form>
+          </GlassDialogShell>
         </Dialog.Content>
       </Dialog.Root>
 
       {/* Delete Confirmation Dialog */}
       <Dialog.Root open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <Dialog.Content maxWidth="400px">
-          <Dialog.Title>Eliminar categoría</Dialog.Title>
-          <div className="space-y-4">
-            <p className="text-slate-600 dark:text-slate-400">
-              ¿Está seguro de que desea eliminar &quot;
-              {categoryData.category.name}&quot;? Esta acción no se puede
-              deshacer.
-            </p>
-            {categoryData.summary.transactionCount > 0 && (
-              <p className="text-red-600 dark:text-red-400 text-sm">
-                Esta categoría tiene {categoryData.summary.transactionCount}{" "}
-                transacciones. No puede eliminar una categoría con transacciones
-                existentes.
+        <Dialog.Content maxWidth="420px" className={glassDialogContent}>
+          <VisuallyHidden>
+            <Dialog.Title>Eliminar categoría</Dialog.Title>
+          </VisuallyHidden>
+          <GlassDialogShell
+            icon={<Trash2 size={16} />}
+            title="Eliminar categoría"
+            subtitle="Esta acción no se puede deshacer."
+          >
+            <div className="space-y-4">
+              <p className="text-sm text-ink-muted">
+                ¿Estás seguro de que deseas eliminar &quot;{category.name}
+                &quot;?
               </p>
-            )}
-            <div className="flex justify-end gap-2">
-              <Button
-                color="gray"
-                variant="soft"
-                onClick={() => setShowDeleteDialog(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                color="red"
-                disabled={
-                  isDeleting || categoryData.summary.transactionCount > 0
-                }
-                onClick={confirmDelete}
-              >
-                {isDeleting ? "Eliminando..." : "Eliminar"}
-              </Button>
+              {summary.transactionCount > 0 && (
+                <div className="rounded-lg border border-expense-border bg-expense-soft px-3 py-2.5">
+                  <p className="text-xs text-expense">
+                    Esta categoría tiene {summary.transactionCount}{" "}
+                    transacciones. No puedes eliminar una categoría con
+                    transacciones existentes.
+                  </p>
+                </div>
+              )}
+              <div className="flex justify-end gap-2 pt-4 border-t border-edge-soft mt-2">
+                <GlassButton
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setShowDeleteDialog(false)}
+                >
+                  Cancelar
+                </GlassButton>
+                <GlassButton
+                  variant="danger"
+                  disabled={isDeleting || summary.transactionCount > 0}
+                  onClick={confirmDelete}
+                >
+                  {isDeleting ? "Eliminando..." : "Eliminar"}
+                </GlassButton>
+              </div>
             </div>
-          </div>
+          </GlassDialogShell>
         </Dialog.Content>
       </Dialog.Root>
     </div>

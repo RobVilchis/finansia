@@ -4,10 +4,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import CategoryCard from "@/app/components/CategoryCard";
 import CategoryDialog from "@/app/components/CategoryDialog";
 import { AddButton } from "@/app/components/AddButton";
-import { GlassButton } from "@/app/components/ui/glass";
+import { GlassButton, GlassInput } from "@/app/components/ui/glass";
 import { EmptyState, ErrorState } from "@/app/components/ui/states";
 import { Toast } from "radix-ui";
-import { Check, FolderOpen, Plus, SearchX } from "lucide-react";
+import { Check, FolderOpen, Plus, Search, SearchX } from "lucide-react";
+
+function formatMXN(amount: number) {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
 
 interface Category {
   id: string;
@@ -111,73 +119,49 @@ export default function CategoriesPage() {
           {/* Summary Stats */}
           {!loading && !error && hasBudgetData && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
-              <div className="rounded-xl border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-slate-800/70 px-4 py-3">
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                  Gastado este mes
-                </p>
-                <p className="font-mono text-lg font-semibold tabular-nums text-slate-800 dark:text-slate-100">
-                  {new Intl.NumberFormat("es-MX", {
-                    style: "currency",
-                    currency: "MXN",
-                    maximumFractionDigits: 0,
-                  }).format(totalSpent)}
+              <div className="rounded-xl border border-edge bg-surface backdrop-blur-md px-4 py-3">
+                <p className="text-xs text-ink-subtle mb-1">Gastado este mes</p>
+                <p className="font-mono text-lg font-semibold tabular-nums text-ink">
+                  {formatMXN(totalSpent)}
                 </p>
               </div>
-              <div className="rounded-xl border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-slate-800/70 px-4 py-3">
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                  Presupuesto total
-                </p>
-                <p className="font-mono text-lg font-semibold tabular-nums text-slate-800 dark:text-slate-100">
-                  {new Intl.NumberFormat("es-MX", {
-                    style: "currency",
-                    currency: "MXN",
-                    maximumFractionDigits: 0,
-                  }).format(totalBudget)}
+              <div className="rounded-xl border border-edge bg-surface backdrop-blur-md px-4 py-3">
+                <p className="text-xs text-ink-subtle mb-1">Presupuesto total</p>
+                <p className="font-mono text-lg font-semibold tabular-nums text-ink">
+                  {formatMXN(totalBudget)}
                 </p>
               </div>
               <div
-                className={`rounded-xl border px-4 py-3 ${
+                className={`rounded-xl border backdrop-blur-md px-4 py-3 ${
                   overCategories.length > 0
-                    ? "border-rose-200 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10"
-                    : "border-slate-200 dark:border-white/[0.07] bg-white dark:bg-slate-800/70"
+                    ? "border-expense-border bg-expense-soft"
+                    : "border-edge bg-surface"
                 }`}
               >
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                <p className="text-xs text-ink-subtle mb-1">
                   Excedido
                   {overCategories.length > 0 &&
                     ` · ${overCategories.length} categ.`}
                 </p>
                 <p
                   className={`font-mono text-lg font-semibold tabular-nums ${
-                    overCategories.length > 0
-                      ? "text-rose-600 dark:text-rose-400"
-                      : "text-slate-800 dark:text-slate-100"
+                    overCategories.length > 0 ? "text-expense" : "text-ink"
                   }`}
                 >
-                  {totalOverspent > 0
-                    ? new Intl.NumberFormat("es-MX", {
-                        style: "currency",
-                        currency: "MXN",
-                        maximumFractionDigits: 0,
-                      }).format(totalOverspent)
-                    : "—"}
+                  {totalOverspent > 0 ? formatMXN(totalOverspent) : "—"}
                 </p>
               </div>
               <div
-                className={`rounded-xl border px-4 py-3 ${
+                className={`rounded-xl border backdrop-blur-md px-4 py-3 ${
                   warningCategories.length > 0
-                    ? "border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/10"
-                    : "border-slate-200 dark:border-white/[0.07] bg-white dark:bg-slate-800/70"
+                    ? "border-warn-border bg-warn-soft"
+                    : "border-edge bg-surface"
                 }`}
               >
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                  En alerta
-                </p>
+                <p className="text-xs text-ink-subtle mb-1">En alerta</p>
                 <p
                   className={`font-mono text-lg font-semibold tabular-nums ${
-                    warningCategories.length > 0
-                      ? "text-amber-600 dark:text-amber-400"
-                      : "text-slate-800 dark:text-slate-100"
+                    warningCategories.length > 0 ? "text-warn" : "text-ink"
                   }`}
                 >
                   {warningCategories.length > 0
@@ -189,45 +173,29 @@ export default function CategoriesPage() {
           )}
 
           {/* Search Bar */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="relative max-w-md">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="h-5 w-5 text-slate-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-              <input
+          <div className="flex justify-between items-center gap-3 mb-6">
+            <div className="w-full max-w-md">
+              <GlassInput
                 type="text"
                 placeholder="Buscar categoría"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-200   dark:bg-slate-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                leadingIcon={<Search size={16} />}
               />
             </div>
             <AddButton onClick={() => setOpen(true)} />
           </div>
 
           {loading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700"
+                  className="bg-surface backdrop-blur-md rounded-xl p-4 border border-edge"
                 >
                   <div className="space-y-3">
-                    <div className="w-32 h-4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-                    <div className="w-24 h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+                    <div className="w-32 h-4 bg-surface-strong rounded animate-pulse"></div>
+                    <div className="w-24 h-3 bg-surface-strong rounded animate-pulse"></div>
                   </div>
                 </div>
               ))}
@@ -243,7 +211,7 @@ export default function CategoriesPage() {
           {!loading && !error && (
             <>
               <section className="mb-8">
-                <h2 className="text-xl font-semibold mb-4 text-gray-600 dark:text-gray-400">
+                <h2 className="text-xl font-semibold mb-4 text-ink-muted">
                   Gastos
                 </h2>
                 {expenseCategories.length === 0 ? (
@@ -281,7 +249,7 @@ export default function CategoriesPage() {
                 )}
               </section>
               <section>
-                <h2 className="text-xl font-semibold mb-4 text-gray-600 dark:text-gray-400">
+                <h2 className="text-xl font-semibold mb-4 text-ink-muted">
                   Ingresos
                 </h2>
                 {incomeCategories.length === 0 ? (
@@ -327,13 +295,15 @@ export default function CategoriesPage() {
           onCategoryAdded={onCategoryAdded}
         />
         <Toast.Root
-          className="pointer-events-auto w-64 grid grid-cols-[auto_max-content] items-center gap-x-[15px] rounded-md bg-green-700 px-[15px] pt-[15px]    pb-[12px] shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] [grid-template-areas:_'title_action'_'description_action'] data-[swipe=cancel]:translate-x-0 data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[state=closed]:animate-hide data-[state=open]:animate-slideIn data-[swipe=end]:animate-swipeOut data-[swipe=cancel]:transition-[transform_200ms_ease-out]"
+          className="pointer-events-auto w-72 grid grid-cols-[auto_max-content] items-center gap-x-[15px] rounded-xl bg-app/95 backdrop-blur-xl border border-income-border px-[15px] pt-[15px] pb-[12px] shadow-2xl shadow-black/50 [grid-template-areas:_'title_action'_'description_action'] data-[swipe=cancel]:translate-x-0 data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[state=closed]:animate-hide data-[state=open]:animate-slideIn data-[swipe=end]:animate-swipeOut data-[swipe=cancel]:transition-[transform_200ms_ease-out]"
           open={toastOpen}
           onOpenChange={setToastOpen}
         >
           <div className="flex items-center gap-3">
-            <Check className="h-10 w-10 text-white" />
-            <Toast.Title className="text-[15px] text-white font-medium">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-income-soft border border-income-border text-income">
+              <Check className="h-5 w-5" />
+            </span>
+            <Toast.Title className="text-[15px] text-ink font-medium">
               ¡La categoría se agregó exitosamente!
             </Toast.Title>
           </div>

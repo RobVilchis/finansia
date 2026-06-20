@@ -24,10 +24,10 @@ export const Sidebar = () => {
   }, [page]);
 
   return (
-    <aside className="fixed top-0 left-0 flex flex-col bg-gray-950 border-r border-white/8 h-screen w-80 font-(family-name:--font-outfit)">
+    <aside className="fixed top-0 left-0 flex flex-col bg-app-secondary border-r border-edge-soft h-screen w-80 font-(family-name:--font-outfit)">
       {/* Logo */}
-      <div className="px-6 py-7 border-b border-white/8">
-        <span className="text-2xl font-semibold text-white tracking-tight">
+      <div className="px-6 py-7 border-b border-edge-soft">
+        <span className="text-2xl font-semibold text-ink tracking-tight">
           finansia
         </span>
       </div>
@@ -43,8 +43,8 @@ export const Sidebar = () => {
               className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200
                 ${
                   isActive
-                    ? "bg-white/10 text-white"
-                    : "text-white/40 hover:text-white/80 hover:bg-white/6"
+                    ? "bg-surface-strong text-ink"
+                    : "text-ink-subtle hover:text-ink-muted hover:bg-surface"
                 }`}
             >
               <Icon className="w-4 h-4 shrink-0" />
@@ -55,7 +55,7 @@ export const Sidebar = () => {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-white/8">
+      <div className="p-4 border-t border-edge-soft">
         <UserButton />
       </div>
     </aside>

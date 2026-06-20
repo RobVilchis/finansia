@@ -4,14 +4,27 @@ import { Transaction } from "@/app/(main)/data/DataDashboard";
 
 export default function TransactionCard({
   description,
+  date,
   amount,
   showCategory = true,
+  showDate = false,
   categoryName,
   type,
-}: Omit<Transaction, "id" | "sourceAccountId"> & { showCategory?: boolean }) {
+}: Omit<Transaction, "id" | "sourceAccountId"> & {
+  showCategory?: boolean;
+  showDate?: boolean;
+}) {
   let amountColor = "text-transfer";
   if (type === "income") amountColor = "text-income";
   else if (type === "expense") amountColor = "text-expense";
+
+  const formattedDate =
+    showDate && date
+      ? new Date(date).toLocaleDateString("es-MX", {
+          day: "numeric",
+          month: "short",
+        })
+      : null;
 
   return (
     <div
@@ -25,6 +38,9 @@ export default function TransactionCard({
           <h3 className="text-sm font-medium text-ink/90 line-clamp-1">
             {description}
           </h3>
+          {formattedDate && (
+            <span className="text-xs text-ink-faint">{formattedDate}</span>
+          )}
         </div>
         {type !== "transfer" && showCategory && categoryName && (
           <span className="text-xs text-ink-faint shrink-0">{categoryName}</span>

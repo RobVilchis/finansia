@@ -19,6 +19,7 @@
 
   /* Page + surfaces */
   --color-app: var(--app);
+  --color-app-secondary: var(--app-secondary);
   --color-app-elevated: var(--app-elevated);
   --color-surface: var(--surface);
   --color-surface-strong: var(--surface-strong);
@@ -162,6 +163,7 @@
 
   /* Surfaces */
   --app: oklch(0.16 0.012 256);              /* gray-950-ish base */
+  --app-secondary: oklch(0.19 0.012 256);    /* slightly lighter — sidebar/nav */
   --app-elevated: oklch(0.20 0.013 256);
   --surface: color-mix(in oklab, white 6%, transparent);
   --surface-strong: color-mix(in oklab, white 10%, transparent);

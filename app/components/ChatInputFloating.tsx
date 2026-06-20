@@ -43,24 +43,24 @@ export default function ChatInputFloating() {
     >
       <form
         onSubmit={handleSubmit}
-        className="relative flex items-center h-14 bg-gray-900/80 backdrop-blur-xl
-          border border-white/10 rounded-2xl
-          focus-within:border-cyan-400/40
+        className="relative flex items-center h-14 bg-app-elevated/80 backdrop-blur-xl
+          border border-edge rounded-2xl
+          focus-within:border-accent-border
           shadow-2xl shadow-black/40 transition-all duration-200"
       >
-        <Sparkles className="absolute left-4 w-4 h-4 text-cyan-400/70 pointer-events-none" />
+        <Sparkles className="absolute left-4 w-4 h-4 text-accent/70 pointer-events-none" />
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Pregúntale a tu asistente financiero…"
           className="focus:outline-none flex-1 bg-transparent py-3 pl-11 pr-14
-            text-sm text-white/90 placeholder:text-white/30"
+            text-sm text-ink/90 placeholder:text-ink-faint"
         />
         <button
           type="submit"
           disabled={!input.trim()}
-          className="absolute right-2 p-2 bg-cyan-500/20 border border-cyan-500/30
-            text-cyan-300 rounded-xl hover:bg-cyan-500/30 hover:text-cyan-200
+          className="absolute right-2 p-2 bg-accent-soft border border-accent-border
+            text-accent rounded-xl hover:bg-accent/30 hover:text-accent-fg
             transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
         >
           <ArrowUp className="w-4 h-4" />
