@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
   // Build lookups for cross-field validation
   const categoryByName = new Map(
-    userCategories.map((category) => [category.name, category])
+    userCategories.map((category) => [category.name, category]),
   );
 
   const systemContext = `
@@ -94,11 +94,15 @@ export async function POST(req: Request) {
   ${JSON.stringify(accounts, null, 2)}
 
   USER CATEGORIES:
-  ${JSON.stringify(userCategories.map((c) => ({ name: c.name, type: c.type })), null, 2)}
+  ${JSON.stringify(
+    userCategories.map((c) => ({ name: c.name, type: c.type })),
+    null,
+    2,
+  )}
   `;
 
   const result = streamText({
-    model: "openai/gpt-5",
+    model: "anthropic/claude-sonnet-5",
     tools: {
       createTransaction: tool({
         description: "Create a new transaction for the user",
@@ -112,10 +116,10 @@ export async function POST(req: Request) {
               .enum(
                 (userCategories.length > 0
                   ? userCategories.map((category) => category.name)
-                  : [""]) as [string, ...string[]]
+                  : [""]) as [string, ...string[]],
               )
               .describe(
-                "Category of the transaction. Must match the selected type (expense categories for expense, income categories for income)."
+                "Category of the transaction. Must match the selected type (expense categories for expense, income categories for income).",
               ),
             type: z
               .enum(["expense", "income", "transfer"])
@@ -124,19 +128,19 @@ export async function POST(req: Request) {
               .enum(
                 (userAccounts.length > 0
                   ? userAccounts.map((account) => account.name)
-                  : [""]) as [string, ...string[]]
+                  : [""]) as [string, ...string[]],
               )
               .describe(
-                "Source account for the transaction, if the type is expense or transfer"
+                "Source account for the transaction, if the type is expense or transfer",
               ),
             targetAccountName: z
               .enum(
                 (userAccounts.length > 0
                   ? userAccounts.map((account) => account.name)
-                  : [""]) as [string, ...string[]]
+                  : [""]) as [string, ...string[]],
               )
               .describe(
-                "Target Account ID of the transaction, if the type is transfer or income"
+                "Target Account ID of the transaction, if the type is transfer or income",
               ),
           })
           .superRefine((val, ctx) => {
@@ -211,10 +215,10 @@ export async function POST(req: Request) {
               .enum(
                 (userCategories.length > 0
                   ? userCategories.map((category) => category.name)
-                  : [""]) as [string, ...string[]]
+                  : [""]) as [string, ...string[]],
               )
               .describe(
-                "Category of the transaction. Must match the selected type (expense categories for expense, income categories for income)."
+                "Category of the transaction. Must match the selected type (expense categories for expense, income categories for income).",
               )
               .optional(),
             type: z
@@ -225,20 +229,20 @@ export async function POST(req: Request) {
               .enum(
                 (userAccounts.length > 0
                   ? userAccounts.map((account) => account.name)
-                  : [""]) as [string, ...string[]]
+                  : [""]) as [string, ...string[]],
               )
               .describe(
-                "Source account for the transaction, if the type is expense or transfer"
+                "Source account for the transaction, if the type is expense or transfer",
               )
               .optional(),
             targetAccountName: z
               .enum(
                 (userAccounts.length > 0
                   ? userAccounts.map((account) => account.name)
-                  : [""]) as [string, ...string[]]
+                  : [""]) as [string, ...string[]],
               )
               .describe(
-                "Target Account ID of the transaction, if the type is transfer or income"
+                "Target Account ID of the transaction, if the type is transfer or income",
               )
               .optional(),
             startDatetime: z
@@ -316,10 +320,10 @@ export async function POST(req: Request) {
               .enum(
                 (userCategories.length > 0
                   ? userCategories.map((category) => category.name)
-                  : [""]) as [string, ...string[]]
+                  : [""]) as [string, ...string[]],
               )
               .describe(
-                "Category of the transaction. Must match the selected type (expense categories for expense, income categories for income)."
+                "Category of the transaction. Must match the selected type (expense categories for expense, income categories for income).",
               )
               .optional(),
             type: z
@@ -330,20 +334,20 @@ export async function POST(req: Request) {
               .enum(
                 (userAccounts.length > 0
                   ? userAccounts.map((account) => account.name)
-                  : [""]) as [string, ...string[]]
+                  : [""]) as [string, ...string[]],
               )
               .describe(
-                "Source account for the transaction, if the type is expense or transfer"
+                "Source account for the transaction, if the type is expense or transfer",
               )
               .optional(),
             targetAccountName: z
               .enum(
                 (userAccounts.length > 0
                   ? userAccounts.map((account) => account.name)
-                  : [""]) as [string, ...string[]]
+                  : [""]) as [string, ...string[]],
               )
               .describe(
-                "Target Account ID of the transaction, if the type is transfer or income"
+                "Target Account ID of the transaction, if the type is transfer or income",
               )
               .optional(),
             startDatetime: z
@@ -405,7 +409,7 @@ export async function POST(req: Request) {
               : undefined,
           });
 
-          return { status: "deleted" }
+          return { status: "deleted" };
         },
       }),
 
@@ -426,7 +430,7 @@ export async function POST(req: Request) {
             .enum(
               (userCategories.length > 0
                 ? userCategories.map((c) => c.name)
-                : [""]) as [string, ...string[]]
+                : [""]) as [string, ...string[]],
             )
             .describe("New category name")
             .optional(),
@@ -438,7 +442,7 @@ export async function POST(req: Request) {
             .enum(
               (userAccounts.length > 0
                 ? userAccounts.map((a) => a.name)
-                : [""]) as [string, ...string[]]
+                : [""]) as [string, ...string[]],
             )
             .describe("New source account name")
             .optional(),
@@ -446,7 +450,7 @@ export async function POST(req: Request) {
             .enum(
               (userAccounts.length > 0
                 ? userAccounts.map((a) => a.name)
-                : [""]) as [string, ...string[]]
+                : [""]) as [string, ...string[]],
             )
             .describe("New target account name")
             .optional(),
@@ -469,8 +473,8 @@ export async function POST(req: Request) {
             .where(
               and(
                 eq(transactionsTable.id, id),
-                eq(transactionsTable.userId, user!.id)
-              )
+                eq(transactionsTable.userId, user!.id),
+              ),
             )
             .limit(1);
 
@@ -488,8 +492,8 @@ export async function POST(req: Request) {
               .where(
                 and(
                   eq(categoriesTable.name, category),
-                  eq(categoriesTable.userId, user!.id)
-                )
+                  eq(categoriesTable.userId, user!.id),
+                ),
               )
               .limit(1);
             if (cat.length) categoryId = cat[0].id;
@@ -507,8 +511,8 @@ export async function POST(req: Request) {
               .where(
                 and(
                   eq(accountsTable.name, accountName),
-                  eq(accountsTable.userId, user!.id)
-                )
+                  eq(accountsTable.userId, user!.id),
+                ),
               )
               .limit(1);
             if (acc.length) sourceAccountId = acc[0].id;
@@ -520,8 +524,8 @@ export async function POST(req: Request) {
               .where(
                 and(
                   eq(accountsTable.name, targetAccountName),
-                  eq(accountsTable.userId, user!.id)
-                )
+                  eq(accountsTable.userId, user!.id),
+                ),
               )
               .limit(1);
             if (acc.length) targetAccountId = acc[0].id;
@@ -546,16 +550,14 @@ export async function POST(req: Request) {
               amount: amount !== undefined ? amount.toString() : current.amount,
               type: newType,
               category: categoryId,
-              sourceAccountId:
-                newType === "income" ? null : sourceAccountId,
-              targetAccountId:
-                newType === "expense" ? null : targetAccountId,
+              sourceAccountId: newType === "income" ? null : sourceAccountId,
+              targetAccountId: newType === "expense" ? null : targetAccountId,
             })
             .where(
               and(
                 eq(transactionsTable.id, id),
-                eq(transactionsTable.userId, user!.id)
-              )
+                eq(transactionsTable.userId, user!.id),
+              ),
             )
             .returning();
 
@@ -578,11 +580,15 @@ export async function POST(req: Request) {
             .select()
             .from(accountsTable)
             .where(
-              and(eq(accountsTable.name, name), eq(accountsTable.userId, user!.id))
+              and(
+                eq(accountsTable.name, name),
+                eq(accountsTable.userId, user!.id),
+              ),
             )
             .limit(1);
 
-          if (existing.length) return { error: "Account with this name already exists" };
+          if (existing.length)
+            return { error: "Account with this name already exists" };
 
           const created = await db
             .insert(accountsTable)
@@ -594,8 +600,7 @@ export async function POST(req: Request) {
       }),
 
       getAccounts: tool({
-        description:
-          "Get all user accounts with their current balances",
+        description: "Get all user accounts with their current balances",
         inputSchema: z.object({}),
         execute: async () => {
           return await fetchUserAccounts(user!.id);
@@ -609,21 +614,21 @@ export async function POST(req: Request) {
             .enum(
               (userAccounts.length > 0
                 ? userAccounts.map((a) => a.name)
-                : [""]) as [string, ...string[]]
+                : [""]) as [string, ...string[]],
             )
             .describe("Current name of the account to update"),
           newName: z.string().describe("New name for the account").optional(),
-          newType: z
-            .string()
-            .describe("New type for the account")
-            .optional(),
+          newType: z.string().describe("New type for the account").optional(),
         }),
         execute: async ({ name, newName, newType }) => {
           const acc = await db
             .select()
             .from(accountsTable)
             .where(
-              and(eq(accountsTable.name, name), eq(accountsTable.userId, user!.id))
+              and(
+                eq(accountsTable.name, name),
+                eq(accountsTable.userId, user!.id),
+              ),
             )
             .limit(1);
 
@@ -636,7 +641,10 @@ export async function POST(req: Request) {
               ...(newType !== undefined && { type: newType }),
             })
             .where(
-              and(eq(accountsTable.id, acc[0].id), eq(accountsTable.userId, user!.id))
+              and(
+                eq(accountsTable.id, acc[0].id),
+                eq(accountsTable.userId, user!.id),
+              ),
             )
             .returning();
 
@@ -645,14 +653,13 @@ export async function POST(req: Request) {
       }),
 
       deleteAccount: tool({
-        description:
-          "Delete an account. Ask user for confirmation first.",
+        description: "Delete an account. Ask user for confirmation first.",
         inputSchema: z.object({
           name: z
             .enum(
               (userAccounts.length > 0
                 ? userAccounts.map((a) => a.name)
-                : [""]) as [string, ...string[]]
+                : [""]) as [string, ...string[]],
             )
             .describe("Name of the account to delete"),
         }),
@@ -661,7 +668,10 @@ export async function POST(req: Request) {
             .select()
             .from(accountsTable)
             .where(
-              and(eq(accountsTable.name, name), eq(accountsTable.userId, user!.id))
+              and(
+                eq(accountsTable.name, name),
+                eq(accountsTable.userId, user!.id),
+              ),
             )
             .limit(1);
 
@@ -670,7 +680,10 @@ export async function POST(req: Request) {
           await db
             .delete(accountsTable)
             .where(
-              and(eq(accountsTable.id, acc[0].id), eq(accountsTable.userId, user!.id))
+              and(
+                eq(accountsTable.id, acc[0].id),
+                eq(accountsTable.userId, user!.id),
+              ),
             );
 
           return { success: true, deletedAccount: name };
@@ -683,9 +696,7 @@ export async function POST(req: Request) {
           "Create a new financial goal. This also creates a linked account to track savings toward the goal.",
         inputSchema: z.object({
           name: z.string().describe("Name of the goal"),
-          targetAmount: z
-            .number()
-            .describe("Target amount in Mexican Pesos"),
+          targetAmount: z.number().describe("Target amount in Mexican Pesos"),
           targetDate: z
             .string()
             .date()
@@ -698,7 +709,10 @@ export async function POST(req: Request) {
             .select()
             .from(accountsTable)
             .where(
-              and(eq(accountsTable.name, name), eq(accountsTable.userId, user!.id))
+              and(
+                eq(accountsTable.name, name),
+                eq(accountsTable.userId, user!.id),
+              ),
             )
             .limit(1);
 
@@ -737,14 +751,12 @@ export async function POST(req: Request) {
       }),
 
       updateGoal: tool({
-        description: "Update a financial goal's name, target amount, or target date",
+        description:
+          "Update a financial goal's name, target amount, or target date",
         inputSchema: z.object({
           name: z.string().describe("Current name of the goal to update"),
           newName: z.string().describe("New name for the goal").optional(),
-          newTargetAmount: z
-            .number()
-            .describe("New target amount")
-            .optional(),
+          newTargetAmount: z.number().describe("New target amount").optional(),
           newTargetDate: z
             .string()
             .date()
@@ -758,8 +770,8 @@ export async function POST(req: Request) {
             .where(
               and(
                 eq(financialGoals.name, name),
-                eq(financialGoals.userId, user!.id)
-              )
+                eq(financialGoals.userId, user!.id),
+              ),
             )
             .limit(1);
 
@@ -777,8 +789,8 @@ export async function POST(req: Request) {
             .where(
               and(
                 eq(financialGoals.id, goal[0].id),
-                eq(financialGoals.userId, user!.id)
-              )
+                eq(financialGoals.userId, user!.id),
+              ),
             )
             .returning();
 
@@ -799,8 +811,8 @@ export async function POST(req: Request) {
             .where(
               and(
                 eq(financialGoals.name, name),
-                eq(financialGoals.userId, user!.id)
-              )
+                eq(financialGoals.userId, user!.id),
+              ),
             )
             .limit(1);
 
@@ -811,8 +823,8 @@ export async function POST(req: Request) {
             .where(
               and(
                 eq(financialGoals.id, goal[0].id),
-                eq(financialGoals.userId, user!.id)
-              )
+                eq(financialGoals.userId, user!.id),
+              ),
             );
 
           return { success: true, deletedGoal: name };
@@ -854,13 +866,10 @@ export async function POST(req: Request) {
             .enum(
               (userCategories.length > 0
                 ? userCategories.map((c) => c.name)
-                : [""]) as [string, ...string[]]
+                : [""]) as [string, ...string[]],
             )
             .describe("Current name of the category to update"),
-          newName: z
-            .string()
-            .describe("New name for the category")
-            .optional(),
+          newName: z.string().describe("New name for the category").optional(),
           newType: z
             .enum(["expense", "income"])
             .describe("New type for the category")
@@ -877,8 +886,8 @@ export async function POST(req: Request) {
             .where(
               and(
                 eq(categoriesTable.name, name),
-                eq(categoriesTable.userId, user!.id)
-              )
+                eq(categoriesTable.userId, user!.id),
+              ),
             )
             .limit(1);
 
@@ -896,8 +905,8 @@ export async function POST(req: Request) {
             .where(
               and(
                 eq(categoriesTable.id, cat[0].id),
-                eq(categoriesTable.userId, user!.id)
-              )
+                eq(categoriesTable.userId, user!.id),
+              ),
             )
             .returning();
 
@@ -913,7 +922,7 @@ export async function POST(req: Request) {
             .enum(
               (userCategories.length > 0
                 ? userCategories.map((c) => c.name)
-                : [""]) as [string, ...string[]]
+                : [""]) as [string, ...string[]],
             )
             .describe("Name of the category to delete"),
         }),
@@ -924,8 +933,8 @@ export async function POST(req: Request) {
             .where(
               and(
                 eq(categoriesTable.name, name),
-                eq(categoriesTable.userId, user!.id)
-              )
+                eq(categoriesTable.userId, user!.id),
+              ),
             )
             .limit(1);
 
@@ -938,8 +947,8 @@ export async function POST(req: Request) {
             .where(
               and(
                 eq(transactionsTable.category, cat[0].id),
-                eq(transactionsTable.userId, user!.id)
-              )
+                eq(transactionsTable.userId, user!.id),
+              ),
             )
             .limit(1);
 
@@ -954,8 +963,8 @@ export async function POST(req: Request) {
             .where(
               and(
                 eq(categoriesTable.id, cat[0].id),
-                eq(categoriesTable.userId, user!.id)
-              )
+                eq(categoriesTable.userId, user!.id),
+              ),
             );
 
           return { success: true, deletedCategory: name };
@@ -968,7 +977,9 @@ export async function POST(req: Request) {
           "Create a recurring transaction that automatically creates transactions at the specified frequency (e.g. monthly Netflix subscription, biweekly salary).",
         inputSchema: z
           .object({
-            name: z.string().describe("Description of the recurring transaction"),
+            name: z
+              .string()
+              .describe("Description of the recurring transaction"),
             amount: z.number().describe("Amount of each occurrence"),
             type: z
               .enum(["expense", "income", "transfer"])
@@ -977,7 +988,7 @@ export async function POST(req: Request) {
               .enum(
                 (userCategories.length > 0
                   ? userCategories.map((c) => c.name)
-                  : [""]) as [string, ...string[]]
+                  : [""]) as [string, ...string[]],
               )
               .describe("Category name (required for expense/income)")
               .optional(),
@@ -995,7 +1006,9 @@ export async function POST(req: Request) {
             startDate: z
               .string()
               .date()
-              .describe("Start date (YYYY-MM-DD). Defaults to today if not specified."),
+              .describe(
+                "Start date (YYYY-MM-DD). Defaults to today if not specified.",
+              ),
             endDate: z
               .string()
               .date()
@@ -1005,7 +1018,7 @@ export async function POST(req: Request) {
               .enum(
                 (userAccounts.length > 0
                   ? userAccounts.map((a) => a.name)
-                  : [""]) as [string, ...string[]]
+                  : [""]) as [string, ...string[]],
               )
               .describe("Source account (for expense/transfer)")
               .optional(),
@@ -1013,7 +1026,7 @@ export async function POST(req: Request) {
               .enum(
                 (userAccounts.length > 0
                   ? userAccounts.map((a) => a.name)
-                  : [""]) as [string, ...string[]]
+                  : [""]) as [string, ...string[]],
               )
               .describe("Target account (for income/transfer)")
               .optional(),
@@ -1093,7 +1106,7 @@ export async function POST(req: Request) {
           id: z
             .string()
             .describe(
-              "ID of the recurring transaction to delete. Use getRecurringTransactions to find the ID first."
+              "ID of the recurring transaction to delete. Use getRecurringTransactions to find the ID first.",
             ),
         }),
         execute: async ({ id }) => {
