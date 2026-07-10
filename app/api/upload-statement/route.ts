@@ -3,7 +3,6 @@ export const maxDuration = 300;
 import { fetchUserCategories } from "@/lib/financial-data";
 import {
   createStatementUpload,
-  updateStatementText,
   updateStatementUploadStatus,
 } from "@/lib/services/statements";
 import { createTransactionIfUnique } from "@/lib/services/transactions";
@@ -13,16 +12,14 @@ import { generateObject } from "ai";
 import { promises as fs } from "fs";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
-import PDFParser from "pdf2json";
 import { v4 as uuidv4 } from "uuid";
 import z from "zod";
 
 const createPrompt = (
-  content: string,
   accountType: string | null,
   accountId: string | null,
   comments: string | null
-) => `You are a financial data parser. Your job is to read uploaded bank statements and extract all transactions into the provided format.
+) => `You are a financial data parser. Your job is to read the attached bank statement PDF and extract all transactions into the provided format.
 
 GUIDELINES:
 - Statements can be either credit card statements or checking account statements.
@@ -31,14 +28,13 @@ GUIDELINES:
 - The name of the account is provided by the user. Pass it into the accountName field for expenses, and into the targetAccountName for income.
 - For each transaction, generate a short description in spanish, based on the available information.
 - If there is no time value, set it to 12:00 PM by default.
-- If you can't accurately classify the transaction with the available information, leave the category as null and set needsVerification to true, for the user to classify later 
+- If you can't accurately classify the transaction with the available information, leave the category as null and set needsVerification to true, for the user to classify later
 
 ${comments ? "ADDITIONAL INSTRUCTIONS PROVIDED BY USER: " + comments : ""}
 
 STATEMENT TYPE: ${accountType}
 ACCOUNT NAME: ${accountId}
-STATEMENT CONTENT: 
-${content}
+The statement is attached as a PDF file.
 `;
 
 async function processStatement(
@@ -57,24 +53,27 @@ async function processStatement(
   try {
     console.log(`Starting background processing for statement ${statementId}`);
 
-    // Parse PDF
-    const pdfParser = new PDFParser(null, true);
-    const parsedText = await new Promise<string>((resolve, reject) => {
-      pdfParser.on("pdfParser_dataError", (error) => reject(error));
-      pdfParser.on("pdfParser_dataReady", () => {
-        resolve(pdfParser.getRawTextContent());
-      });
-      pdfParser.loadPDF(tempFilePath);
-    });
-
-    console.log("File processed successfully, updating text...");
-
-    await updateStatementText(statementId, parsedText);
-    const prompt = createPrompt(parsedText, accountType, accountId, comments);
+    // Read the PDF and send it directly to Claude, which parses PDFs natively
+    // (including image-based and Type3/custom-glyph fonts that break pdf2json).
+    const pdfBuffer = await fs.readFile(tempFilePath);
+    const prompt = createPrompt(accountType, accountId, comments);
 
     const response = await generateObject({
       model: "anthropic/claude-sonnet-4.5",
       output: "array",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            {
+              type: "file",
+              data: pdfBuffer,
+              mediaType: "application/pdf",
+            },
+          ],
+        },
+      ],
       schema: z.object({
         description: z.string().describe("Description of the transaction"),
         date: z.string().date().describe("Date of the transaction"),
@@ -107,7 +106,6 @@ async function processStatement(
           .boolean()
           .describe("Set to true if user verification is needed"),
       }),
-      prompt: prompt,
     });
 
     console.log(`Generated ${response.object.length} transactions from AI`);
